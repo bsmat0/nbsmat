@@ -349,6 +349,16 @@
             animation: pulseGreen 1.2s infinite alternate !important;
         }
 
+        /*
+         * إصلاح الموافقة في الوضع المعتم
+         * النص يصبح أبيض وواضح والخلفية خضراء داكنة.
+         */
+        .container.dark-card .status-approved {
+            background-color: #183526 !important;
+            border-color: #2ed573 !important;
+            color: #ffffff !important;
+        }
+
         @keyframes pulseGreen {
             0% {
                 box-shadow: 0 0 8px rgba(46, 213, 115, 0.4);
@@ -368,6 +378,27 @@
             border: 3px solid var(--danger-red) !important;
             color: var(--danger-red) !important;
             animation: pulseRed 1.2s infinite alternate !important;
+        }
+
+        /*
+         * إصلاح الرفض في الوضع المعتم
+         * النص يصبح أبيض وواضح والخلفية حمراء داكنة.
+         */
+        .container.dark-card .status-rejected {
+            background-color: #3a2025 !important;
+            border-color: #ff4757 !important;
+            color: #ffffff !important;
+        }
+
+        /*
+         * ضمان أن كل النصوص داخل بطاقة الحالة
+         * ترث لون البطاقة في الوضع المعتم.
+         */
+        .container.dark-card .status-card p,
+        .container.dark-card .status-card strong,
+        .container.dark-card .status-card span,
+        .container.dark-card .status-card small {
+            color: inherit !important;
         }
 
         @keyframes pulseRed {
@@ -2084,8 +2115,7 @@
                 stopStatusPolling();
 
                 /*
-                 * تم إضافة الصوت هنا.
-                 * سابقًا كان الرفض يظهر بدون صوت.
+                 * صوت الرفض
                  */
                 playUnifiedTone();
 
