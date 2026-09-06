@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -570,7 +569,8 @@
     const API_URL =
         "https://gtbgfndskfofcxgtgqlc.supabase.co/functions/v1/parent-api";
 
-    const SESSION_KEY = "bsm_admin_session";
+    const SESSION_KEY =
+        "bsm_admin_session";
 
     let soundInterval = null;
 
@@ -591,26 +591,38 @@
 
     function createStars() {
 
-        const container = document.getElementById('stars');
+        const container =
+            document.getElementById('stars');
 
-        const types = ['gold', 'bright', 'orange'];
+        const types =
+            ['gold', 'bright', 'orange'];
 
         for (let i = 0; i < 35; i++) {
 
-            const star = document.createElement('div');
+            const star =
+                document.createElement('div');
 
             star.classList.add(
                 'star',
-                types[Math.floor(Math.random() * types.length)]
+                types[
+                    Math.floor(
+                        Math.random() *
+                        types.length
+                    )
+                ]
             );
 
-            const size = Math.random() * 2.5 + 1;
+            const size =
+                Math.random() * 2.5 + 1;
 
-            star.style.width = `${size}px`;
+            star.style.width =
+                `${size}px`;
 
-            star.style.height = `${size}px`;
+            star.style.height =
+                `${size}px`;
 
-            star.style.left = `${Math.random() * 100}%`;
+            star.style.left =
+                `${Math.random() * 100}%`;
 
             star.style.animationDuration =
                 `${Math.random() * 4 + 3}s`;
@@ -626,24 +638,35 @@
 
 
     /* =========================================================
-       أدوات عامة
+       أدوات الجلسة
        ========================================================= */
 
     function getSessionToken() {
 
-        return sessionStorage.getItem(SESSION_KEY) || "";
+        return (
+            sessionStorage.getItem(
+                SESSION_KEY
+            ) || ""
+        );
     }
 
 
     function saveSessionToken(token) {
 
-        if (token) {
+        if (
+            typeof token === "string" &&
+            token.trim() !== ""
+        ) {
 
             sessionStorage.setItem(
                 SESSION_KEY,
                 token
             );
+
+            return true;
         }
+
+        return false;
     }
 
 
@@ -655,13 +678,24 @@
     }
 
 
-    function setConnectionStatus(message, isError = false) {
+    /* =========================================================
+       حالة الاتصال
+       ========================================================= */
+
+    function setConnectionStatus(
+        message,
+        isError = false
+    ) {
 
         const loginStatus =
-            document.getElementById('loginStatus');
+            document.getElementById(
+                'loginStatus'
+            );
 
         const panelStatus =
-            document.getElementById('connectionStatus');
+            document.getElementById(
+                'connectionStatus'
+            );
 
         if (loginStatus) {
 
@@ -669,7 +703,9 @@
                 message || "";
 
             loginStatus.style.color =
-                isError ? "#d9534f" : "#777";
+                isError
+                    ? "#d9534f"
+                    : "#777";
         }
 
         if (panelStatus) {
@@ -678,23 +714,48 @@
                 message || "";
 
             panelStatus.style.color =
-                isError ? "#d9534f" : "#777";
+                isError
+                    ? "#d9534f"
+                    : "#777";
         }
     }
 
 
+    /* =========================================================
+       حماية عرض النصوص
+       ========================================================= */
+
     function escapeHtml(value) {
 
-        if (value === null || value === undefined) {
+        if (
+            value === null ||
+            value === undefined
+        ) {
+
             return "";
         }
 
         return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
     }
 
 
@@ -702,14 +763,15 @@
 
         try {
 
-            return new Date(dateString)
-                .toLocaleTimeString(
-                    'ar-SA',
-                    {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }
-                );
+            return new Date(
+                dateString
+            ).toLocaleTimeString(
+                'ar-SA',
+                {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }
+            );
 
         } catch (e) {
 
@@ -722,20 +784,32 @@
        الاتصال بـ Edge Function
        ========================================================= */
 
-    async function apiRequest(payload, requireAuth = true) {
+    async function apiRequest(
+        payload,
+        requireAuth = true
+    ) {
 
         const headers = {
-            "Content-Type": "application/json"
+            "Content-Type":
+                "application/json"
         };
 
+
+        /*
+         * تسجيل الدخول لا يحتاج جلسة.
+         * بقية أوامر الإدارة تحتاج الجلسة.
+         */
         if (requireAuth) {
 
-            const token = getSessionToken();
+            const token =
+                getSessionToken();
 
             if (!token) {
 
                 const error =
-                    new Error("NO_SESSION");
+                    new Error(
+                        "NO_SESSION"
+                    );
 
                 error.status = 401;
 
@@ -747,33 +821,41 @@
         }
 
 
-        const response = await fetch(
-            API_URL,
-            {
-                method: "POST",
-                headers: headers,
-                body: JSON.stringify(payload),
-                cache: "no-store"
-            }
-        );
+        const response =
+            await fetch(
+                API_URL,
+                {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify(
+                        payload
+                    ),
+                    cache: "no-store"
+                }
+            );
 
 
         let result = null;
 
         try {
 
-            result = await response.json();
+            result =
+                await response.json();
 
         } catch (e) {
 
             result = {
                 success: false,
-                message: "استجابة غير صالحة من الخادم"
+                message:
+                    "استجابة غير صالحة من الخادم"
             };
         }
 
 
-        if (!response.ok || result.success === false) {
+        if (
+            !response.ok ||
+            result.success === false
+        ) {
 
             const error =
                 new Error(
@@ -789,6 +871,49 @@
 
 
         return result;
+    }
+
+
+    /* =========================================================
+       استخراج جلسة الإدارة
+       ========================================================= */
+
+    function extractSessionToken(
+        result
+    ) {
+
+        /*
+         * الخادم الجديد يرجع:
+         * session_token
+         *
+         * تمت إضافة token كخيار احتياطي
+         * حتى لا تتعطل الصفحة لو تغير الاسم
+         * في إصدار مستقبلي.
+         */
+
+        if (
+            result &&
+            typeof result.session_token ===
+                "string" &&
+            result.session_token.trim() !== ""
+        ) {
+
+            return result.session_token;
+        }
+
+
+        if (
+            result &&
+            typeof result.token ===
+                "string" &&
+            result.token.trim() !== ""
+        ) {
+
+            return result.token;
+        }
+
+
+        return "";
     }
 
 
@@ -814,7 +939,9 @@
 
         if (!password) {
 
-            alert("يرجى إدخال كلمة المرور.");
+            alert(
+                "يرجى إدخال كلمة المرور."
+            );
 
             return;
         }
@@ -828,20 +955,39 @@
 
         try {
 
+            /*
+             * مهم جداً:
+             * admin_login لا يحتاج Authorization
+             */
             const result =
                 await apiRequest(
                     {
-                        action: "admin_login",
-                        password: password
+                        action:
+                            "admin_login",
+
+                        password:
+                            password
                     },
                     false
                 );
 
 
-            if (
-                !result.token ||
-                typeof result.token !== "string"
-            ) {
+            /*
+             * الإصلاح الرئيسي:
+             * الخادم يرجع session_token
+             */
+            const sessionToken =
+                extractSessionToken(
+                    result
+                );
+
+
+            if (!sessionToken) {
+
+                console.error(
+                    "Server login response:",
+                    result
+                );
 
                 throw new Error(
                     "لم يتم استلام جلسة الإدارة من الخادم."
@@ -849,32 +995,52 @@
             }
 
 
-            saveSessionToken(
-                result.token
-            );
+            const saved =
+                saveSessionToken(
+                    sessionToken
+                );
+
+
+            if (!saved) {
+
+                throw new Error(
+                    "تعذر حفظ جلسة الإدارة."
+                );
+            }
 
 
             input.value = "";
 
 
             document
-                .getElementById('loginSection')
-                .classList.add('hidden');
+                .getElementById(
+                    'loginSection'
+                )
+                .classList.add(
+                    'hidden'
+                );
 
 
             document
-                .getElementById('adminPanelSection')
-                .classList.remove('hidden');
+                .getElementById(
+                    'adminPanelSection'
+                )
+                .classList.remove(
+                    'hidden'
+                );
 
 
             setConnectionStatus(
-                "🟢 متصل بالنظام"
+                "🟢 تم تسجيل الدخول بنجاح"
             );
 
 
             playSoftTone();
 
 
+            /*
+             * تحميل البيانات بعد تسجيل الدخول
+             */
             await loadAdminRequests();
 
             await loadAdminStudents();
@@ -927,34 +1093,59 @@
 
         try {
 
-            await apiRequest(
-                {
-                    action: "admin_refresh"
-                },
-                true
-            ).then(result => {
+            const result =
+                await apiRequest(
+                    {
+                        action:
+                            "admin_refresh"
+                    },
+                    true
+                );
 
-                if (result.token) {
 
-                    saveSessionToken(
-                        result.token
-                    );
-                }
-            });
+            /*
+             * الإصلاح هنا أيضاً:
+             * نأخذ session_token
+             */
+            const newToken =
+                extractSessionToken(
+                    result
+                );
+
+
+            if (!newToken) {
+
+                throw new Error(
+                    "تعذر تجديد جلسة الإدارة."
+                );
+            }
+
+
+            saveSessionToken(
+                newToken
+            );
 
 
             document
-                .getElementById('loginSection')
-                .classList.add('hidden');
+                .getElementById(
+                    'loginSection'
+                )
+                .classList.add(
+                    'hidden'
+                );
 
 
             document
-                .getElementById('adminPanelSection')
-                .classList.remove('hidden');
+                .getElementById(
+                    'adminPanelSection'
+                )
+                .classList.remove(
+                    'hidden'
+                );
 
 
             setConnectionStatus(
-                "🟢 متصل بالنظام"
+                "🟢 تم استعادة جلسة الإدارة"
             );
 
 
@@ -969,11 +1160,11 @@
         } catch (error) {
 
             console.log(
-                "لا توجد جلسة إدارة صالحة حالياً."
+                "لا توجد جلسة إدارة صالحة حالياً.",
+                error
             );
 
             clearSessionToken();
-
         }
     }
 
@@ -989,6 +1180,7 @@
 
 
         if (!token) {
+
             return false;
         }
 
@@ -998,27 +1190,42 @@
             const result =
                 await apiRequest(
                     {
-                        action: "admin_refresh"
+                        action:
+                            "admin_refresh"
                     },
                     true
                 );
 
 
-            if (result.token) {
-
-                saveSessionToken(
-                    result.token
+            /*
+             * الإصلاح هنا:
+             * session_token وليس token
+             */
+            const newToken =
+                extractSessionToken(
+                    result
                 );
 
-                setConnectionStatus(
-                    "🟢 الجلسة نشطة"
-                );
 
-                return true;
+            if (!newToken) {
+
+                throw new Error(
+                    "لم يتم استلام جلسة جديدة من الخادم."
+                );
             }
 
 
-            return false;
+            saveSessionToken(
+                newToken
+            );
+
+
+            setConnectionStatus(
+                "🟢 الجلسة نشطة"
+            );
+
+
+            return true;
 
         } catch (error) {
 
@@ -1030,13 +1237,13 @@
 
             if (
                 error.status === 401 ||
-                error.message === "NO_SESSION"
+                error.message ===
+                    "NO_SESSION"
             ) {
 
-                logoutAdmin(
-                    false
-                );
+                await handleSessionExpired();
             }
+
 
             return false;
         }
@@ -1075,9 +1282,7 @@
 
 
         /*
-         * تجديد الجلسة كل 30 دقيقة.
-         * الجلسة نفسها 8 ساعات،
-         * لكن طالما الصفحة مفتوحة يتم تجديدها تلقائياً.
+         * تجديد الجلسة كل 30 دقيقة
          */
         refreshInterval =
             setInterval(
@@ -1124,35 +1329,59 @@
     function switchAdminTab(tab) {
 
         document
-            .getElementById('tabRequests')
-            .classList.remove('active');
+            .getElementById(
+                'tabRequests'
+            )
+            .classList.remove(
+                'active'
+            );
 
 
         document
-            .getElementById('tabStudents')
-            .classList.remove('active');
+            .getElementById(
+                'tabStudents'
+            )
+            .classList.remove(
+                'active'
+            );
 
 
         document
-            .getElementById('adminRequestsView')
-            .classList.add('hidden');
+            .getElementById(
+                'adminRequestsView'
+            )
+            .classList.add(
+                'hidden'
+            );
 
 
         document
-            .getElementById('adminStudentsView')
-            .classList.add('hidden');
+            .getElementById(
+                'adminStudentsView'
+            )
+            .classList.add(
+                'hidden'
+            );
 
 
         if (tab === 'requests') {
 
             document
-                .getElementById('tabRequests')
-                .classList.add('active');
+                .getElementById(
+                    'tabRequests'
+                )
+                .classList.add(
+                    'active'
+                );
 
 
             document
-                .getElementById('adminRequestsView')
-                .classList.remove('hidden');
+                .getElementById(
+                    'adminRequestsView'
+                )
+                .classList.remove(
+                    'hidden'
+                );
 
 
             loadAdminRequests();
@@ -1160,13 +1389,21 @@
         } else {
 
             document
-                .getElementById('tabStudents')
-                .classList.add('active');
+                .getElementById(
+                    'tabStudents'
+                )
+                .classList.add(
+                    'active'
+                );
 
 
             document
-                .getElementById('adminStudentsView')
-                .classList.remove('hidden');
+                .getElementById(
+                    'adminStudentsView'
+                )
+                .classList.remove(
+                    'hidden'
+                );
 
 
             loadAdminStudents();
@@ -1188,6 +1425,7 @@
 
 
             if (!AudioContext) {
+
                 return;
             }
 
@@ -1205,75 +1443,81 @@
             }
 
 
-            [523.25, 659.25, 783.99]
-                .forEach(
-                    (freq, index) => {
+            [
+                523.25,
+                659.25,
+                783.99
+            ].forEach(
+                (freq, index) => {
 
-                        const osc =
-                            audioCtx
-                                .createOscillator();
-
-
-                        const gain =
-                            audioCtx
-                                .createGain();
+                    const osc =
+                        audioCtx
+                            .createOscillator();
 
 
-                        osc.type =
-                            'sine';
+                    const gain =
+                        audioCtx
+                            .createGain();
 
 
-                        osc.frequency
-                            .setValueAtTime(
-                                freq,
-                                audioCtx.currentTime +
-                                (index * 0.15)
-                            );
+                    osc.type =
+                        'sine';
 
 
-                        gain.gain
-                            .setValueAtTime(
-                                0.3,
-                                audioCtx.currentTime +
-                                (index * 0.15)
-                            );
-
-
-                        gain.gain
-                            .exponentialRampToValueAtTime(
-                                0.001,
-                                audioCtx.currentTime +
-                                (index * 0.15) +
-                                0.3
-                            );
-
-
-                        osc.connect(gain);
-
-                        gain.connect(
-                            audioCtx.destination
-                        );
-
-
-                        osc.start(
+                    osc.frequency
+                        .setValueAtTime(
+                            freq,
                             audioCtx.currentTime +
                             (index * 0.15)
                         );
 
 
-                        osc.stop(
+                    gain.gain
+                        .setValueAtTime(
+                            0.3,
+                            audioCtx.currentTime +
+                            (index * 0.15)
+                        );
+
+
+                    gain.gain
+                        .exponentialRampToValueAtTime(
+                            0.001,
                             audioCtx.currentTime +
                             (index * 0.15) +
                             0.3
                         );
-                    }
-                );
+
+
+                    osc.connect(gain);
+
+                    gain.connect(
+                        audioCtx.destination
+                    );
+
+
+                    osc.start(
+                        audioCtx.currentTime +
+                        (index * 0.15)
+                    );
+
+
+                    osc.stop(
+                        audioCtx.currentTime +
+                        (index * 0.15) +
+                        0.3
+                    );
+                }
+            );
 
 
             setTimeout(
                 () => {
+
                     try {
+
                         audioCtx.close();
+
                     } catch (e) {}
                 },
                 1500
@@ -1344,11 +1588,13 @@
     ) {
 
         if (isLoadingRequests) {
+
             return;
         }
 
 
         if (!getSessionToken()) {
+
             return;
         }
 
@@ -1384,10 +1630,6 @@
                 ).length;
 
 
-            /*
-             * إذا وصل طلب جديد،
-             * نشغل التنبيه.
-             */
             if (pendingCount > 0) {
 
                 startContinuousAlert();
@@ -1398,9 +1640,6 @@
             }
 
 
-            /*
-             * صوت إضافي عند وصول طلب جديد
-             */
             if (
                 pendingCount >
                 lastPendingCount
@@ -1443,7 +1682,8 @@
 
             if (
                 error.status === 401 ||
-                error.message === "NO_SESSION"
+                error.message ===
+                    "NO_SESSION"
             ) {
 
                 await handleSessionExpired();
@@ -1579,10 +1819,6 @@
                 }
 
 
-                /*
-                 * النوع أصبح يعتمد مباشرة على request_type
-                 * وليس على reject_reason.
-                 */
                 const isPermission =
                     req.request_type ===
                     "excuse";
@@ -1611,9 +1847,6 @@
                     "";
 
 
-                /*
-                 * سبب الاستئذان
-                 */
                 if (
                     isPermission &&
                     req.excuse_reason
@@ -1631,9 +1864,6 @@
                 }
 
 
-                /*
-                 * سبب الرفض
-                 */
                 if (
                     isRejected &&
                     req.reject_reason
@@ -1771,6 +2001,7 @@
     ) {
 
         if (!reqId) {
+
             return;
         }
 
@@ -1785,7 +2016,9 @@
 
             buttons.forEach(
                 button => {
-                    button.disabled = true;
+
+                    button.disabled =
+                        true;
                 }
             );
 
@@ -1813,14 +2046,19 @@
 
                 await loadAdminRequests();
 
-                if (newStatus === 'approved') {
+
+                if (
+                    newStatus ===
+                    'approved'
+                ) {
 
                     alert(
                         "تمت الموافقة على الطلب ✅"
                     );
 
                 } else if (
-                    newStatus === 'rejected'
+                    newStatus ===
+                    'rejected'
                 ) {
 
                     alert(
@@ -1840,7 +2078,8 @@
 
             if (
                 error.status === 401 ||
-                error.message === "NO_SESSION"
+                error.message ===
+                    "NO_SESSION"
             ) {
 
                 await handleSessionExpired();
@@ -1901,11 +2140,13 @@
     async function loadAdminStudents() {
 
         if (isLoadingStudents) {
+
             return;
         }
 
 
         if (!getSessionToken()) {
+
             return;
         }
 
@@ -1978,6 +2219,7 @@
                                 -
 
                                 الكود:
+
                                 <strong>
                                     ${escapeHtml(
                                         student.parent_code
@@ -2009,7 +2251,8 @@
 
             if (
                 error.status === 401 ||
-                error.message === "NO_SESSION"
+                error.message ===
+                    "NO_SESSION"
             ) {
 
                 await handleSessionExpired();
@@ -2149,7 +2392,8 @@
 
             if (
                 error.status === 401 ||
-                error.message === "NO_SESSION"
+                error.message ===
+                    "NO_SESSION"
             ) {
 
                 await handleSessionExpired();
@@ -2181,6 +2425,7 @@
     ) {
 
         if (!id) {
+
             return;
         }
 
@@ -2192,6 +2437,7 @@
 
 
         if (!confirmed) {
+
             return;
         }
 
@@ -2217,6 +2463,7 @@
                     "تم حذف الطالب بنجاح ✅"
                 );
 
+
                 await loadAdminStudents();
 
                 await loadAdminRequests();
@@ -2233,7 +2480,8 @@
 
             if (
                 error.status === 401 ||
-                error.message === "NO_SESSION"
+                error.message ===
+                    "NO_SESSION"
             ) {
 
                 await handleSessionExpired();
@@ -2361,12 +2609,6 @@
 
                 if (getSessionToken()) {
 
-                    /*
-                     * عند العودة للصفحة بعد النوم أو
-                     * الانتقال لتبويب آخر، نحدث الجلسة
-                     * ونحصل على الطلبات مباشرة.
-                     */
-
                     await refreshAdminSession();
 
                     await loadAdminRequests(
@@ -2391,6 +2633,7 @@
                 setConnectionStatus(
                     "🟢 عاد الاتصال بالنظام"
                 );
+
 
                 await refreshAdminSession();
 
@@ -2430,4 +2673,3 @@
 
 </body>
 </html>
-```
