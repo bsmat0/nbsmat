@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>نظام نداء واستئذان الطلاب - بسمات الوعد الأهلية</title>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --primary-purple: #4a2e6f;
@@ -14,7 +16,7 @@
             --danger-red: #ff4757;
             --success-green: #2ed573;
             --info-blue: #3498db;
-            
+
             --card-bg: rgba(255, 255, 255, 0.98);
             --card-text: #2c3e50;
             --input-bg: #ffffff;
@@ -47,109 +49,351 @@
             border-color: rgba(243, 177, 55, 0.5) !important;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            background: var(--bg-gradient); 
-            margin: 0; padding: 15px; text-align: center; color: #fff;
-            position: relative; overflow-x: hidden; min-height: 100vh;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .stars-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
-        .star { position: absolute; border-radius: 50%; opacity: 0.9; animation: fall linear infinite; }
-        .star.gold { background: #ffeaa7; box-shadow: 0 0 12px #ffeaa7, 0 0 20px #f3b137; }
-        .star.bright { background: #ffffff; box-shadow: 0 0 15px #ffffff; }
-        .star.orange { background: #ff9f43; box-shadow: 0 0 12px #ff9f43; }
+        body {
+            background: var(--bg-gradient);
+            margin: 0;
+            padding: 15px;
+            text-align: center;
+            color: #fff;
+            position: relative;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.9;
+            animation: fall linear infinite;
+        }
+
+        .star.gold {
+            background: #ffeaa7;
+            box-shadow: 0 0 12px #ffeaa7, 0 0 20px #f3b137;
+        }
+
+        .star.bright {
+            background: #ffffff;
+            box-shadow: 0 0 15px #ffffff;
+        }
+
+        .star.orange {
+            background: #ff9f43;
+            box-shadow: 0 0 12px #ff9f43;
+        }
 
         @keyframes fall {
-            0% { transform: translateY(-20px) scale(0.7); opacity: 0; }
-            20% { opacity: 1; } 80% { opacity: 1; }
-            100% { transform: translateY(105vh) scale(1.3); opacity: 0; }
+            0% {
+                transform: translateY(-20px) scale(0.7);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(105vh) scale(1.3);
+                opacity: 0;
+            }
         }
 
-        .container { 
-            position: relative; z-index: 1; width: 100%; max-width: 600px; margin: 0 auto; 
-            background: var(--card-bg); backdrop-filter: blur(12px);
-            padding: 24px; border-radius: 24px; 
-            box-shadow: var(--card-shadow); 
-            border: 2px solid rgba(243, 177, 55, 0.75); 
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 24px;
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            border: 2px solid rgba(243, 177, 55, 0.75);
             color: var(--card-text);
             transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
         }
-        
-        .top-bar-parent { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .logo-img { max-width: 110px; height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
-        
+
+        .top-bar-parent {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .logo-img {
+            max-width: 110px;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
         .theme-toggle-btn {
-            background: #e2d9eb; border: none; border-radius: 50%; width: 38px; height: 38px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;
-            transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #e2d9eb;
+            border: none;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .container.dark-card .theme-toggle-btn { background: #382d50; color: #ffd700; }
-        .theme-toggle-btn:active { transform: scale(0.9); }
 
-        h1 { color: var(--card-h1); font-size: 19px; margin-bottom: 5px; font-weight: 800; transition: 0.3s; }
-        h2 { color: var(--card-h2); font-size: 16px; margin-top: 10px; transition: 0.3s; }
-        p { color: var(--card-text); opacity: 0.9; }
-        
-        .steps-indicator { display: flex; justify-content: center; gap: 8px; margin: 12px 0 18px 0; }
-        .step-dot { width: 30px; height: 6px; background: #e2d9eb; border-radius: 3px; transition: 0.3s; }
-        .container.dark-card .step-dot { background: #382d50; }
-        .step-dot.active { background: var(--accent-gold); width: 45px; box-shadow: 0 0 8px rgba(243, 177, 55, 0.6); }
-
-        .btn-mode { padding: 14px 20px; margin: 10px 0; font-size: 15px; font-weight: bold; border: none; border-radius: 14px; cursor: pointer; transition: 0.25s; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-height: 50px; }
-        .btn-parent { background-color: var(--primary-purple); color: white; }
-        .container.dark-card .btn-parent { background-color: #7b52b9; }
-        .btn-excuse { background-color: var(--info-blue); color: white; }
-        .btn-mode:active { transform: scale(0.97); }
-        
-        .form-group { margin-bottom: 14px; text-align: right; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; color: var(--label-color); font-size: 13px; transition: 0.3s; }
-        
-        input, select, textarea { 
-            width: 100%; padding: 12px; border: 2px solid var(--input-border); border-radius: 10px; 
-            font-size: 15px; outline: none; background: var(--input-bg); color: var(--input-text); 
-            transition: 0.2s; min-height: 48px; 
+        .container.dark-card .theme-toggle-btn {
+            background: #382d50;
+            color: #ffd700;
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--accent-gold); box-shadow: 0 0 8px rgba(243, 177, 55, 0.25); }
-        
-        .btn-submit { width: 100%; padding: 13px; background-color: var(--accent-gold); color: #333; border: none; border-radius: 12px; font-size: 15px; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 12px rgba(243, 177, 55, 0.3); min-height: 48px; }
-        .btn-submit:active { transform: scale(0.97); }
-        
-        .status-card { 
-            margin-top: 15px; padding: 16px; border-radius: 14px; background: #f3eff8; border: 2px solid #dcd0ea; 
-            text-align: center; transition: all 0.5s ease; color: #333;
-        }
-        .container.dark-card .status-card { background: #262135; border-color: #4a3b65; color: #fff; }
 
-        .status-card.pulsing { animation: pulseGold 1.5s infinite alternate; }
+        .theme-toggle-btn:active {
+            transform: scale(0.9);
+        }
+
+        h1 {
+            color: var(--card-h1);
+            font-size: 19px;
+            margin-bottom: 5px;
+            font-weight: 800;
+            transition: 0.3s;
+        }
+
+        h2 {
+            color: var(--card-h2);
+            font-size: 16px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        p {
+            color: var(--card-text);
+            opacity: 0.9;
+        }
+
+        .steps-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 12px 0 18px 0;
+        }
+
+        .step-dot {
+            width: 30px;
+            height: 6px;
+            background: #e2d9eb;
+            border-radius: 3px;
+            transition: 0.3s;
+        }
+
+        .container.dark-card .step-dot {
+            background: #382d50;
+        }
+
+        .step-dot.active {
+            background: var(--accent-gold);
+            width: 45px;
+            box-shadow: 0 0 8px rgba(243, 177, 55, 0.6);
+        }
+
+        .btn-mode {
+            padding: 14px 20px;
+            margin: 10px 0;
+            font-size: 15px;
+            font-weight: bold;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: 0.25s;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            min-height: 50px;
+        }
+
+        .btn-parent {
+            background-color: var(--primary-purple);
+            color: white;
+        }
+
+        .container.dark-card .btn-parent {
+            background-color: #7b52b9;
+        }
+
+        .btn-excuse {
+            background-color: var(--info-blue);
+            color: white;
+        }
+
+        .btn-mode:active {
+            transform: scale(0.97);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+            text-align: right;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: var(--label-color);
+            font-size: 13px;
+            transition: 0.3s;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--input-border);
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            background: var(--input-bg);
+            color: var(--input-text);
+            transition: 0.2s;
+            min-height: 48px;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 8px rgba(243, 177, 55, 0.25);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            background-color: var(--accent-gold);
+            color: #333;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(243, 177, 55, 0.3);
+            min-height: 48px;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.97);
+        }
+
+        .status-card {
+            margin-top: 15px;
+            padding: 16px;
+            border-radius: 14px;
+            background: #f3eff8;
+            border: 2px solid #dcd0ea;
+            text-align: center;
+            transition: all 0.5s ease;
+            color: #333;
+        }
+
+        .container.dark-card .status-card {
+            background: #262135;
+            border-color: #4a3b65;
+            color: #fff;
+        }
+
+        .status-card.pulsing {
+            animation: pulseGold 1.5s infinite alternate;
+        }
+
         @keyframes pulseGold {
-            0% { box-shadow: 0 0 5px rgba(243, 177, 55, 0.4); border-color: #f3b137; }
-            100% { box-shadow: 0 0 22px rgba(243, 177, 55, 0.9); border-color: #f3b137; transform: scale(1.01); }
+            0% {
+                box-shadow: 0 0 5px rgba(243, 177, 55, 0.4);
+                border-color: #f3b137;
+            }
+
+            100% {
+                box-shadow: 0 0 22px rgba(243, 177, 55, 0.9);
+                border-color: #f3b137;
+                transform: scale(1.01);
+            }
         }
 
-        .status-approved { 
-            background-color: #e8f8f0 !important; border: 3px solid var(--success-green) !important; color: #27ae60 !important; 
+        .status-approved {
+            background-color: #e8f8f0 !important;
+            border: 3px solid var(--success-green) !important;
+            color: #27ae60 !important;
             animation: pulseGreen 1.2s infinite alternate !important;
         }
+
         @keyframes pulseGreen {
-            0% { box-shadow: 0 0 8px rgba(46, 213, 115, 0.4); border-color: #2ed573; transform: scale(1); }
-            100% { box-shadow: 0 0 25px rgba(46, 213, 115, 1); border-color: #2ed573; transform: scale(1.02); }
+            0% {
+                box-shadow: 0 0 8px rgba(46, 213, 115, 0.4);
+                border-color: #2ed573;
+                transform: scale(1);
+            }
+
+            100% {
+                box-shadow: 0 0 25px rgba(46, 213, 115, 1);
+                border-color: #2ed573;
+                transform: scale(1.02);
+            }
         }
 
-        .status-rejected { 
-            background-color: #fce4e4 !important; border: 3px solid var(--danger-red) !important; color: var(--danger-red) !important; 
+        .status-rejected {
+            background-color: #fce4e4 !important;
+            border: 3px solid var(--danger-red) !important;
+            color: var(--danger-red) !important;
             animation: pulseRed 1.2s infinite alternate !important;
         }
+
         @keyframes pulseRed {
-            0% { box-shadow: 0 0 8px rgba(255, 71, 87, 0.4); border-color: #ff4757; transform: scale(1); }
-            100% { box-shadow: 0 0 25px rgba(255, 71, 87, 1); border-color: #ff4757; transform: scale(1.02); }
+            0% {
+                box-shadow: 0 0 8px rgba(255, 71, 87, 0.4);
+                border-color: #ff4757;
+                transform: scale(1);
+            }
+
+            100% {
+                box-shadow: 0 0 25px rgba(255, 71, 87, 1);
+                border-color: #ff4757;
+                transform: scale(1.02);
+            }
         }
 
-        .animated-text { display: inline-block; font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+        .animated-text {
+            display: inline-block;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
 
-        .hidden { display: none; }
+        .hidden {
+            display: none;
+        }
 
         .children-grid {
             display: grid;
@@ -158,14 +402,28 @@
             margin-top: 14px;
         }
 
-        .child-card { 
-            padding: 16px 10px; border-radius: 14px; text-align: center; cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        .child-card {
+            padding: 16px 10px;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            border: 3px solid transparent; position: relative;
+            border: 3px solid transparent;
+            position: relative;
         }
-        .child-card.girl { background-color: var(--girl-card-bg); border-color: var(--girl-card-border); color: var(--card-text); }
-        .child-card.boy { background-color: var(--boy-card-bg); border-color: var(--boy-card-border); color: var(--card-text); }
+
+        .child-card.girl {
+            background-color: var(--girl-card-bg);
+            border-color: var(--girl-card-border);
+            color: var(--card-text);
+        }
+
+        .child-card.boy {
+            background-color: var(--boy-card-bg);
+            border-color: var(--boy-card-border);
+            color: var(--card-text);
+        }
 
         .child-card.selected {
             border-color: var(--accent-gold) !important;
@@ -173,405 +431,1576 @@
             transform: translateY(-4px);
         }
 
-        .child-avatar { 
-            font-size: 38px; background: rgba(255,255,255,0.9); width: 60px; height: 60px; 
-            display: flex; align-items: center; justify-content: center; border-radius: 50%; 
-            margin: 0 auto 8px auto; box-shadow: 0 3px 8px rgba(0,0,0,0.08); 
+        .child-avatar {
+            font-size: 38px;
+            background: rgba(255,255,255,0.9);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 8px auto;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
         }
 
         .btn-back-home {
-            background: var(--card-bg); color: var(--label-color); border: 2px solid var(--label-color);
-            padding: 9px 20px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; margin-top: 15px; transition: 0.2s; min-height: 44px;
+            background: var(--card-bg);
+            color: var(--label-color);
+            border: 2px solid var(--label-color);
+            padding: 9px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.2s;
+            min-height: 44px;
         }
-        .btn-back-home:active { transform: scale(0.96); }
 
-        footer { margin-top: 20px; font-size: 11px; opacity: 0.7; border-top: 1px solid rgba(150,150,150,0.2); padding-top: 8px; }
+        .btn-back-home:active {
+            transform: scale(0.96);
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 11px;
+            opacity: 0.7;
+            border-top: 1px solid rgba(150,150,150,0.2);
+            padding-top: 8px;
+        }
     </style>
 </head>
+
 <body>
 
 <div class="stars-container" id="stars"></div>
 
 <div class="container" id="mainCardContainer">
+
     <div class="top-bar-parent">
-        <img src="https://i.ibb.co/ddsMPQH/logo.png" alt="شعار بسمات الوعد" class="logo-img">
-        <button class="theme-toggle-btn" id="themeToggleParentBtn" onclick="toggleParentCardTheme()" title="تبديل مظهر المربع">
+
+        <img
+            src="https://i.ibb.co/ddsMPQH/logo.png"
+            alt="شعار بسمات الوعد"
+            class="logo-img">
+
+        <button
+            class="theme-toggle-btn"
+            id="themeToggleParentBtn"
+            onclick="toggleParentCardTheme()"
+            title="تبديل مظهر المربع">
+
             <span id="themeParentIcon">🌙</span>
+
         </button>
+
     </div>
 
     <div id="selection-screen">
-        <h1>روضة وابتدائية بسمات الوعد الأهلية بطريف</h1>
-        <p style="font-size: 13px; margin-bottom: 25px;">نظام نداء واستئذان الطلاب الذكي</p>
+
+        <h1>
+            روضة وابتدائية بسمات الوعد الأهلية بطريف
+        </h1>
+
+        <p style="font-size: 13px; margin-bottom: 25px;">
+            نظام نداء واستئذان الطلاب الذكي
+        </p>
+
         <div class="steps-indicator">
+
             <div class="step-dot active"></div>
+
             <div class="step-dot"></div>
+
             <div class="step-dot"></div>
+
         </div>
-        <button class="btn-mode btn-parent" onclick="openServiceMode('normal')">📱 طلب نداء انصراف</button>
-        <button class="btn-mode btn-excuse" onclick="openServiceMode('excuse')">📝 طلب استئذان مبكر (طارئ)</button>
+
+        <button
+            class="btn-mode btn-parent"
+            onclick="openServiceMode('normal')">
+
+            📱 طلب نداء انصراف
+
+        </button>
+
+        <button
+            class="btn-mode btn-excuse"
+            onclick="openServiceMode('excuse')">
+
+            📝 طلب استئذان مبكر (طارئ)
+
+        </button>
+
     </div>
 
     <div id="service-screen" class="hidden">
-        <h2 id="serviceTitle">إدخال كود الأمان</h2>
-        <div class="steps-indicator" id="stepIndicatorBar">
-            <div class="step-dot active" id="dot1"></div>
-            <div class="step-dot" id="dot2"></div>
-            <div class="step-dot" id="dot3"></div>
-        </div>
-        <div class="form-group" id="codeFormGroup">
-            <label>رمز الأمان الخاص بولي الأمر:</label>
-            <input type="password" id="sharedParentCode" placeholder="أدخل الكود السري للعائلة" inputmode="numeric">
-        </div>
-        <button class="btn-submit" id="fetchStudentsBtn" onclick="fetchChildrenByCode()">عرض الطالب المسجل</button>
 
-        <div id="childrenContainer" style="margin-top: 14px;"></div>
+        <h2 id="serviceTitle">
+            إدخال كود الأمان
+        </h2>
 
-        <div id="actionFormSection" class="hidden" style="margin-top: 15px; border-top: 2px dashed rgba(150,150,150,0.3); padding-top: 14px;">
-            <div id="excuseReasonGroup" class="form-group hidden">
-                <label>سبب الاستئذان: <span id="charCounter" style="float: left; font-size: 11px; opacity: 0.7;">0/100</span></label>
-                <textarea id="inputExcuseReason" rows="2" maxlength="100" placeholder="مثال: موعد مستشفى، ظرف عائلي..." oninput="updateCharCount(this)"></textarea>
+        <div
+            class="steps-indicator"
+            id="stepIndicatorBar">
+
+            <div
+                class="step-dot active"
+                id="dot1">
             </div>
-            <button class="btn-submit" id="executeSubmitBtn" onclick="submitFinalRequest()">تأكيد وإرسال الطلب</button>
+
+            <div
+                class="step-dot"
+                id="dot2">
+            </div>
+
+            <div
+                class="step-dot"
+                id="dot3">
+            </div>
+
         </div>
 
-        <div id="dynamicStatusCard" class="status-card hidden">
-            <p id="dynamicStatusText" style="font-size: 15px; font-weight: bold; margin:0;">⏳ جاري الإرسال...</p>
+        <div
+            class="form-group"
+            id="codeFormGroup">
+
+            <label>
+                رمز الأمان الخاص بولي الأمر:
+            </label>
+
+            <input
+                type="password"
+                id="sharedParentCode"
+                placeholder="أدخل الكود السري للعائلة"
+                inputmode="numeric"
+                maxlength="8"
+                autocomplete="off">
+
         </div>
 
-        <br><button class="btn-back-home" onclick="showScreen('selection')">🏠 العودة للرئيسية</button>
+        <button
+            class="btn-submit"
+            id="fetchStudentsBtn"
+            onclick="fetchChildrenByCode()">
+
+            عرض الطالب المسجل
+
+        </button>
+
+        <div
+            id="childrenContainer"
+            style="margin-top: 14px;">
+        </div>
+
+        <div
+            id="actionFormSection"
+            class="hidden"
+            style="margin-top: 15px; border-top: 2px dashed rgba(150,150,150,0.3); padding-top: 14px;">
+
+            <div
+                id="excuseReasonGroup"
+                class="form-group hidden">
+
+                <label>
+
+                    سبب الاستئذان:
+
+                    <span
+                        id="charCounter"
+                        style="float: left; font-size: 11px; opacity: 0.7;">
+
+                        0/100
+
+                    </span>
+
+                </label>
+
+                <textarea
+                    id="inputExcuseReason"
+                    rows="2"
+                    maxlength="100"
+                    placeholder="مثال: موعد مستشفى، ظرف عائلي..."
+                    oninput="updateCharCount(this)">
+                </textarea>
+
+            </div>
+
+            <button
+                class="btn-submit"
+                id="executeSubmitBtn"
+                onclick="submitFinalRequest()">
+
+                تأكيد وإرسال الطلب
+
+            </button>
+
+        </div>
+
+        <div
+            id="dynamicStatusCard"
+            class="status-card hidden">
+
+            <p
+                id="dynamicStatusText"
+                style="font-size: 15px; font-weight: bold; margin:0;">
+
+                ⏳ جاري الإرسال...
+
+            </p>
+
+        </div>
+
+        <br>
+
+        <button
+            class="btn-back-home"
+            onclick="showScreen('selection')">
+
+            🏠 العودة للرئيسية
+
+        </button>
+
     </div>
 
-    <footer>تم إنشاء وتطوير النظام من قبل إخلاص الحضيري | وكيلة مدرسة بسمات الوعد</footer>
+    <footer>
+
+        تم إنشاء وتطوير النظام من قبل إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
+
+    </footer>
+
 </div>
 
 <script>
-    function toggleParentCardTheme() {
-        const container = document.getElementById('mainCardContainer');
-        container.classList.toggle('dark-card');
-        const iconSpan = document.getElementById('themeParentIcon');
-        if(container.classList.contains('dark-card')) {
-            iconSpan.textContent = '☀️';
-            localStorage.setItem('parent_card_theme', 'dark');
-        } else {
-            iconSpan.textContent = '🌙';
-            localStorage.setItem('parent_card_theme', 'light');
-        }
-    }
 
-    if(localStorage.getItem('parent_card_theme') === 'dark') {
-        document.getElementById('mainCardContainer').classList.add('dark-card');
-        document.getElementById('themeParentIcon').textContent = '☀️';
-    }
+    /* =========================================================
+       إعداد الاتصال الآمن
+       ========================================================= */
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
+    const SUPABASE_URL =
+        'https://gtbgfndskfofcxgtgqlc.supabase.co';
 
-    function createStars() {
-        const container = document.getElementById('stars');
-        const types = ['gold', 'bright', 'orange'];
-        for (let i = 0; i < 40; i++) {
-            const star = document.createElement('div');
-            star.classList.add('star', types[Math.floor(Math.random() * types.length)]);
-            const size = Math.random() * 3 + 1;
-            star.style.width = `${size}px`; star.style.height = `${size}px`;
-            star.style.left = `${Math.random() * 100}%`;
-            star.style.animationDuration = `${Math.random() * 3 + 2.5}s`;
-            star.style.animationDelay = `${Math.random() * 5}s`;
-            container.appendChild(star);
-        }
-    }
-    createStars();
+    const SUPABASE_ANON_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0YmdmbmRza2ZvZmN4Z3RncWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MTYyNzgsImV4cCI6MjEwNDI5MjI3OH0.o2XZwDyYSJOgJVb6Ost-QwH5fRjVEHK0pppGLJutQ_I';
 
-    // المفتاح الصحيح المعتمد لمشروعك
-    const SUPABASE_URL = 'https://nqyildmygpakkmnfltiw.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xeWlsZG15Z3Bha2ttbmZsdGl3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODI3NjUyMiwiZXhwIjoyMTAzODUyNTIyfQ._C416P-3Ub3TA1umVB5RoqZaIvODN0gKfhnsBNrxS-Y';
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const db =
+        supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+
+    const PARENT_API_URL =
+        SUPABASE_URL.replace(/\/$/, '') +
+        '/functions/v1/parent-api';
+
+
+    /* =========================================================
+       المتغيرات
+       ========================================================= */
 
     let currentMode = 'normal';
+
     let loadedChildren = [];
+
     let selectedChildrenIds = new Set();
-    let activeSubscriptions = [];
+
+    let currentRequestToken = null;
+
+    let statusPollingTimer = null;
+
+
+    /* =========================================================
+       الوضع الليلي
+       ========================================================= */
+
+    function toggleParentCardTheme() {
+
+        const container =
+            document.getElementById(
+                'mainCardContainer'
+            );
+
+        container.classList.toggle(
+            'dark-card'
+        );
+
+        const iconSpan =
+            document.getElementById(
+                'themeParentIcon'
+            );
+
+        if (
+            container.classList.contains(
+                'dark-card'
+            )
+        ) {
+
+            iconSpan.textContent = '☀️';
+
+            localStorage.setItem(
+                'parent_card_theme',
+                'dark'
+            );
+
+        } else {
+
+            iconSpan.textContent = '🌙';
+
+            localStorage.setItem(
+                'parent_card_theme',
+                'light'
+            );
+        }
+    }
+
+
+    if (
+        localStorage.getItem(
+            'parent_card_theme'
+        ) === 'dark'
+    ) {
+
+        document
+            .getElementById(
+                'mainCardContainer'
+            )
+            .classList.add(
+                'dark-card'
+            );
+
+        document
+            .getElementById(
+                'themeParentIcon'
+            )
+            .textContent = '☀️';
+    }
+
+
+    /* =========================================================
+       حماية النصوص
+       ========================================================= */
+
+    function escapeHtml(str) {
+
+        if (!str) return '';
+
+        return String(str)
+            .replace(
+                /&/g,
+                '&amp;'
+            )
+            .replace(
+                /</g,
+                '&lt;'
+            )
+            .replace(
+                />/g,
+                '&gt;'
+            )
+            .replace(
+                /"/g,
+                '&quot;'
+            )
+            .replace(
+                /'/g,
+                '&#039;'
+            );
+    }
+
+
+    /* =========================================================
+       النجوم
+       ========================================================= */
+
+    function createStars() {
+
+        const container =
+            document.getElementById(
+                'stars'
+            );
+
+        const types = [
+            'gold',
+            'bright',
+            'orange'
+        ];
+
+        for (
+            let i = 0;
+            i < 40;
+            i++
+        ) {
+
+            const star =
+                document.createElement(
+                    'div'
+                );
+
+            star.classList.add(
+                'star',
+                types[
+                    Math.floor(
+                        Math.random() *
+                        types.length
+                    )
+                ]
+            );
+
+            const size =
+                Math.random() * 3 + 1;
+
+            star.style.width =
+                `${size}px`;
+
+            star.style.height =
+                `${size}px`;
+
+            star.style.left =
+                `${Math.random() * 100}%`;
+
+            star.style.animationDuration =
+                `${Math.random() * 3 + 2.5}s`;
+
+            star.style.animationDelay =
+                `${Math.random() * 5}s`;
+
+            container.appendChild(
+                star
+            );
+        }
+    }
+
+    createStars();
+
+
+    /* =========================================================
+       استدعاء Edge Function
+       ========================================================= */
+
+    async function callParentApi(payload) {
+
+        const response =
+            await fetch(
+                PARENT_API_URL,
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json',
+
+                        'apikey':
+                            SUPABASE_ANON_KEY,
+
+                        'Authorization':
+                            `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+
+                    body:
+                        JSON.stringify(
+                            payload
+                        )
+                }
+            );
+
+        let result = null;
+
+        try {
+
+            result =
+                await response.json();
+
+        } catch (e) {
+
+            throw new Error(
+                'تعذر قراءة رد الخادم'
+            );
+        }
+
+        if (
+            !response.ok ||
+            !result.success
+        ) {
+
+            throw new Error(
+                result.error ||
+                'حدث خطأ في الخادم'
+            );
+        }
+
+        return result;
+    }
+
+
+    /* =========================================================
+       الانتقال بين الشاشات
+       ========================================================= */
 
     function showScreen(screen) {
-        document.getElementById('selection-screen').classList.add('hidden');
-        document.getElementById('service-screen').classList.add('hidden');
 
-        if(screen === 'service') {
-            document.getElementById('service-screen').classList.remove('hidden');
-            document.getElementById('sharedParentCode').value = '';
-            document.getElementById('childrenContainer').innerHTML = '';
-            document.getElementById('actionFormSection').classList.add('hidden');
-            document.getElementById('dynamicStatusCard').classList.add('hidden');
-            document.getElementById('serviceTitle').innerText = currentMode === 'normal' ? 'طلب نداء انصراف' : 'طلب استئذان مبكر (طارئ)';
+        document
+            .getElementById(
+                'selection-screen'
+            )
+            .classList.add(
+                'hidden'
+            );
+
+        document
+            .getElementById(
+                'service-screen'
+            )
+            .classList.add(
+                'hidden'
+            );
+
+        stopStatusPolling();
+
+        if (
+            screen === 'service'
+        ) {
+
+            document
+                .getElementById(
+                    'service-screen'
+                )
+                .classList.remove(
+                    'hidden'
+                );
+
+            document
+                .getElementById(
+                    'sharedParentCode'
+                )
+                .value = '';
+
+            document
+                .getElementById(
+                    'childrenContainer'
+                )
+                .innerHTML = '';
+
+            document
+                .getElementById(
+                    'actionFormSection'
+                )
+                .classList.add(
+                    'hidden'
+                );
+
+            document
+                .getElementById(
+                    'dynamicStatusCard'
+                )
+                .classList.add(
+                    'hidden'
+                );
+
+            document
+                .getElementById(
+                    'inputExcuseReason'
+                )
+                .value = '';
+
+            updateCharCount(
+                document.getElementById(
+                    'inputExcuseReason'
+                )
+            );
+
+            selectedChildrenIds.clear();
+
+            loadedChildren = [];
+
+            currentRequestToken = null;
+
+            document
+                .getElementById(
+                    'serviceTitle'
+                )
+                .innerText =
+                    currentMode === 'normal'
+                        ? 'طلب نداء انصراف'
+                        : 'طلب استئذان مبكر (طارئ)';
+
             updateStepIndicator(1);
         }
-        if(screen === 'selection') document.getElementById('selection-screen').classList.remove('hidden');
+
+        if (
+            screen === 'selection'
+        ) {
+
+            document
+                .getElementById(
+                    'selection-screen'
+                )
+                .classList.remove(
+                    'hidden'
+                );
+        }
     }
+
+
+    /* =========================================================
+       مؤشر الخطوات
+       ========================================================= */
 
     function updateStepIndicator(step) {
-        const d1 = document.getElementById('dot1');
-        const d2 = document.getElementById('dot2');
-        const d3 = document.getElementById('dot3');
-        if(!d1) return;
-        d1.className = 'step-dot'; d2.className = 'step-dot'; d3.className = 'step-dot';
-        if(step === 1) d1.className = 'step-dot active';
-        if(step === 2) { d1.className = 'step-dot'; d2.className = 'step-dot active'; }
-        if(step === 3) { d1.className = 'step-dot'; d2.className = 'step-dot'; d3.className = 'step-dot active'; }
+
+        const d1 =
+            document.getElementById(
+                'dot1'
+            );
+
+        const d2 =
+            document.getElementById(
+                'dot2'
+            );
+
+        const d3 =
+            document.getElementById(
+                'dot3'
+            );
+
+        if (!d1) return;
+
+        d1.className =
+            'step-dot';
+
+        d2.className =
+            'step-dot';
+
+        d3.className =
+            'step-dot';
+
+        if (
+            step === 1
+        ) {
+
+            d1.className =
+                'step-dot active';
+        }
+
+        if (
+            step === 2
+        ) {
+
+            d2.className =
+                'step-dot active';
+        }
+
+        if (
+            step === 3
+        ) {
+
+            d3.className =
+                'step-dot active';
+        }
     }
 
+
+    /* =========================================================
+       فتح الخدمة
+       ========================================================= */
+
     function openServiceMode(mode) {
+
         currentMode = mode;
+
         showScreen('service');
     }
 
+
+    /* =========================================================
+       عداد السبب
+       ========================================================= */
+
     function updateCharCount(textarea) {
-        const len = textarea.value.length;
-        const counter = document.getElementById('charCounter');
-        if(counter) counter.innerText = `${len}/100`;
+
+        const len =
+            textarea.value.length;
+
+        const counter =
+            document.getElementById(
+                'charCounter'
+            );
+
+        if (counter) {
+
+            counter.innerText =
+                `${len}/100`;
+        }
     }
+
+
+    /* =========================================================
+       تحديد بنت / ولد
+       ========================================================= */
 
     function isGirlName(name) {
+
         if (!name) return false;
-        const trimmed = name.trim();
-        if (trimmed.endsWith('ة') || trimmed.endsWith('ه')) return true;
-        const commonGirls = ['مريم', 'فاطمة', 'عائشة', 'سارة', 'هند', 'جواهر', 'نورة', 'منيرة', 'ريم', 'حصة', 'البارق', 'الدانة', 'سلطانة', 'وضحة', 'سحابة', 'غيم'];
-        const firstName = trimmed.split(' ')[0];
-        return commonGirls.includes(firstName);
+
+        const trimmed =
+            name.trim();
+
+        if (
+            trimmed.endsWith('ة') ||
+            trimmed.endsWith('ه')
+        ) {
+
+            return true;
+        }
+
+        const commonGirls = [
+            'مريم',
+            'فاطمة',
+            'عائشة',
+            'سارة',
+            'هند',
+            'جواهر',
+            'نورة',
+            'منيرة',
+            'ريم',
+            'حصة',
+            'البارق',
+            'الدانة',
+            'سلطانة',
+            'وضحة',
+            'سحابة',
+            'غيم'
+        ];
+
+        const firstName =
+            trimmed.split(' ')[0];
+
+        return commonGirls.includes(
+            firstName
+        );
     }
 
+
+    /* =========================================================
+       جلب الطلاب من Edge Function
+       ========================================================= */
+
     async function fetchChildrenByCode() {
-        const rawCode = document.getElementById('sharedParentCode').value;
-        const code = rawCode ? rawCode.trim() : '';
-        const container = document.getElementById('childrenContainer');
-        
-        document.getElementById('dynamicStatusCard').classList.add('hidden');
-        document.getElementById('actionFormSection').classList.add('hidden');
+
+        const input =
+            document.getElementById(
+                'sharedParentCode'
+            );
+
+        const rawCode =
+            input.value || '';
+
+        const code =
+            rawCode.trim();
+
+        const container =
+            document.getElementById(
+                'childrenContainer'
+            );
+
+        const button =
+            document.getElementById(
+                'fetchStudentsBtn'
+            );
+
+        document
+            .getElementById(
+                'dynamicStatusCard'
+            )
+            .classList.add(
+                'hidden'
+            );
+
+        document
+            .getElementById(
+                'actionFormSection'
+            )
+            .classList.add(
+                'hidden'
+            );
+
         selectedChildrenIds.clear();
 
-        if(!code) {
-            alert('الرجاء إدخال كود الأمان!');
+        if (!code) {
+
+            alert(
+                'الرجاء إدخال كود الأمان!'
+            );
+
             return;
         }
 
-        container.innerHTML = "<p style='font-weight:bold;'>⏳ جاري التحقق من الكود...</p>";
+        if (
+            !/^\d+$/.test(code)
+        ) {
+
+            alert(
+                'كود ولي الأمر يجب أن يتكون من أرقام فقط.'
+            );
+
+            return;
+        }
+
+        container.innerHTML =
+            "<p style='font-weight:bold;'>⏳ جاري التحقق من الكود...</p>";
+
+        button.disabled = true;
+
+        button.style.opacity = '0.6';
 
         try {
-            const oneHourAgo = new Date(new Date().getTime() - (60 * 60 * 1000)).toISOString();
-            
-            let recentRequests = [];
-            let isOfflineMode = !navigator.onLine;
 
-            if(!isOfflineMode) {
-                try {
-                    const { data: remoteReqs, error: reqError } = await db
-                        .from('school_requests')
-                        .select('*')
-                        .ilike('parent_code', `${code}%`)
-                        .gte('created_at', oneHourAgo);
-                    if(!reqError) recentRequests = remoteReqs || [];
-                } catch(netErr) {
-                    isOfflineMode = true;
-                }
-            }
+            const result =
+                await callParentApi({
 
-            if(isOfflineMode) {
-                const cachedReqs = JSON.parse(localStorage.getItem('offline_requests') || '[]');
-                recentRequests = cachedReqs.filter(r => r.parent_code && r.parent_code.includes(code) && new Date(r.created_at) > new Date(oneHourAgo));
-            }
+                    action:
+                        'get_students',
 
-            if (recentRequests.length >= 3) {
-                container.innerHTML = `<div class="status-card status-rejected" style="margin-top:0;"><p style='font-size: 14px; font-weight: bold; margin:0;'>⚠️ عذراً، لقد قمت بإرسال (${recentRequests.length}) طلبات خلال الساعة الماضية.<br><small style='opacity:0.8;'>لا يمكنك إرسال طلب جديد الآن، يرجى الانتظار.</small></p></div>`;
+                    parent_code:
+                        code
+                });
+
+            const children =
+                result.students || [];
+
+            if (
+                !children ||
+                children.length === 0
+            ) {
+
+                container.innerHTML =
+                    "<p style='color:var(--danger-red); font-weight:bold;'>❌ كود الأمان غير صحيح أو لا يوجد طالب مسجل له!<br><small style='opacity:0.8;'>تأكد من إدخال الكود الصحيح.</small></p>";
+
                 return;
             }
 
-            let children = [];
-            if(!isOfflineMode) {
-                try {
-                    const { data: remoteChildren, error } = await db.from('students').select('*').eq('parent_code', code);
-                    if(error) throw error;
-                    children = remoteChildren || [];
-                    localStorage.setItem('cached_children_' + code, JSON.stringify(children));
-                } catch(errFetch) {
-                    isOfflineMode = true;
-                }
-            }
+            loadedChildren =
+                children;
 
-            if(isOfflineMode) {
-                const cachedChildren = localStorage.getItem('cached_children_' + code);
-                children = cachedChildren ? JSON.parse(cachedChildren) : [];
-            }
-
-            if(!children || children.length === 0) {
-                container.innerHTML = "<p style='color:var(--danger-red); font-weight:bold;'>❌ كود الأمان غير صحيح أو لا يوجد طالب مسجل له!<br><small style='opacity:0.8;'>تأكد من إدخال الكود الصحيح.</small></p>";
-                return;
-            }
-
-            loadedChildren = children;
             updateStepIndicator(2);
-            container.innerHTML = `<p style='font-weight:bold; margin-bottom: 5px; font-size:14px;'>اختر الطالب:</p><div class="children-grid" id="gridContainer"></div>`;
-            
-            const grid = document.getElementById('gridContainer');
-            children.forEach(child => {
-                const girl = isGirlName(child.student_name);
-                const cardClass = girl ? 'child-card girl' : 'child-card boy';
-                const avatarEmoji = girl ? '👧' : '👦';
 
-                const card = document.createElement('div');
-                card.className = cardClass;
-                card.innerHTML = `
-                    <div class="child-avatar">${avatarEmoji}</div>
-                    <strong style="font-size:14px; display:block; margin-bottom:3px;">${escapeHtml(child.student_name)}</strong>
-                    <small style="opacity:0.7; font-size:12px;">${escapeHtml(child.student_class || 'غير محدد')}</small>
+            container.innerHTML =
+                `
+                <p style='font-weight:bold; margin-bottom:5px; font-size:14px;'>
+                    اختر الطالب:
+                </p>
+
+                <div
+                    class="children-grid"
+                    id="gridContainer">
+                </div>
                 `;
-                
-                card.onclick = () => toggleChildSelection(child.id, card);
-                grid.appendChild(card);
-            });
 
-        } catch(err) {
-            container.innerHTML = "<p style='color:var(--danger-red);'>حدث خطأ في الاتصال بالشبكة.</p>";
+            const grid =
+                document.getElementById(
+                    'gridContainer'
+                );
+
+            children.forEach(
+                child => {
+
+                    const girl =
+                        isGirlName(
+                            child.student_name
+                        );
+
+                    const cardClass =
+                        girl
+                            ? 'child-card girl'
+                            : 'child-card boy';
+
+                    const avatarEmoji =
+                        girl
+                            ? '👧'
+                            : '👦';
+
+                    const card =
+                        document.createElement(
+                            'div'
+                        );
+
+                    card.className =
+                        cardClass;
+
+                    card.innerHTML =
+                        `
+                        <div class="child-avatar">
+                            ${avatarEmoji}
+                        </div>
+
+                        <strong style="font-size:14px; display:block; margin-bottom:3px;">
+                            ${escapeHtml(
+                                child.student_name
+                            )}
+                        </strong>
+
+                        <small style="opacity:0.7; font-size:12px;">
+                            ${escapeHtml(
+                                child.class_name ||
+                                'غير محدد'
+                            )}
+                        </small>
+                        `;
+
+                    card.onclick =
+                        () =>
+                            toggleChildSelection(
+                                child.id,
+                                card
+                            );
+
+                    grid.appendChild(
+                        card
+                    );
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                'Parent API Error:',
+                error
+            );
+
+            container.innerHTML =
+                `
+                <p style='color:var(--danger-red); font-weight:bold;'>
+                    ❌ ${escapeHtml(
+                        error.message ||
+                        'حدث خطأ في الاتصال بالخادم.'
+                    )}
+                </p>
+                `;
+
+        } finally {
+
+            button.disabled = false;
+
+            button.style.opacity = '1';
         }
     }
 
-    function toggleChildSelection(childId, cardElement) {
-        if(selectedChildrenIds.has(childId)) {
-            selectedChildrenIds.delete(childId);
-            cardElement.classList.remove('selected');
+
+    /* =========================================================
+       اختيار الطالب
+       ========================================================= */
+
+    function toggleChildSelection(
+        childId,
+        cardElement
+    ) {
+
+        if (
+            selectedChildrenIds.has(
+                childId
+            )
+        ) {
+
+            selectedChildrenIds.delete(
+                childId
+            );
+
+            cardElement.classList.remove(
+                'selected'
+            );
+
         } else {
+
             selectedChildrenIds.clear();
-            document.querySelectorAll('.child-card').forEach(c => c.classList.remove('selected'));
-            selectedChildrenIds.add(childId);
-            cardElement.classList.add('selected');
+
+            document
+                .querySelectorAll(
+                    '.child-card'
+                )
+                .forEach(
+                    c =>
+                        c.classList.remove(
+                            'selected'
+                        )
+                );
+
+            selectedChildrenIds.add(
+                childId
+            );
+
+            cardElement.classList.add(
+                'selected'
+            );
         }
 
-        const section = document.getElementById('actionFormSection');
-        if(selectedChildrenIds.size > 0) {
-            section.classList.remove('hidden');
-            const excuseGroup = document.getElementById('excuseReasonGroup');
-            if(currentMode === 'excuse') {
-                excuseGroup.classList.remove('hidden');
+        const section =
+            document.getElementById(
+                'actionFormSection'
+            );
+
+        if (
+            selectedChildrenIds.size > 0
+        ) {
+
+            section.classList.remove(
+                'hidden'
+            );
+
+            const excuseGroup =
+                document.getElementById(
+                    'excuseReasonGroup'
+                );
+
+            if (
+                currentMode === 'excuse'
+            ) {
+
+                excuseGroup.classList.remove(
+                    'hidden'
+                );
+
             } else {
-                excuseGroup.classList.add('hidden');
+
+                excuseGroup.classList.add(
+                    'hidden'
+                );
             }
+
         } else {
-            section.classList.add('hidden');
+
+            section.classList.add(
+                'hidden'
+            );
         }
     }
+
+
+    /* =========================================================
+       إرسال الطلب
+       ========================================================= */
 
     async function submitFinalRequest() {
-        if(selectedChildrenIds.size === 0) return;
 
-        const code = document.getElementById('sharedParentCode').value.trim();
-        const excuseReasonText = document.getElementById('inputExcuseReason').value.trim();
-        
-        let reqTypeLabel = 'نداء انصراف عادي';
-        if(currentMode === 'excuse') {
-            reqTypeLabel = `طلب استئذان مبكر: ${escapeHtml(excuseReasonText || 'ظرف طارئ')}`;
+        if (
+            selectedChildrenIds.size === 0
+        ) {
+            return;
         }
 
-        if(currentMode === 'excuse' && !excuseReasonText) {
-            alert('يرجى كتابة سبب الاستئذان!');
+        const code =
+            document
+                .getElementById(
+                    'sharedParentCode'
+                )
+                .value
+                .trim();
+
+        const excuseReasonText =
+            document
+                .getElementById(
+                    'inputExcuseReason'
+                )
+                .value
+                .trim();
+
+        if (!code) {
+
+            alert(
+                'الرجاء إدخال كود الأمان!'
+            );
+
+            return;
+        }
+
+        if (
+            !/^\d+$/.test(code)
+        ) {
+
+            alert(
+                'كود ولي الأمر يجب أن يتكون من أرقام فقط.'
+            );
+
+            return;
+        }
+
+        if (
+            currentMode === 'excuse' &&
+            !excuseReasonText
+        ) {
+
+            alert(
+                'يرجى كتابة سبب الاستئذان!'
+            );
+
+            return;
+        }
+
+        const chosenChild =
+            loadedChildren.find(
+                child =>
+                    selectedChildrenIds.has(
+                        child.id
+                    )
+            );
+
+        if (!chosenChild) {
+
+            alert(
+                'تعذر تحديد الطالب، يرجى المحاولة مرة أخرى.'
+            );
+
             return;
         }
 
         updateStepIndicator(3);
-        const statusCard = document.getElementById('dynamicStatusCard');
-        const statusText = document.getElementById('dynamicStatusText');
-        
-        statusCard.classList.remove('hidden', 'status-approved', 'status-rejected');
-        statusCard.className = "status-card pulsing";
-        statusText.innerText = "⏳ جاري إرسال الطلب للإدارة، يرجى الانتظار...";
 
-        const chosenChild = loadedChildren.find(c => selectedChildrenIds.has(c.id));
-        const finalCodeReport = `${code} (${chosenChild.student_name} ✅)`;
-        
-        let reqId = 'local_' + Date.now();
-        let isSuccess = false;
+        const statusCard =
+            document.getElementById(
+                'dynamicStatusCard'
+            );
+
+        const statusText =
+            document.getElementById(
+                'dynamicStatusText'
+            );
+
+        const submitButton =
+            document.getElementById(
+                'executeSubmitBtn'
+            );
+
+        statusCard.classList.remove(
+            'hidden',
+            'status-approved',
+            'status-rejected'
+        );
+
+        statusCard.className =
+            'status-card pulsing';
+
+        statusText.innerText =
+            '⏳ جاري إرسال الطلب للإدارة، يرجى الانتظار...';
+
+        submitButton.disabled = true;
+
+        submitButton.style.opacity = '0.6';
 
         try {
-            const { data, error } = await db.from('school_requests').insert([
-                {
-                    student_name: chosenChild.student_name,
-                    student_class: chosenChild.student_class || 'غير محدد',
-                    parent_code: finalCodeReport,
-                    status: 'pending',
-                    request_type: reqTypeLabel,
-                    reject_reason: reqTypeLabel
-                }
-            ]).select();
 
-            if(!error && data && data.length > 0) {
-                reqId = data[0].id;
-                isSuccess = true;
+            const requestType =
+                currentMode === 'excuse'
+                    ? 'excuse'
+                    : 'pickup';
+
+            /*
+             * هنا تم إصلاح المشكلة:
+             * سبب الاستئذان يتم إرساله إلى Edge Function
+             * ليتم حفظه في school_requests.excuse_reason
+             */
+
+            const result =
+                await callParentApi({
+
+                    action:
+                        'create_request',
+
+                    parent_code:
+                        code,
+
+                    student_id:
+                        chosenChild.id,
+
+                    request_type:
+                        requestType,
+
+                    excuse_reason:
+                        requestType === 'excuse'
+                            ? excuseReasonText
+                            : ''
+                });
+
+            if (
+                !result.request ||
+                !result.request.request_token
+            ) {
+
+                throw new Error(
+                    'تم إنشاء الطلب ولكن لم يصل رمز المتابعة.'
+                );
             }
-        } catch(e) {
-            isSuccess = false;
+
+            currentRequestToken =
+                result.request.request_token;
+
+            statusText.innerHTML =
+                `
+                <span class="animated-text">
+                    ⏳ تم إرسال الطلب بنجاح
+                </span>
+
+                <br>
+
+                <strong>
+                    بانتظار رد الإدارة...
+                </strong>
+                `;
+
+            localStorage.setItem(
+                'last_request_token',
+                currentRequestToken
+            );
+
+            localStorage.setItem(
+                'last_request_parent_code',
+                code
+            );
+
+            startStatusPolling(
+                code,
+                currentRequestToken
+            );
+
+        } catch (error) {
+
+            console.error(
+                'Create Request Error:',
+                error
+            );
+
+            statusCard.className =
+                'status-card status-rejected';
+
+            statusText.innerHTML =
+                `
+                <span class="animated-text">
+                    ❌ تعذر إرسال الطلب
+                </span>
+
+                <br>
+
+                <strong>
+                    ${escapeHtml(
+                        error.message ||
+                        'حدث خطأ، حاول مرة أخرى.'
+                    )}
+                </strong>
+                `;
+
+            updateStepIndicator(2);
+
+        } finally {
+
+            submitButton.disabled = false;
+
+            submitButton.style.opacity = '1';
         }
-
-        const offlineReqs = JSON.parse(localStorage.getItem('offline_requests') || '[]');
-        offlineReqs.push({
-            id: reqId,
-            student_name: chosenChild.student_name,
-            student_class: chosenChild.student_class,
-            parent_code: finalCodeReport,
-            status: 'pending',
-            request_type: reqTypeLabel,
-            reject_reason: reqTypeLabel,
-            created_at: new Date().toISOString()
-        });
-        localStorage.setItem('offline_requests', JSON.stringify(offlineReqs));
-
-        statusText.innerHTML = `<span class="animated-text">⏳ تم إرسال الطلب بنجاح، بانتظار رد الإدارة...</span>`;
-
-        activeSubscriptions.forEach(sub => db.removeChannel(sub));
-        activeSubscriptions = [];
-
-        const sub = db.channel('parent_status_' + reqId)
-          .on('postgres_changes', { 
-              event: 'UPDATE', 
-              schema: 'public', 
-              table: 'school_requests',
-              filter: `id=eq.${reqId}`
-          }, payload => {
-              const newStatus = payload.new.status;
-              if(newStatus === 'approved') {
-                  playUnifiedTone();
-                  statusCard.className = "status-card status-approved";
-                  statusText.innerHTML = `<span class="animated-text">✅ تمت الموافقة على الطلب بنجاح</span><br><strong>${currentMode === 'excuse' ? 'تم قبول الاستئذان، الطالب في طريقه للبوابة الآن.' : 'دقائق ويكون الطالب جاهزاً عند البوابة!'}</strong>`;
-              } else if(newStatus === 'rejected') {
-                  statusCard.className = "status-card status-rejected";
-                  statusText.innerHTML = `<span class="animated-text">⚠️ تم رفض الطلب</span><br><strong>السبب: ${escapeHtml(payload.new.reject_reason || 'بيانات غير مطابقة')}</strong>`;
-              }
-          }).subscribe();
-
-        activeSubscriptions.push(sub);
     }
+
+
+    /* =========================================================
+       متابعة حالة الطلب
+       ========================================================= */
+
+    function startStatusPolling(
+        parentCode,
+        requestToken
+    ) {
+
+        stopStatusPolling();
+
+        checkRequestStatus(
+            parentCode,
+            requestToken
+        );
+
+        statusPollingTimer =
+            setInterval(
+                () => {
+
+                    checkRequestStatus(
+                        parentCode,
+                        requestToken
+                    );
+
+                },
+                2500
+            );
+    }
+
+
+    /* =========================================================
+       إيقاف المتابعة
+       ========================================================= */
+
+    function stopStatusPolling() {
+
+        if (
+            statusPollingTimer
+        ) {
+
+            clearInterval(
+                statusPollingTimer
+            );
+
+            statusPollingTimer =
+                null;
+        }
+    }
+
+
+    /* =========================================================
+       فحص الحالة من Edge Function
+       ========================================================= */
+
+    async function checkRequestStatus(
+        parentCode,
+        requestToken
+    ) {
+
+        try {
+
+            const result =
+                await callParentApi({
+
+                    action:
+                        'get_request_status',
+
+                    parent_code:
+                        parentCode,
+
+                    request_token:
+                        requestToken
+                });
+
+            if (
+                !result.request
+            ) {
+                return;
+            }
+
+            const request =
+                result.request;
+
+            const status =
+                request.status;
+
+            const statusCard =
+                document.getElementById(
+                    'dynamicStatusCard'
+                );
+
+            const statusText =
+                document.getElementById(
+                    'dynamicStatusText'
+                );
+
+            if (
+                status === 'pending'
+            ) {
+
+                statusCard.className =
+                    'status-card pulsing';
+
+                statusText.innerHTML =
+                    `
+                    <span class="animated-text">
+                        ⏳ بانتظار رد الإدارة...
+                    </span>
+
+                    <br>
+
+                    <strong>
+                        سيتم تحديث الحالة تلقائيًا
+                    </strong>
+                    `;
+
+                return;
+            }
+
+            if (
+                status === 'approved'
+            ) {
+
+                stopStatusPolling();
+
+                playUnifiedTone();
+
+                statusCard.className =
+                    'status-card status-approved';
+
+                statusText.innerHTML =
+                    `
+                    <span class="animated-text">
+                        ✅ تمت الموافقة على الطلب بنجاح
+                    </span>
+
+                    <br>
+
+                    <strong>
+                        ${
+                            currentMode === 'excuse'
+                                ? 'تم قبول الاستئذان، الطالب في طريقه للبوابة الآن.'
+                                : 'دقائق ويكون الطالب جاهزاً عند البوابة!'
+                        }
+                    </strong>
+                    `;
+
+                return;
+            }
+
+            if (
+                status === 'rejected'
+            ) {
+
+                stopStatusPolling();
+
+                statusCard.className =
+                    'status-card status-rejected';
+
+                statusText.innerHTML =
+                    `
+                    <span class="animated-text">
+                        ⚠️ تم رفض الطلب
+                    </span>
+
+                    <br>
+
+                    <strong>
+                        تم رفض الطلب من الإدارة.
+                    </strong>
+                    `;
+
+                return;
+            }
+
+        } catch (error) {
+
+            console.warn(
+                'Status check failed:',
+                error
+            );
+        }
+    }
+
+
+    /* =========================================================
+       الصوت عند الموافقة
+       ========================================================= */
 
     function playUnifiedTone() {
+
         try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            [523.25, 659.25, 783.99].forEach((freq, index) => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (index * 0.15));
-                gain.gain.setValueAtTime(0.5, audioCtx.currentTime + (index * 0.15));
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (index * 0.15) + 0.4);
-                osc.connect(gain); 
-                gain.connect(audioCtx.destination);
-                osc.start(audioCtx.currentTime + (index * 0.15));
-                osc.stop(audioCtx.currentTime + (index * 0.15) + 0.4);
-            });
-        } catch(e) {}
+
+            const AudioContext =
+                window.AudioContext ||
+                window.webkitAudioContext;
+
+            if (!AudioContext) {
+                return;
+            }
+
+            const audioCtx =
+                new AudioContext();
+
+            [
+                523.25,
+                659.25,
+                783.99
+            ].forEach(
+                (freq, index) => {
+
+                    const osc =
+                        audioCtx.createOscillator();
+
+                    const gain =
+                        audioCtx.createGain();
+
+                    osc.type =
+                        'sine';
+
+                    osc.frequency.setValueAtTime(
+                        freq,
+                        audioCtx.currentTime +
+                        (index * 0.15)
+                    );
+
+                    gain.gain.setValueAtTime(
+                        0.5,
+                        audioCtx.currentTime +
+                        (index * 0.15)
+                    );
+
+                    gain.gain.exponentialRampToValueAtTime(
+                        0.001,
+                        audioCtx.currentTime +
+                        (index * 0.15) +
+                        0.4
+                    );
+
+                    osc.connect(
+                        gain
+                    );
+
+                    gain.connect(
+                        audioCtx.destination
+                    );
+
+                    osc.start(
+                        audioCtx.currentTime +
+                        (index * 0.15)
+                    );
+
+                    osc.stop(
+                        audioCtx.currentTime +
+                        (index * 0.15) +
+                        0.4
+                    );
+                }
+            );
+
+        } catch (e) {
+
+            console.warn(
+                'Audio unavailable'
+            );
+        }
     }
+
+
+    /* =========================================================
+       منع إدخال غير رقمي في كود ولي الأمر
+       ========================================================= */
+
+    document
+        .getElementById(
+            'sharedParentCode'
+        )
+        .addEventListener(
+            'input',
+            function () {
+
+                this.value =
+                    this.value.replace(
+                        /\D/g,
+                        ''
+                    );
+            }
+        );
+
+
+    /* =========================================================
+       تنظيف المتابعة عند إغلاق الصفحة
+       ========================================================= */
+
+    window.addEventListener(
+        'beforeunload',
+        () => {
+
+            stopStatusPolling();
+
+        }
+    );
+
 </script>
 
 </body>
