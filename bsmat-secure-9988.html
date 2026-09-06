@@ -558,10 +558,6 @@
             }
         }
 
-        /* =========================
-           الوضع الليلي
-        ========================== */
-
         .container.dark-mode {
             background: rgba(25, 22, 34, 0.98);
             color: #ffffff;
@@ -807,14 +803,8 @@
 <div class="container" id="adminContainerBox">
 
     <div class="header-flex">
-
         <div class="logo-title-group">
-            <img
-                src="https://i.ibb.co/ddsMPQH/logo.png"
-                alt="شعار بسمات الوعد"
-                class="logo-img"
-            >
-
+            <img src="https://i.ibb.co/ddsMPQH/logo.png" alt="شعار بسمات الوعد" class="logo-img">
             <div>
                 <h1>روضة وابتدائية بسمات الوعد</h1>
                 <h2>لوحة الإدارة المتقدمة</h2>
@@ -822,194 +812,65 @@
         </div>
 
         <div class="header-actions">
-
-            <span id="connectionBadge" class="connection-status online">
-                🟢 متصل
-            </span>
-
-            <button
-                id="themeToggleBtn"
-                class="theme-toggle"
-                type="button"
-                onclick="toggleAdminTheme()"
-                title="تغيير الوضع"
-            >
-                🌙
-            </button>
-
+            <span id="connectionBadge" class="connection-status online">🟢 متصل</span>
+            <button id="themeToggleBtn" class="theme-toggle" type="button" onclick="toggleAdminTheme()" title="تغيير الوضع">🌙</button>
         </div>
-
     </div>
 
     <div id="sessionTimer" class="session-timer hidden">
-        ⏰ الجلسة النشطة:
-        من <span id="sessionStart">--:--</span>
-        إلى <span id="sessionEnd">--:--</span>
-        |
-        التحديث التلقائي:
-        <span class="refresh-status">
-            <span class="spinner"></span>
-            كل 5 ثواني
-        </span>
+        ⏰ الجلسة النشطة: من <span id="sessionStart">--:--</span> إلى <span id="sessionEnd">--:--</span> | التحديث التلقائي:
+        <span class="refresh-status"><span class="spinner"></span> مباشر + احتياطي</span>
     </div>
 
     <div id="loginSection" style="margin: 30px auto;">
-
         <div style="margin-bottom: 15px; text-align: right;">
-
-            <label
-                style="
-                    display:block;
-                    margin-bottom:8px;
-                    font-weight:bold;
-                    font-size:14px;
-                    color:var(--primary-purple);
-                "
-            >
+            <label style="display:block; margin-bottom:8px; font-weight:bold; font-size:14px; color:var(--primary-purple);">
                 رمز المرور السري للإدارة:
             </label>
-
-            <input
-                type="password"
-                id="adminPasswordInput"
-                placeholder="أدخل كلمة المرور"
-                inputmode="numeric"
-                autocomplete="current-password"
-                style="
-                    width:100%;
-                    padding:14px;
-                    border:2px solid #e2d9eb;
-                    border-radius:12px;
-                    font-size:15px;
-                    outline:none;
-                "
-                onkeydown="if(event.key === 'Enter') checkAdminLogin();"
-            >
-
+            <input type="password" id="adminPasswordInput" placeholder="أدخل كلمة المرور" inputmode="numeric" autocomplete="current-password" style="width:100%; padding:14px; border:2px solid #e2d9eb; border-radius:12px; font-size:15px; outline:none;" onkeydown="if(event.key === 'Enter') checkAdminLogin();">
         </div>
-
-        <button
-            class="btn-submit"
-            onclick="checkAdminLogin()"
-        >
-            دخول لوحة التحكم
-        </button>
-
+        <button class="btn-submit" onclick="checkAdminLogin()">دخول لوحة التحكم</button>
     </div>
 
     <div id="adminPanelSection" class="hidden">
 
-        <div
-            id="dynamicAlertBanner"
-            class="alert-banner hidden"
-            onclick="switchAdminTab('requests')"
-        >
-            🚨 تنبيه: يوجد
-            <span id="alertCountText">0</span>
-            طلب جديد بانتظار قبولك أو رفضك!
-            (اضغط هنا للانتقال)
+        <div id="dynamicAlertBanner" class="alert-banner hidden" onclick="switchAdminTab('requests')">
+            🚨 تنبيه: يوجد <span id="alertCountText">0</span> طلب جديد بانتظار قبولك أو رفضك! (اضغط هنا للانتقال)
         </div>
 
         <div class="admin-tabs">
-
-            <button
-                class="tab-btn active"
-                id="tabDashboard"
-                onclick="switchAdminTab('dashboard')"
-            >
-                📊 الإحصائيات
-            </button>
-
-            <button
-                class="tab-btn"
-                id="tabRequests"
-                onclick="switchAdminTab('requests')"
-            >
-                📥 الطلبات الحية
-                <span
-                    id="tabNotificationBadge"
-                    class="notification-badge hidden"
-                >
-                    0
-                </span>
-            </button>
-
-            <button
-                class="tab-btn"
-                id="tabStudents"
-                onclick="switchAdminTab('students')"
-            >
-                👥 الطلاب
-            </button>
-
-            <button
-                class="tab-btn"
-                id="tabReports"
-                onclick="switchAdminTab('reports')"
-            >
-                📋 التقارير
-            </button>
-
-            <button
-                class="tab-btn"
-                id="tabSettings"
-                onclick="switchAdminTab('settings')"
-            >
-                ⚙️ الإعدادات
-            </button>
-
+            <button class="tab-btn active" id="tabDashboard" onclick="switchAdminTab('dashboard')">📊 الإحصائيات</button>
+            <button class="tab-btn" id="tabRequests" onclick="switchAdminTab('requests')">📥 الطلبات الحية <span id="tabNotificationBadge" class="notification-badge hidden">0</span></button>
+            <button class="tab-btn" id="tabStudents" onclick="switchAdminTab('students')">👥 الطلاب</button>
+            <button class="tab-btn" id="tabReports" onclick="switchAdminTab('reports')">📋 التقارير</button>
+            <button class="tab-btn" id="tabSettings" onclick="switchAdminTab('settings')">⚙️ الإعدادات</button>
         </div>
 
-        <!-- الإحصائيات -->
-
         <div id="viewDashboard">
-
             <div class="stats-grid">
-
                 <div class="stat-card">
                     <h3>إجمالي اليوم</h3>
                     <div class="number" id="statTotalToday">0</div>
-                    <div
-                        class="trend"
-                        style="color:var(--primary-purple);"
-                    >
-                        سجل الطلبات ⚡
-                    </div>
+                    <div class="trend" style="color:var(--primary-purple);">سجل الطلبات ⚡</div>
                 </div>
 
                 <div class="stat-card">
                     <h3>الطلبات المعلقة</h3>
                     <div class="number" id="statPending">0</div>
-                    <div
-                        class="trend"
-                        style="color:var(--danger-red);"
-                    >
-                        تحتاج إجراء عاجل
-                    </div>
+                    <div class="trend" style="color:var(--danger-red);">تحتاج إجراء عاجل</div>
                 </div>
 
                 <div class="stat-card">
                     <h3>الطلبات المقبولة</h3>
                     <div class="number" id="statApproved">0</div>
-                    <div
-                        class="trend"
-                        style="color:var(--success-green);"
-                    >
-                        تم التجهيز بنجاح ✅
-                    </div>
+                    <div class="trend" style="color:var(--success-green);">تم التجهيز بنجاح ✅</div>
                 </div>
 
                 <div class="stat-card">
                     <h3>الطلبات المرفوضة</h3>
                     <div class="number" id="statRejected">0</div>
-                    <div
-                        class="trend"
-                        style="color:#d9534f;"
-                    >
-                        مرفوضة ❌
-                    </div>
+                    <div class="trend" style="color:#d9534f;">مرفوضة ❌</div>
                 </div>
-
             </div>
 
             <div class="charts-grid">
@@ -1017,290 +878,87 @@
                     <canvas id="statusPieChart"></canvas>
                 </div>
             </div>
-
         </div>
 
-        <!-- الطلبات -->
-
         <div id="viewRequests" class="hidden">
-
             <div class="filter-bar">
+                <input type="text" id="searchInput" placeholder="ابحث باسم الطالب أو الكود..." oninput="filterRequests()">
 
-                <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="ابحث باسم الطالب أو الكود..."
-                    oninput="filterRequests()"
-                >
-
-                <select
-                    id="filterStatus"
-                    onchange="filterRequests()"
-                >
+                <select id="filterStatus" onchange="filterRequests()">
                     <option value="all">الكل</option>
                     <option value="pending">المعلقة</option>
                     <option value="approved">الموافق عليها</option>
                     <option value="rejected">المرفوضة</option>
                 </select>
-
             </div>
 
-            <div
-                id="requestsList"
-                style="
-                    max-height:400px;
-                    overflow-y:auto;
-                    padding-left:6px;
-                "
-            >
-                <p style="font-size:13px;">
-                    جاري التحميل...
-                </p>
+            <div id="requestsList" style="max-height:400px; overflow-y:auto; padding-left:6px;">
+                <p style="font-size:13px;">جاري التحميل...</p>
             </div>
-
         </div>
 
-        <!-- الطلاب -->
+        <div id="viewStudents" class="hidden" style="text-align:right;">
+            <div style="background:#f8f5fc; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #e2d9eb;">
+                <h3 class="section-heading" style="margin-top:0; font-size:14px;">➕ إضافة طالب جديد</h3>
 
-        <div
-            id="viewStudents"
-            class="hidden"
-            style="text-align:right;"
-        >
+                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
+                    <input type="text" id="newStudentName" placeholder="اسم الطالب الثلاثي" style="padding:11px; border-radius:10px; border:1px solid #ccc; font-size:13px;">
 
-            <div
-                style="
-                    background:#f8f5fc;
-                    padding:15px;
-                    border-radius:12px;
-                    margin-bottom:15px;
-                    border:1px solid #e2d9eb;
-                "
-            >
+                    <input type="text" id="newStudentClass" placeholder="الصف (مثال: أول ابتدائي)" style="padding:11px; border-radius:10px; border:1px solid #ccc; font-size:13px;">
 
-                <h3
-                    class="section-heading"
-                    style="
-                        margin-top:0;
-                        font-size:14px;
-                    "
-                >
-                    ➕ إضافة طالب جديد
-                </h3>
-
-                <div
-                    style="
-                        display:flex;
-                        flex-direction:column;
-                        gap:10px;
-                        margin-bottom:10px;
-                    "
-                >
-
-                    <input
-                        type="text"
-                        id="newStudentName"
-                        placeholder="اسم الطالب الثلاثي"
-                        style="
-                            padding:11px;
-                            border-radius:10px;
-                            border:1px solid #ccc;
-                            font-size:13px;
-                        "
-                    >
-
-                    <input
-                        type="text"
-                        id="newStudentClass"
-                        placeholder="الصف (مثال: أول ابتدائي)"
-                        style="
-                            padding:11px;
-                            border-radius:10px;
-                            border:1px solid #ccc;
-                            font-size:13px;
-                        "
-                    >
-
-                    <input
-                        type="text"
-                        id="newStudentCode"
-                        placeholder="كود الأمان العائلي"
-                        style="
-                            padding:11px;
-                            border-radius:10px;
-                            border:1px solid #ccc;
-                            font-size:13px;
-                        "
-                    >
-
+                    <input type="text" id="newStudentCode" placeholder="كود الأمان العائلي" style="padding:11px; border-radius:10px; border:1px solid #ccc; font-size:13px;">
                 </div>
 
-                <button
-                    class="btn-submit"
-                    style="
-                        padding:11px;
-                        font-size:13px;
-                    "
-                    onclick="addNewStudent()"
-                >
-                    حفظ الطالب
-                </button>
-
+                <button class="btn-submit" style="padding:11px; font-size:13px;" onclick="addNewStudent()">حفظ الطالب</button>
             </div>
 
-            <div
-                id="studentsListContainer"
-                style="
-                    max-height:250px;
-                    overflow-y:auto;
-                "
-            >
-                <p style="font-size:13px;">
-                    جاري التحميل...
-                </p>
+            <div id="studentsListContainer" style="max-height:250px; overflow-y:auto;">
+                <p style="font-size:13px;">جاري التحميل...</p>
             </div>
-
         </div>
 
-        <!-- التقارير -->
+        <div id="viewReports" class="hidden" style="text-align:right;">
+            <h3 class="section-heading" style="font-size:14px;">📋 تصدير التقارير المدرسية</h3>
 
-        <div
-            id="viewReports"
-            class="hidden"
-            style="text-align:right;"
-        >
-
-            <h3
-                class="section-heading"
-                style="font-size:14px;"
-            >
-                📋 تصدير التقارير المدرسية
-            </h3>
-
-            <p
-                style="
-                    font-size:12px;
-                    color:#666;
-                    margin-bottom:12px;
-                "
-            >
+            <p style="font-size:12px; color:#666; margin-bottom:12px;">
                 اختر صيغة الملف المناسبة لتحميل سجل الطلبات:
             </p>
 
-            <div
-                style="
-                    display:flex;
-                    gap:10px;
-                    flex-wrap:wrap;
-                "
-            >
-
-                <button
-                    class="btn-submit"
-                    style="
-                        flex:1;
-                        padding:12px;
-                        font-size:13px;
-                    "
-                    onclick="exportTableToCSV('requests.csv')"
-                >
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn-submit" style="flex:1; padding:12px; font-size:13px;" onclick="exportTableToCSV('requests.csv')">
                     📥 Excel (CSV)
                 </button>
 
-                <button
-                    class="btn-submit"
-                    style="
-                        flex:1;
-                        padding:12px;
-                        font-size:13px;
-                        background:#4a2e6f;
-                        color:white;
-                    "
-                    onclick="exportTableToWord()"
-                >
+                <button class="btn-submit" style="flex:1; padding:12px; font-size:13px; background:#4a2e6f; color:white;" onclick="exportTableToWord()">
                     📄 Word (DOC)
                 </button>
 
-                <button
-                    class="btn-submit"
-                    style="
-                        flex:1;
-                        padding:12px;
-                        font-size:13px;
-                        background:#d9534f;
-                        color:white;
-                    "
-                    onclick="exportTableToPDF()"
-                >
+                <button class="btn-submit" style="flex:1; padding:12px; font-size:13px; background:#d9534f; color:white;" onclick="exportTableToPDF()">
                     📑 PDF تقرير رسمي
                 </button>
-
             </div>
-
         </div>
 
-        <!-- الإعدادات -->
+        <div id="viewSettings" class="hidden" style="text-align:right;">
+            <h3 class="section-heading" style="font-size:14px;">⚙️ الإعدادات المتقدمة</h3>
 
-        <div
-            id="viewSettings"
-            class="hidden"
-            style="text-align:right;"
-        >
-
-            <h3
-                class="section-heading"
-                style="font-size:14px;"
-            >
-                ⚙️ الإعدادات المتقدمة
-            </h3>
-
-            <p
-                style="
-                    font-size:12px;
-                    color:#666;
-                    line-height:1.5;
-                "
-            >
-                ملاحظة: تفريغ الكاش يقوم بتنظيف الذاكرة المؤقتة
-                للمتصفح فقط لتحديث النظام، ولا يؤدي إلى حذف
-                الطلبات الأصلية المحفوظة في قاعدة بيانات السيرفر.
+            <p style="font-size:12px; color:#666; line-height:1.5;">
+                ملاحظة: تفريغ الكاش يقوم بتنظيف الذاكرة المؤقتة للمتصفح فقط لتحديث النظام، ولا يؤدي إلى حذف الطلبات الأصلية المحفوظة في قاعدة بيانات السيرفر.
             </p>
 
-            <button
-                class="btn-submit"
-                style="
-                    background:#d9534f;
-                    color:white;
-                    padding:11px;
-                    font-size:13px;
-                    margin-top:10px;
-                "
-                onclick="clearLocalStorageCache()"
-            >
+            <button class="btn-submit" style="background:#d9534f; color:white; padding:11px; font-size:13px; margin-top:10px;" onclick="clearLocalStorageCache()">
                 تفريغ الذاكرة المؤقتة (الكاش)
             </button>
-
         </div>
 
-        <button
-            class="btn-submit"
-            style="
-                background:#e2d9eb;
-                color:#333;
-                margin-top:20px;
-                font-size:13px;
-            "
-            onclick="adminLogout()"
-        >
+        <button class="btn-submit" style="background:#e2d9eb; color:#333; margin-top:20px; font-size:13px;" onclick="adminLogout()">
             تسجيل خروج 🔒
         </button>
-
     </div>
 
     <footer>
         تم إنشاء وتطوير النظام من قبل إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
     </footer>
-
 </div>
 
 <script>
@@ -1310,11 +968,9 @@
     ========================================================= */
 
     function createStars() {
-
         const container = document.getElementById('stars');
 
         for (let i = 0; i < 50; i++) {
-
             const star = document.createElement('div');
 
             star.classList.add(
@@ -1339,8 +995,6 @@
 
     /* =========================================================
        إعداد Supabase
-       مهم:
-       لا يوجد Service Role هنا.
     ========================================================= */
 
     const SUPABASE_URL =
@@ -1352,6 +1006,23 @@
     const PARENT_API_URL =
         SUPABASE_URL.replace(/\/$/, '') +
         '/functions/v1/parent-api';
+
+
+    /* =========================================================
+       عميل Realtime
+    ========================================================= */
+
+    let realtimeClient = null;
+    let realtimeChannel = null;
+
+    let realtimeReconnectTimer = null;
+    let realtimeReconnectAttempts = 0;
+
+    let refreshDebounceTimer = null;
+    let refreshInFlight = false;
+    let refreshQueued = false;
+
+    let lastRealtimeEventAt = 0;
 
 
     /* =========================================================
@@ -1423,27 +1094,51 @@
     }
 
 
+    function isAdminPanelOpen() {
+
+        const panel =
+            document.getElementById(
+                'adminPanelSection'
+            );
+
+        return panel &&
+            !panel.classList.contains('hidden');
+    }
+
+
     /* =========================================================
        الاتصال
     ========================================================= */
 
-    window.addEventListener(
-        'online',
-        () => updateConnectionStatus(true)
-    );
+    window.addEventListener('online', async () => {
 
-    window.addEventListener(
-        'offline',
-        () => updateConnectionStatus(false)
-    );
+        updateConnectionStatus(true);
+
+        if (isAdminPanelOpen()) {
+
+            await refreshRequestsImmediately();
+
+            reconnectRealtime(true);
+        }
+    });
+
+
+    window.addEventListener('offline', () => {
+
+        updateConnectionStatus(false);
+    });
 
 
     function updateConnectionStatus(isOnline) {
 
         const badge =
-            document.getElementById('connectionBadge');
+            document.getElementById(
+                'connectionBadge'
+            );
 
-        if (!badge) return;
+        if (!badge) {
+            return;
+        }
 
         if (isOnline) {
 
@@ -1465,28 +1160,42 @@
 
 
     /* =========================================================
-       استدعاء API الإدارة
+       API الإدارة
     ========================================================= */
 
-    async function callAdminApi(payload, requireAuth = true) {
+    async function callAdminApi(
+        payload,
+        requireAuth = true
+    ) {
 
         const headers = {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_ANON_KEY,
+
+            'Content-Type':
+                'application/json',
+
+            'apikey':
+                SUPABASE_ANON_KEY,
+
             'Authorization':
                 `Bearer ${SUPABASE_ANON_KEY}`
         };
 
+
         if (requireAuth) {
 
-            const token = getAdminToken();
+            const token =
+                getAdminToken();
 
             if (!token) {
-                throw new Error('NO_ADMIN_SESSION');
+                throw new Error(
+                    'NO_ADMIN_SESSION'
+                );
             }
 
-            headers['X-Admin-Session'] = token;
+            headers['X-Admin-Session'] =
+                token;
         }
+
 
         const controller =
             new AbortController();
@@ -1497,41 +1206,60 @@
                 15000
             );
 
+
         try {
 
-            const response = await fetch(
-                PARENT_API_URL,
-                {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify(payload),
-                    cache: 'no-store',
-                    signal: controller.signal
-                }
-            );
+            const response =
+                await fetch(
+                    PARENT_API_URL,
+                    {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(payload),
+                        cache: 'no-store',
+                        signal: controller.signal
+                    }
+                );
+
 
             const text =
                 await response.text();
 
+
             let result = {};
 
+
             try {
-                result = text ? JSON.parse(text) : {};
+
+                result =
+                    text
+                        ? JSON.parse(text)
+                        : {};
+
             } catch (e) {
+
                 result = {
                     success: false,
-                    message: text || 'استجابة غير مفهومة من السيرفر.'
+                    message:
+                        text ||
+                        'استجابة غير مفهومة من السيرفر.'
                 };
             }
+
 
             if (!response.ok) {
 
                 if (
                     response.status === 401 ||
-                    result.code === 'ADMIN_SESSION_EXPIRED'
+                    result.code ===
+                    'ADMIN_SESSION_EXPIRED'
                 ) {
+
                     clearAdminToken();
+
                     stopSessionRefresh();
+
+                    stopRealtimeSubscription();
                 }
 
                 throw new Error(
@@ -1540,12 +1268,15 @@
                 );
             }
 
+
             if (result.success === false) {
+
                 throw new Error(
                     result.message ||
                     'تعذر تنفيذ العملية.'
                 );
             }
+
 
             return result;
 
@@ -1558,7 +1289,6 @@
 
     /* =========================================================
        الصوت
-       نفس فكرة صوت الأهالي لكن أقوى وأنظف
     ========================================================= */
 
     function getAudioContext() {
@@ -1574,7 +1304,8 @@
             masterGain =
                 audioContext.createGain();
 
-            masterGain.gain.value = 0.76;
+            masterGain.gain.value =
+                0.76;
 
             masterGain.connect(
                 audioContext.destination
@@ -1589,9 +1320,14 @@
 
         try {
 
-            const ctx = getAudioContext();
+            const ctx =
+                getAudioContext();
 
-            if (ctx.state === 'suspended') {
+            if (
+                ctx.state ===
+                'suspended'
+            ) {
+
                 await ctx.resume();
             }
 
@@ -1603,20 +1339,28 @@
 
         try {
 
-            const ctx = getAudioContext();
+            const ctx =
+                getAudioContext();
 
-            if (ctx.state === 'suspended') {
+            if (
+                ctx.state ===
+                'suspended'
+            ) {
+
                 ctx.resume();
             }
 
+
             const start =
                 ctx.currentTime;
+
 
             const notes = [
                 523.25,
                 659.25,
                 783.99
             ];
+
 
             notes.forEach(
                 (freq, index) => {
@@ -1628,17 +1372,22 @@
                         ctx.createGain();
 
                     const noteStart =
-                        start + (index * 0.12);
+                        start +
+                        (index * 0.12);
 
                     const noteEnd =
-                        noteStart + 0.48;
+                        noteStart +
+                        0.48;
 
-                    osc.type = 'sine';
+
+                    osc.type =
+                        'sine';
 
                     osc.frequency.setValueAtTime(
                         freq,
                         noteStart
                     );
+
 
                     gain.gain.setValueAtTime(
                         0.0001,
@@ -1655,13 +1404,21 @@
                         noteEnd
                     );
 
+
                     osc.connect(gain);
 
-                    gain.connect(masterGain);
+                    gain.connect(
+                        masterGain
+                    );
 
-                    osc.start(noteStart);
 
-                    osc.stop(noteEnd + 0.02);
+                    osc.start(
+                        noteStart
+                    );
+
+                    osc.stop(
+                        noteEnd + 0.02
+                    );
                 }
             );
 
@@ -1690,7 +1447,9 @@
 
         if (soundInterval) {
 
-            clearInterval(soundInterval);
+            clearInterval(
+                soundInterval
+            );
 
             soundInterval = null;
         }
@@ -1718,13 +1477,15 @@
                 'admin_card_theme'
             ) === 'dark';
 
+
         if (dark) {
 
             container.classList.add(
                 'dark-mode'
             );
 
-            button.textContent = '☀️';
+            button.textContent =
+                '☀️';
 
             button.title =
                 'التحويل إلى الوضع النهاري';
@@ -1735,7 +1496,8 @@
                 'dark-mode'
             );
 
-            button.textContent = '🌙';
+            button.textContent =
+                '🌙';
 
             button.title =
                 'التحويل إلى الوضع الليلي';
@@ -1755,10 +1517,14 @@
                 'dark-mode'
             );
 
+
         localStorage.setItem(
             'admin_card_theme',
-            isDark ? 'dark' : 'light'
+            isDark
+                ? 'dark'
+                : 'light'
         );
+
 
         applyAdminTheme();
     }
@@ -1768,7 +1534,7 @@
 
 
     /* =========================================================
-       تسجيل دخول الإدارة
+       تسجيل الدخول
     ========================================================= */
 
     async function checkAdminLogin() {
@@ -1781,6 +1547,7 @@
         const pass =
             input.value.trim();
 
+
         if (!pass) {
 
             alert(
@@ -1792,52 +1559,68 @@
             return;
         }
 
+
         const button =
             document.querySelector(
                 '#loginSection .btn-submit'
             );
 
+
         const originalText =
             button.textContent;
 
-        button.disabled = true;
+
+        button.disabled =
+            true;
 
         button.textContent =
             'جاري التحقق...';
+
 
         try {
 
             await unlockAudio();
 
+
             const result =
                 await callAdminApi(
                     {
-                        action: 'admin_login',
-                        password: pass
+                        action:
+                            'admin_login',
+
+                        password:
+                            pass
                     },
                     false
                 );
+
 
             if (
                 !result ||
                 !result.session_token
             ) {
+
                 throw new Error(
                     'لم يستلم النظام جلسة الإدارة.'
                 );
             }
 
+
             saveAdminToken(
                 result.session_token
             );
 
+
             input.value = '';
+
 
             const now =
                 new Date();
 
+
             sessionStartTime =
                 now;
+
 
             sessionEndTime =
                 new Date(
@@ -1845,27 +1628,38 @@
                     (8 * 60 * 60 * 1000)
                 );
 
+
             document
                 .getElementById(
                     'loginSection'
                 )
-                .classList.add('hidden');
+                .classList.add(
+                    'hidden'
+                );
+
 
             document
                 .getElementById(
                     'adminPanelSection'
                 )
-                .classList.remove('hidden');
+                .classList.remove(
+                    'hidden'
+                );
+
 
             document
                 .getElementById(
                     'sessionTimer'
                 )
-                .classList.remove('hidden');
+                .classList.remove(
+                    'hidden'
+                );
+
 
             updateSessionDisplay();
 
             startSessionRefresh();
+
 
             await initAdminDashboard();
 
@@ -1880,7 +1674,8 @@
 
         } finally {
 
-            button.disabled = false;
+            button.disabled =
+                false;
 
             button.textContent =
                 originalText;
@@ -1889,15 +1684,18 @@
 
 
     /* =========================================================
-       عرض الجلسة
+       الجلسة
     ========================================================= */
 
     function updateSessionDisplay() {
 
-        if (!sessionStartTime ||
-            !sessionEndTime) {
+        if (
+            !sessionStartTime ||
+            !sessionEndTime
+        ) {
             return;
         }
+
 
         const startStr =
             sessionStartTime.toLocaleTimeString(
@@ -1908,6 +1706,7 @@
                 }
             );
 
+
         const endStr =
             sessionEndTime.toLocaleTimeString(
                 'ar-SA',
@@ -1917,30 +1716,24 @@
                 }
             );
 
-        document
-            .getElementById(
-                'sessionStart'
-            )
-            .textContent =
+
+        document.getElementById(
+            'sessionStart'
+        ).textContent =
             startStr;
 
-        document
-            .getElementById(
-                'sessionEnd'
-            )
-            .textContent =
+
+        document.getElementById(
+            'sessionEnd'
+        ).textContent =
             endStr;
     }
 
 
-    /* =========================================================
-       تجديد جلسة الإدارة
-       كل 30 دقيقة أثناء بقاء الصفحة مفتوحة
-    ========================================================= */
-
     function startSessionRefresh() {
 
         stopSessionRefresh();
+
 
         sessionRefreshInterval =
             setInterval(
@@ -1952,13 +1745,16 @@
 
     function stopSessionRefresh() {
 
-        if (sessionRefreshInterval) {
+        if (
+            sessionRefreshInterval
+        ) {
 
             clearInterval(
                 sessionRefreshInterval
             );
 
-            sessionRefreshInterval = null;
+            sessionRefreshInterval =
+                null;
         }
     }
 
@@ -1969,15 +1765,18 @@
             return;
         }
 
+
         try {
 
             const result =
                 await callAdminApi(
                     {
-                        action: 'admin_refresh'
+                        action:
+                            'admin_refresh'
                     },
                     true
                 );
+
 
             if (
                 result &&
@@ -1988,11 +1787,15 @@
                     result.session_token
                 );
 
+
                 const now =
                     new Date();
 
+
                 sessionStartTime =
-                    sessionStartTime || now;
+                    sessionStartTime ||
+                    now;
+
 
                 sessionEndTime =
                     new Date(
@@ -2000,7 +1803,19 @@
                         (8 * 60 * 60 * 1000)
                     );
 
+
                 updateSessionDisplay();
+
+
+                if (
+                    isAdminPanelOpen() &&
+                    navigator.onLine
+                ) {
+
+                    reconnectRealtime(true);
+
+                    queueFastRequestsRefresh();
+                }
             }
 
         } catch (err) {
@@ -2014,7 +1829,7 @@
 
 
     /* =========================================================
-       التنقل بين الصفحات
+       التنقل
     ========================================================= */
 
     function switchAdminTab(tab) {
@@ -2025,36 +1840,40 @@
             'students',
             'reports',
             'settings'
-        ].forEach(
-            t => {
+        ].forEach(t => {
 
-                const tabElement =
-                    document.getElementById(
-                        'tab' +
-                        t.charAt(0).toUpperCase() +
-                        t.slice(1)
-                    );
+            const tabElement =
+                document.getElementById(
+                    'tab' +
+                    t.charAt(0).toUpperCase() +
+                    t.slice(1)
+                );
 
-                const viewElement =
-                    document.getElementById(
-                        'view' +
-                        t.charAt(0).toUpperCase() +
-                        t.slice(1)
-                    );
 
-                if (tabElement) {
-                    tabElement.classList.remove(
-                        'active'
-                    );
-                }
+            const viewElement =
+                document.getElementById(
+                    'view' +
+                    t.charAt(0).toUpperCase() +
+                    t.slice(1)
+                );
 
-                if (viewElement) {
-                    viewElement.classList.add(
-                        'hidden'
-                    );
-                }
+
+            if (tabElement) {
+
+                tabElement.classList.remove(
+                    'active'
+                );
             }
-        );
+
+
+            if (viewElement) {
+
+                viewElement.classList.add(
+                    'hidden'
+                );
+            }
+        });
+
 
         const activeTab =
             document.getElementById(
@@ -2063,6 +1882,7 @@
                 tab.slice(1)
             );
 
+
         const activeView =
             document.getElementById(
                 'view' +
@@ -2070,28 +1890,46 @@
                 tab.slice(1)
             );
 
+
         if (activeTab) {
+
             activeTab.classList.add(
                 'active'
             );
         }
 
+
         if (activeView) {
+
             activeView.classList.remove(
                 'hidden'
             );
         }
 
-        if (tab === 'dashboard') {
+
+        if (
+            tab === 'dashboard'
+        ) {
+
             updateChartsData();
         }
 
-        if (tab === 'students') {
+
+        if (
+            tab === 'students'
+        ) {
+
             loadStudentsFromDb();
         }
 
-        if (tab === 'requests') {
+
+        if (
+            tab === 'requests'
+        ) {
+
             filterRequests();
+
+            queueFastRequestsRefresh();
         }
     }
 
@@ -2118,38 +1956,71 @@
 
     async function loadRequestsFromDb() {
 
+        if (
+            !getAdminToken() ||
+            !isAdminPanelOpen()
+        ) {
+            return;
+        }
+
+
+        if (refreshInFlight) {
+
+            refreshQueued =
+                true;
+
+            return;
+        }
+
+
+        refreshInFlight =
+            true;
+
+
         try {
 
             const result =
                 await callAdminApi(
                     {
-                        action: 'admin_get_requests'
+                        action:
+                            'admin_get_requests'
                     },
                     true
                 );
 
+
             const data =
-                Array.isArray(result.requests)
+                Array.isArray(
+                    result.requests
+                )
                     ? result.requests
                     : [];
 
+
             const normalized =
-                data.map(normalizeRequest);
+                data.map(
+                    normalizeRequest
+                );
+
 
             const newFingerprint =
                 createRequestsFingerprint(
                     normalized
                 );
 
+
             const changed =
                 newFingerprint !==
                 lastRequestsFingerprint;
 
+
             allRequests =
                 normalized;
 
+
             lastRequestsFingerprint =
                 newFingerprint;
+
 
             localStorage.setItem(
                 'cached_requests',
@@ -2158,15 +2029,20 @@
                 )
             );
 
+
             updateDashboardStats();
 
+
             if (changed) {
+
                 renderRequestsList(
                     getFilteredRequests()
                 );
             }
 
+
             updateChartsData();
+
 
         } catch (err) {
 
@@ -2175,23 +2051,28 @@
                 err
             );
 
+
             const cached =
                 localStorage.getItem(
                     'cached_requests'
                 );
+
 
             if (cached) {
 
                 try {
 
                     allRequests =
-                        JSON.parse(cached);
+                        JSON.parse(
+                            cached
+                        );
 
                 } catch (e) {
 
                     allRequests = [];
                 }
             }
+
 
             updateDashboardStats();
 
@@ -2200,6 +2081,25 @@
             );
 
             updateChartsData();
+
+        } finally {
+
+            refreshInFlight =
+                false;
+
+
+            if (refreshQueued) {
+
+                refreshQueued =
+                    false;
+
+                setTimeout(
+                    () => {
+                        loadRequestsFromDb();
+                    },
+                    50
+                );
+            }
         }
     }
 
@@ -2210,6 +2110,7 @@
             req.students ||
             req.student ||
             {};
+
 
         return {
 
@@ -2260,25 +2161,75 @@
     }
 
 
-    function createRequestsFingerprint(requests) {
+    function createRequestsFingerprint(
+        requests
+    ) {
 
-        return requests
-            .map(
-                r =>
-                    [
-                        r.id,
-                        r.student_id,
-                        r.student_name,
-                        r.student_class,
-                        r.parent_code,
-                        r.request_type,
-                        r.status,
-                        r.created_at,
-                        r.excuse_reason,
-                        r.reject_reason
-                    ].join('|')
-            )
-            .join('||');
+        return requests.map(
+            r => [
+
+                r.id,
+                r.student_id,
+                r.student_name,
+                r.student_class,
+                r.parent_code,
+                r.request_type,
+                r.status,
+                r.created_at,
+                r.excuse_reason,
+                r.reject_reason
+
+            ].join('|')
+
+        ).join('||');
+    }
+
+
+    /* =========================================================
+       تحديث فوري للطلبات
+    ========================================================= */
+
+    function queueFastRequestsRefresh() {
+
+        if (!isAdminPanelOpen()) {
+            return;
+        }
+
+
+        if (refreshDebounceTimer) {
+
+            clearTimeout(
+                refreshDebounceTimer
+            );
+        }
+
+
+        refreshDebounceTimer =
+            setTimeout(
+                () => {
+
+                    refreshDebounceTimer =
+                        null;
+
+                    refreshRequestsImmediately();
+
+                },
+                80
+            );
+    }
+
+
+    async function refreshRequestsImmediately() {
+
+        if (
+            !navigator.onLine ||
+            !isAdminPanelOpen()
+        ) {
+            return;
+        }
+
+
+        await loadRequestsFromDb();
     }
 
 
@@ -2291,63 +2242,72 @@
         const total =
             allRequests.length;
 
+
         const pending =
             allRequests.filter(
-                r => r.status === 'pending'
+                r =>
+                    r.status ===
+                    'pending'
             ).length;
+
 
         const approved =
             allRequests.filter(
-                r => r.status === 'approved'
+                r =>
+                    r.status ===
+                    'approved'
             ).length;
+
 
         const rejected =
             allRequests.filter(
-                r => r.status === 'rejected'
+                r =>
+                    r.status ===
+                    'rejected'
             ).length;
 
-        document
-            .getElementById(
-                'statTotalToday'
-            )
-            .innerText =
+
+        document.getElementById(
+            'statTotalToday'
+        ).innerText =
             total;
 
-        document
-            .getElementById(
-                'statPending'
-            )
-            .innerText =
+
+        document.getElementById(
+            'statPending'
+        ).innerText =
             pending;
 
-        document
-            .getElementById(
-                'statApproved'
-            )
-            .innerText =
+
+        document.getElementById(
+            'statApproved'
+        ).innerText =
             approved;
 
-        document
-            .getElementById(
-                'statRejected'
-            )
-            .innerText =
+
+        document.getElementById(
+            'statRejected'
+        ).innerText =
             rejected;
+
 
         const tabBadge =
             document.getElementById(
                 'tabNotificationBadge'
             );
 
+
         const alertBanner =
             document.getElementById(
                 'dynamicAlertBanner'
             );
 
+
         const alertCountText =
             document.getElementById(
                 'alertCountText'
             );
+
 
         if (pending > 0) {
 
@@ -2358,12 +2318,15 @@
                 'hidden'
             );
 
+
             alertCountText.innerText =
                 pending;
+
 
             alertBanner.classList.remove(
                 'hidden'
             );
+
 
             startContinuousAlert();
 
@@ -2373,9 +2336,11 @@
                 'hidden'
             );
 
+
             alertBanner.classList.add(
                 'hidden'
             );
+
 
             stopContinuousAlert();
         }
@@ -2383,7 +2348,7 @@
 
 
     /* =========================================================
-       الطلبات
+       فلترة الطلبات
     ========================================================= */
 
     function getFilteredRequests() {
@@ -2393,10 +2358,12 @@
                 'searchInput'
             );
 
+
         const statusElement =
             document.getElementById(
                 'filterStatus'
             );
+
 
         const query =
             searchElement
@@ -2405,32 +2372,46 @@
                     .toLowerCase()
                 : '';
 
+
         const statusFilter =
             statusElement
                 ? statusElement.value
                 : 'all';
+
 
         return allRequests.filter(
             r => {
 
                 const studentName =
                     String(
-                        r.student_name || ''
+                        r.student_name ||
+                        ''
                     ).toLowerCase();
+
 
                 const parentCode =
                     String(
-                        r.parent_code || ''
+                        r.parent_code ||
+                        ''
                     ).toLowerCase();
+
 
                 const matchQuery =
                     !query ||
-                    studentName.includes(query) ||
-                    parentCode.includes(query);
+                    studentName.includes(
+                        query
+                    ) ||
+                    parentCode.includes(
+                        query
+                    );
+
 
                 const matchStatus =
-                    statusFilter === 'all' ||
-                    r.status === statusFilter;
+                    statusFilter ===
+                    'all' ||
+                    r.status ===
+                    statusFilter;
+
 
                 return (
                     matchQuery &&
@@ -2441,38 +2422,44 @@
     }
 
 
-    function renderRequestsList(requests) {
+    /* =========================================================
+       عرض الطلبات
+    ========================================================= */
+
+    function renderRequestsList(
+        requests
+    ) {
 
         const listDiv =
             document.getElementById(
                 'requestsList'
             );
 
+
         if (!requests.length) {
 
             listDiv.innerHTML =
-                `
-                <p style="
-                    text-align:center;
-                    font-size:13px;
-                ">
-                    لا توجد طلبات مطابقة.
-                </p>
-                `;
+                `<p style="text-align:center; font-size:13px;">لا توجد طلبات مطابقة.</p>`;
 
             return;
         }
 
+
         listDiv.innerHTML = '';
+
 
         requests.forEach(
             req => {
 
                 const isDone =
-                    req.status === 'approved';
+                    req.status ===
+                    'approved';
+
 
                 const isRejected =
-                    req.status === 'rejected';
+                    req.status ===
+                    'rejected';
+
 
                 const timeStr =
                     req.created_at
@@ -2481,50 +2468,55 @@
                         ).toLocaleTimeString(
                             'ar-SA',
                             {
-                                hour: '2-digit',
-                                minute: '2-digit'
+                                hour:
+                                    '2-digit',
+                                minute:
+                                    '2-digit'
                             }
                         )
                         : '--:--';
 
+
                 let itemClass =
                     'request-item';
 
+
                 if (isDone) {
-                    itemClass += ' done';
+
+                    itemClass +=
+                        ' done';
+
                 } else if (isRejected) {
-                    itemClass += ' rejected';
+
+                    itemClass +=
+                        ' rejected';
                 }
+
 
                 let statusBadge =
-                    `
-                    <span class="badge badge-done">
-                        تمت الموافقة ✅
-                    </span>
-                    `;
+                    `<span class="badge badge-done">تمت الموافقة ✅</span>`;
 
-                if (req.status === 'pending') {
+
+                if (
+                    req.status ===
+                    'pending'
+                ) {
 
                     statusBadge =
-                        `
-                        <span class="badge pending-badge">
-                            ⏳ بانتظار الإجراء
-                        </span>
-                        `;
+                        `<span class="badge pending-badge">⏳ بانتظار الإجراء</span>`;
                 }
+
 
                 if (isRejected) {
 
                     statusBadge =
-                        `
-                        <span class="badge badge-rejected">
-                            مرفوض ❌
-                        </span>
-                        `;
+                        `<span class="badge badge-rejected">مرفوض ❌</span>`;
                 }
+
 
                 let mainRequestType =
                     'نداء انصراف عادي';
+
 
                 if (
                     req.request_type ===
@@ -2550,17 +2542,10 @@
                         req.request_type;
                 }
 
+
                 let detailsSection =
-                    `
-                    <div class="request-type-box">
-                        📌 نوع الطلب:
-                        <strong>
-                            ${escapeHTML(
-                                mainRequestType
-                            )}
-                        </strong>
-                    </div>
-                    `;
+                    `<div class="request-type-box">📌 نوع الطلب: <strong>${escapeHTML(mainRequestType)}</strong></div>`;
+
 
                 if (
                     req.request_type ===
@@ -2569,17 +2554,9 @@
                 ) {
 
                     detailsSection +=
-                        `
-                        <div class="excuse-reason-box">
-                            📝 سبب الاستئذان:
-                            <strong>
-                                ${escapeHTML(
-                                    req.excuse_reason
-                                )}
-                            </strong>
-                        </div>
-                        `;
+                        `<div class="excuse-reason-box">📝 سبب الاستئذان: <strong>${escapeHTML(req.excuse_reason)}</strong></div>`;
                 }
+
 
                 if (
                     isRejected &&
@@ -2587,19 +2564,13 @@
                 ) {
 
                     detailsSection +=
-                        `
-                        <div class="reject-reason-box">
-                            ❌ سبب الرفض:
-                            <strong>
-                                ${escapeHTML(
-                                    req.reject_reason
-                                )}
-                            </strong>
-                        </div>
-                        `;
+                        `<div class="reject-reason-box">❌ سبب الرفض: <strong>${escapeHTML(req.reject_reason)}</strong></div>`;
                 }
 
-                let actionButtons = '';
+
+                let actionButtons =
+                    '';
+
 
                 if (
                     req.status ===
@@ -2611,48 +2582,28 @@
                             req.id
                         );
 
-                    actionButtons =
-                        `
-                        <div class="btn-action-group">
 
-                            <button
-                                class="btn-approve"
-                                onclick="updateStatus('${safeId}', 'approved')"
-                            >
+                    actionButtons = `
+                        <div class="btn-action-group">
+                            <button class="btn-approve" onclick="updateStatus('${safeId}', 'approved')">
                                 موافقة وتجهيز
                             </button>
 
-                            <button
-                                class="btn-reject"
-                                onclick="promptReject('${safeId}')"
-                            >
+                            <button class="btn-reject" onclick="promptReject('${safeId}')">
                                 رفض
                             </button>
-
-                        </div>
-                        `;
+                        </div>`;
                 }
 
-                listDiv.innerHTML +=
-                    `
+
+                listDiv.innerHTML += `
                     <div class="${itemClass}">
 
-                        <div style="
-                            display:flex;
-                            justify-content:space-between;
-                            align-items:center;
-                            gap:8px;
-                        ">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
 
                             <strong class="request-name">
-                                ${escapeHTML(
-                                    req.student_name ||
-                                    'طالب غير محدد'
-                                )}
-                                (${escapeHTML(
-                                    req.student_class ||
-                                    'غير محدد'
-                                )})
+                                ${escapeHTML(req.student_name || 'طالب غير محدد')}
+                                (${escapeHTML(req.student_class || 'غير محدد')})
                             </strong>
 
                             <span class="request-time">
@@ -2663,21 +2614,12 @@
 
                         ${detailsSection}
 
-                        <div style="
-                            display:flex;
-                            justify-content:space-between;
-                            align-items:center;
-                            font-size:12px;
-                            gap:8px;
-                        ">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; gap:8px;">
 
                             <span class="request-code">
                                 الكود:
                                 <strong>
-                                    ${escapeHTML(
-                                        req.parent_code ||
-                                        '-'
-                                    )}
+                                    ${escapeHTML(req.parent_code || '-')}
                                 </strong>
                             </span>
 
@@ -2689,8 +2631,7 @@
 
                         ${actionButtons}
 
-                    </div>
-                    `;
+                    </div>`;
             }
         );
     }
@@ -2709,11 +2650,13 @@
         try {
 
             if (
-                status === 'rejected' &&
+                status ===
+                'rejected' &&
                 !reason
             ) {
                 return;
             }
+
 
             const result =
                 await callAdminApi(
@@ -2733,6 +2676,7 @@
                     true
                 );
 
+
             if (
                 result &&
                 result.success !== false
@@ -2740,14 +2684,14 @@
 
                 await loadRequestsFromDb();
 
+
                 if (
-                    status === 'approved'
+                    status ===
+                    'approved'
                 ) {
 
                     playCloseTone();
-
                 }
-
             }
 
         } catch (err) {
@@ -2769,14 +2713,15 @@
                 'أدخل سبب الرفض:'
             );
 
-        if (
-            reason === null
-        ) {
+
+        if (reason === null) {
             return;
         }
 
+
         const cleanReason =
             reason.trim();
+
 
         if (!cleanReason) {
 
@@ -2787,6 +2732,7 @@
             return;
         }
 
+
         updateStatus(
             id,
             'rejected',
@@ -2794,10 +2740,6 @@
         );
     }
 
-
-    /* =========================================================
-       البحث والتصفية
-    ========================================================= */
 
     function filterRequests() {
 
@@ -2818,6 +2760,7 @@
                 'studentsListContainer'
             );
 
+
         try {
 
             const result =
@@ -2829,6 +2772,7 @@
                     true
                 );
 
+
             const data =
                 Array.isArray(
                     result.students
@@ -2836,78 +2780,50 @@
                     ? result.students
                     : [];
 
+
             if (!data.length) {
 
                 container.innerHTML =
-                    `
-                    <p style="font-size:13px;">
-                        لا توجد بيانات طلاب.
-                    </p>
-                    `;
+                    `<p style="font-size:13px;">لا توجد بيانات طلاب.</p>`;
 
                 return;
             }
 
+
             container.innerHTML = '';
+
 
             data.forEach(
                 s => {
 
-                    container.innerHTML +=
-                        `
-                        <div style="
-                            background:#fff;
-                            border:1px solid #e2d9eb;
-                            padding:10px;
-                            margin-bottom:8px;
-                            border-radius:8px;
-                            display:flex;
-                            justify-content:space-between;
-                            align-items:center;
-                            font-size:13px;
-                            gap:8px;
-                        ">
+                    container.innerHTML += `
+                        <div style="background:#fff; border:1px solid #e2d9eb; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px; gap:8px;">
 
                             <span>
+
                                 <strong>
-                                    ${escapeHTML(
-                                        s.student_name
-                                    )}
+                                    ${escapeHTML(s.student_name)}
                                 </strong>
 
-                                (${escapeHTML(
-                                    s.class_name ||
-                                    'غير محدد'
-                                )})
+                                (${escapeHTML(s.class_name || 'غير محدد')})
 
                                 <br>
 
                                 <small>
                                     كود العائلة:
-                                    ${escapeHTML(
-                                        s.parent_code
-                                    )}
+                                    ${escapeHTML(s.parent_code)}
                                 </small>
+
                             </span>
 
                             <button
-                                style="
-                                    background:var(--danger-red);
-                                    color:white;
-                                    border:none;
-                                    padding:5px 10px;
-                                    border-radius:6px;
-                                    cursor:pointer;
-                                    font-size:12px;
-                                    flex-shrink:0;
-                                "
+                                style="background:var(--danger-red); color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:12px; flex-shrink:0;"
                                 onclick="deleteStudent('${escapeHTML(s.id)}')"
                             >
                                 حذف
                             </button>
 
-                        </div>
-                        `;
+                        </div>`;
                 }
             );
 
@@ -2916,14 +2832,7 @@
             console.error(err);
 
             container.innerHTML =
-                `
-                <p style="
-                    font-size:13px;
-                    color:#d9534f;
-                ">
-                    تعذر تحميل الطلاب.
-                </p>
-                `;
+                `<p style="font-size:13px; color:#d9534f;">تعذر تحميل الطلاب.</p>`;
         }
     }
 
@@ -2938,6 +2847,7 @@
                 .value
                 .trim();
 
+
         const sClass =
             document
                 .getElementById(
@@ -2946,6 +2856,7 @@
                 .value
                 .trim();
 
+
         const code =
             document
                 .getElementById(
@@ -2953,6 +2864,7 @@
                 )
                 .value
                 .trim();
+
 
         if (
             !name ||
@@ -2966,6 +2878,7 @@
 
             return;
         }
+
 
         try {
 
@@ -2987,6 +2900,7 @@
                     true
                 );
 
+
             if (
                 result &&
                 result.success !== false
@@ -2996,23 +2910,21 @@
                     'تم إضافة الطالب بنجاح ✅'
                 );
 
-                document
-                    .getElementById(
-                        'newStudentName'
-                    )
-                    .value = '';
 
-                document
-                    .getElementById(
-                        'newStudentClass'
-                    )
-                    .value = '';
+                document.getElementById(
+                    'newStudentName'
+                ).value = '';
 
-                document
-                    .getElementById(
-                        'newStudentCode'
-                    )
-                    .value = '';
+
+                document.getElementById(
+                    'newStudentClass'
+                ).value = '';
+
+
+                document.getElementById(
+                    'newStudentCode'
+                ).value = '';
+
 
                 await loadStudentsFromDb();
             }
@@ -3039,6 +2951,7 @@
             return;
         }
 
+
         try {
 
             const result =
@@ -3053,6 +2966,7 @@
                     true
                 );
 
+
             if (
                 result &&
                 result.success !== false
@@ -3061,6 +2975,7 @@
                 alert(
                     'تم حذف الطالب بنجاح.'
                 );
+
 
                 await loadStudentsFromDb();
 
@@ -3090,7 +3005,11 @@
                 'statusPieChart'
             );
 
-        if (!canvas) return;
+
+        if (!canvas) {
+            return;
+        }
+
 
         const approved =
             allRequests.filter(
@@ -3099,12 +3018,14 @@
                     'approved'
             ).length;
 
+
         const rejected =
             allRequests.filter(
                 r =>
                     r.status ===
                     'rejected'
             ).length;
+
 
         const pending =
             allRequests.filter(
@@ -3113,19 +3034,25 @@
                     'pending'
             ).length;
 
+
         const pieCtx =
-            canvas.getContext('2d');
+            canvas.getContext(
+                '2d'
+            );
+
 
         if (pieChartInstance) {
 
             pieChartInstance.destroy();
         }
 
+
         pieChartInstance =
             new Chart(
                 pieCtx,
                 {
-                    type: 'doughnut',
+                    type:
+                        'doughnut',
 
                     data: {
 
@@ -3135,30 +3062,36 @@
                             'معلق'
                         ],
 
-                        datasets: [
-                            {
-                                data: [
-                                    approved,
-                                    rejected,
-                                    pending
-                                ],
+                        datasets: [{
 
-                                backgroundColor: [
-                                    '#28a745',
-                                    '#d9534f',
-                                    '#f3b137'
-                                ]
-                            }
-                        ]
+                            data: [
+                                approved,
+                                rejected,
+                                pending
+                            ],
+
+                            backgroundColor: [
+                                '#28a745',
+                                '#d9534f',
+                                '#f3b137'
+                            ]
+                        }]
                     },
 
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
+
+                        responsive:
+                            true,
+
+                        maintainAspectRatio:
+                            false,
 
                         plugins: {
+
                             legend: {
+
                                 labels: {
+
                                     font: {
                                         family:
                                             'Segoe UI'
@@ -3173,7 +3106,7 @@
 
 
     /* =========================================================
-       التحديث التلقائي
+       التحديث الاحتياطي
     ========================================================= */
 
     function setupAutoRefresh() {
@@ -3185,21 +3118,23 @@
             );
         }
 
+
+        /*
+           Realtime هو الأساسي.
+           هذا التحديث الاحتياطي يحافظ على
+           المزامنة إذا تعطل WebSocket.
+        */
+
         autoRefreshInterval =
             setInterval(
                 () => {
 
                     if (
                         navigator.onLine &&
-                        !document
-                            .getElementById(
-                                'adminPanelSection'
-                            )
-                            .classList
-                            .contains('hidden')
+                        isAdminPanelOpen()
                     ) {
 
-                        loadRequestsFromDb();
+                        queueFastRequestsRefresh();
                     }
 
                 },
@@ -3209,36 +3144,102 @@
 
 
     /* =========================================================
-       Realtime
-       يبقى كتحديث إضافي، مع وجود Polling أساسي
+       Supabase Realtime
     ========================================================= */
 
     function setupRealtimeSubscription() {
 
         try {
 
-            const realtimeClient =
+            stopRealtimeSubscription();
+
+
+            realtimeClient =
                 supabase.createClient(
                     SUPABASE_URL,
-                    SUPABASE_ANON_KEY
+                    SUPABASE_ANON_KEY,
+                    {
+                        realtime: {
+                            params: {
+                                eventsPerSecond: 20
+                            }
+                        }
+                    }
                 );
 
-            realtimeClient
-                .channel(
-                    'admin_live_channel_24_7'
-                )
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'school_requests'
-                    },
-                    () => {
-                        loadRequestsFromDb();
-                    }
-                )
-                .subscribe();
+
+            realtimeChannel =
+                realtimeClient
+                    .channel(
+                        'admin_live_channel_24_7'
+                    )
+
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: 'school_requests'
+                        },
+                        payload => {
+
+                            lastRealtimeEventAt =
+                                Date.now();
+
+
+                            /*
+                               لا نعتمد على البيانات
+                               القادمة من Realtime مباشرة.
+
+                               نستخدم الحدث فقط كإشارة
+                               ثم نعيد جلب البيانات
+                               من Edge Function الآمنة.
+                            */
+
+                            queueFastRequestsRefresh();
+                        }
+                    )
+
+                    .subscribe(
+                        status => {
+
+                            console.log(
+                                'Realtime status:',
+                                status
+                            );
+
+
+                            if (
+                                status ===
+                                'SUBSCRIBED'
+                            ) {
+
+                                realtimeReconnectAttempts =
+                                    0;
+
+                                updateConnectionStatus(
+                                    true
+                                );
+
+                                queueFastRequestsRefresh();
+
+                                return;
+                            }
+
+
+                            if (
+                                status ===
+                                'CHANNEL_ERROR' ||
+                                status ===
+                                'TIMED_OUT' ||
+                                status ===
+                                'CLOSED'
+                            ) {
+
+                                scheduleRealtimeReconnect();
+                            }
+                        }
+                    );
 
         } catch (err) {
 
@@ -3246,8 +3247,248 @@
                 'Realtime غير متاح:',
                 err
             );
+
+            scheduleRealtimeReconnect();
         }
     }
+
+
+    function stopRealtimeSubscription() {
+
+        if (realtimeReconnectTimer) {
+
+            clearTimeout(
+                realtimeReconnectTimer
+            );
+
+            realtimeReconnectTimer =
+                null;
+        }
+
+
+        if (
+            realtimeClient &&
+            realtimeChannel
+        ) {
+
+            try {
+
+                realtimeClient.removeChannel(
+                    realtimeChannel
+                );
+
+            } catch (e) {}
+        }
+
+
+        realtimeChannel =
+            null;
+
+
+        realtimeClient =
+            null;
+    }
+
+
+    function scheduleRealtimeReconnect() {
+
+        if (
+            !isAdminPanelOpen() ||
+            !navigator.onLine
+        ) {
+            return;
+        }
+
+
+        if (realtimeReconnectTimer) {
+            return;
+        }
+
+
+        realtimeReconnectAttempts =
+            Math.min(
+                realtimeReconnectAttempts + 1,
+                8
+            );
+
+
+        const delay =
+            Math.min(
+                1000 *
+                Math.pow(
+                    2,
+                    realtimeReconnectAttempts - 1
+                ),
+                30000
+            );
+
+
+        console.log(
+            'إعادة اتصال Realtime خلال:',
+            delay,
+            'ms'
+        );
+
+
+        realtimeReconnectTimer =
+            setTimeout(
+                () => {
+
+                    realtimeReconnectTimer =
+                        null;
+
+                    reconnectRealtime();
+
+                },
+                delay
+            );
+    }
+
+
+    function reconnectRealtime(
+        immediate = false
+    ) {
+
+        if (
+            !isAdminPanelOpen() ||
+            !navigator.onLine
+        ) {
+            return;
+        }
+
+
+        if (realtimeReconnectTimer) {
+
+            clearTimeout(
+                realtimeReconnectTimer
+            );
+
+            realtimeReconnectTimer =
+                null;
+        }
+
+
+        if (immediate) {
+
+            realtimeReconnectAttempts =
+                0;
+
+            setupRealtimeSubscription();
+
+            return;
+        }
+
+
+        scheduleRealtimeReconnect();
+    }
+
+
+    /* =========================================================
+       استعادة الصفحة والخمول
+    ========================================================= */
+
+    document.addEventListener(
+        'visibilitychange',
+        () => {
+
+            if (
+                document.visibilityState ===
+                'visible'
+            ) {
+
+                if (
+                    isAdminPanelOpen()
+                ) {
+
+                    queueFastRequestsRefresh();
+
+                    reconnectRealtime(true);
+
+                    unlockAudio();
+                }
+            }
+        }
+    );
+
+
+    window.addEventListener(
+        'focus',
+        () => {
+
+            if (
+                isAdminPanelOpen()
+            ) {
+
+                queueFastRequestsRefresh();
+
+                if (
+                    !realtimeChannel
+                ) {
+
+                    reconnectRealtime(true);
+                }
+            }
+        }
+    );
+
+
+    window.addEventListener(
+        'pageshow',
+        () => {
+
+            if (
+                isAdminPanelOpen()
+            ) {
+
+                queueFastRequestsRefresh();
+
+                reconnectRealtime(true);
+            }
+        }
+    );
+
+
+    /* =========================================================
+       فحص دوري لصحة Realtime
+    ========================================================= */
+
+    setInterval(
+        () => {
+
+            if (
+                !isAdminPanelOpen() ||
+                !navigator.onLine
+            ) {
+                return;
+            }
+
+
+            /*
+               إذا لم يصل أي حدث Realtime لفترة طويلة،
+               نحاول التأكد من أن الاتصال لا يزال حيًا.
+            */
+
+            const now =
+                Date.now();
+
+
+            const timeSinceRealtime =
+                now -
+                lastRealtimeEventAt;
+
+
+            if (
+                !realtimeChannel ||
+                timeSinceRealtime >
+                15 * 60 * 1000
+            ) {
+
+                reconnectRealtime(true);
+            }
+
+        },
+        60000
+    );
 
 
     /* =========================================================
@@ -3260,60 +3501,76 @@
 
         stopSessionRefresh();
 
-        if (autoRefreshInterval) {
+
+        if (
+            autoRefreshInterval
+        ) {
 
             clearInterval(
                 autoRefreshInterval
             );
 
-            autoRefreshInterval = null;
+            autoRefreshInterval =
+                null;
         }
+
+
+        stopRealtimeSubscription();
+
 
         clearAdminToken();
 
+
         allRequests = [];
 
-        lastRequestsFingerprint = '';
+        lastRequestsFingerprint =
+            '';
+
 
         if (pieChartInstance) {
 
             pieChartInstance.destroy();
 
-            pieChartInstance = null;
+            pieChartInstance =
+                null;
         }
+
 
         document
             .getElementById(
                 'adminPanelSection'
             )
-            .classList
-            .add('hidden');
+            .classList.add(
+                'hidden'
+            );
+
 
         document
             .getElementById(
                 'sessionTimer'
             )
-            .classList
-            .add('hidden');
+            .classList.add(
+                'hidden'
+            );
+
 
         document
             .getElementById(
                 'loginSection'
             )
-            .classList
-            .remove('hidden');
+            .classList.remove(
+                'hidden'
+            );
 
-        document
-            .getElementById(
-                'adminPasswordInput'
-            )
-            .value = '';
 
-        document
-            .getElementById(
-                'adminPasswordInput'
-            )
-            .focus();
+        document.getElementById(
+            'adminPasswordInput'
+        ).value = '';
+
+
+        document.getElementById(
+            'adminPasswordInput'
+        ).focus();
     }
 
 
@@ -3328,7 +3585,9 @@
                 'admin_card_theme'
             );
 
+
         localStorage.clear();
+
 
         if (keepTheme) {
 
@@ -3338,9 +3597,11 @@
             );
         }
 
+
         alert(
             'تم تفريغ الكاش وتحديث المتصفح بنجاح!\n\nالطلبات الأصلية بقيت محفوظة في قاعدة البيانات.'
         );
+
 
         location.reload();
     }
@@ -3357,37 +3618,51 @@
         let csv =
             'ID,Student Name,Class,Request Type,Excuse Reason,Reject Reason,Status,Parent Code,Time\n';
 
+
         allRequests.forEach(
             r => {
 
                 const row = [
+
                     r.id,
+
                     r.student_name,
-                    r.student_class || '',
-                    r.request_type || '',
-                    r.excuse_reason || '',
-                    r.reject_reason || '',
-                    r.status || '',
-                    r.parent_code || '',
-                    r.created_at || ''
+
+                    r.student_class ||
+                        '',
+
+                    r.request_type ||
+                        '',
+
+                    r.excuse_reason ||
+                        '',
+
+                    r.reject_reason ||
+                        '',
+
+                    r.status ||
+                        '',
+
+                    r.parent_code ||
+                        '',
+
+                    r.created_at ||
+                        ''
+
                 ];
+
 
                 csv +=
                     row
                         .map(
                             value =>
-                                `"${String(
-                                    value
-                                )
-                                .replace(
-                                    /"/g,
-                                    '""'
-                                )}"`
+                                `"${String(value).replace(/"/g, '""')}"`
                         )
                         .join(',') +
                     '\n';
             }
         );
+
 
         const blob =
             new Blob(
@@ -3401,25 +3676,31 @@
                 }
             );
 
+
         const link =
             document.createElement(
                 'a'
             );
+
 
         link.href =
             URL.createObjectURL(
                 blob
             );
 
+
         link.download =
             filename;
 
+
         link.click();
 
+
         setTimeout(
-            () => URL.revokeObjectURL(
-                link.href
-            ),
+            () =>
+                URL.revokeObjectURL(
+                    link.href
+                ),
             1000
         );
     }
@@ -3432,122 +3713,38 @@
     function exportTableToWord() {
 
         let htmlContent =
-            `
-            <html dir="rtl">
-            <head>
-                <meta charset="utf-8">
-                <title>التقرير</title>
-            </head>
-            <body>
-            `;
+            `<html dir="rtl"><head><meta charset="utf-8"><title>التقرير</title></head><body>`;
+
 
         htmlContent +=
-            `
-            <h2 style="
-                text-align:center;
-                color:#4a2e6f;
-            ">
-                تقرير روضة وابتدائية بسمات الوعد
-            </h2>
-            `;
+            `<h2 style="text-align:center; color:#4a2e6f;">تقرير روضة وابتدائية بسمات الوعد</h2>`;
+
 
         htmlContent +=
-            `
-            <table
-                border="1"
-                style="
-                    width:100%;
-                    border-collapse:collapse;
-                    text-align:right;
-                "
-            >
-                <tr style="
-                    background:#f2edf8;
-                ">
-                    <th>اسم الطالب</th>
-                    <th>الصف</th>
-                    <th>نوع الطلب</th>
-                    <th>سبب الاستئذان</th>
-                    <th>سبب الرفض</th>
-                    <th>الحالة</th>
-                    <th>الكود</th>
-                    <th>الوقت</th>
-                </tr>
-            `;
+            `<table border="1" style="width:100%; border-collapse:collapse; text-align:right;"><tr style="background:#f2edf8;"><th>اسم الطالب</th><th>الصف</th><th>نوع الطلب</th><th>سبب الاستئذان</th><th>سبب الرفض</th><th>الحالة</th><th>الكود</th><th>الوقت</th></tr>`;
+
 
         allRequests.forEach(
             r => {
 
                 htmlContent +=
-                    `
-                    <tr>
-
-                        <td>
-                            ${escapeHTML(
-                                r.student_name
-                            )}
-                        </td>
-
-                        <td>
-                            ${escapeHTML(
-                                r.student_class ||
-                                ''
-                            )}
-                        </td>
-
-                        <td>
-                            ${escapeHTML(
-                                r.request_type ||
-                                ''
-                            )}
-                        </td>
-
-                        <td>
-                            ${escapeHTML(
-                                r.excuse_reason ||
-                                ''
-                            )}
-                        </td>
-
-                        <td>
-                            ${escapeHTML(
-                                r.reject_reason ||
-                                ''
-                            )}
-                        </td>
-
-                        <td>
-                            ${escapeHTML(
-                                r.status ||
-                                ''
-                            )}
-                        </td>
-
-                        <td>
-                            ${escapeHTML(
-                                r.parent_code ||
-                                ''
-                            )}
-                        </td>
-
-                        <td>
-                            ${escapeHTML(
-                                r.created_at ||
-                                ''
-                            )}
-                        </td>
-
-                    </tr>
-                    `;
+                    `<tr>
+                        <td>${escapeHTML(r.student_name)}</td>
+                        <td>${escapeHTML(r.student_class || '')}</td>
+                        <td>${escapeHTML(r.request_type || '')}</td>
+                        <td>${escapeHTML(r.excuse_reason || '')}</td>
+                        <td>${escapeHTML(r.reject_reason || '')}</td>
+                        <td>${escapeHTML(r.status || '')}</td>
+                        <td>${escapeHTML(r.parent_code || '')}</td>
+                        <td>${escapeHTML(r.created_at || '')}</td>
+                    </tr>`;
             }
         );
 
+
         htmlContent +=
-            `
-            </table>
-            </body>
-            </html>
-            `;
+            `</table></body></html>`;
+
 
         const blob =
             new Blob(
@@ -3561,38 +3758,45 @@
                 }
             );
 
+
         const link =
             document.createElement(
                 'a'
             );
+
 
         link.href =
             URL.createObjectURL(
                 blob
             );
 
+
         link.download =
             'school_report.doc';
 
+
         link.click();
 
+
         setTimeout(
-            () => URL.revokeObjectURL(
-                link.href
-            ),
+            () =>
+                URL.revokeObjectURL(
+                    link.href
+                ),
             1000
         );
     }
 
 
     /* =========================================================
-       PDF / طباعة التقرير
+       PDF
     ========================================================= */
 
     function exportTableToPDF() {
 
         const total =
             allRequests.length;
+
 
         const pending =
             allRequests.filter(
@@ -3601,12 +3805,14 @@
                     'pending'
             ).length;
 
+
         const approved =
             allRequests.filter(
                 r =>
                     r.status ===
                     'approved'
             ).length;
+
 
         const rejected =
             allRequests.filter(
@@ -3615,17 +3821,19 @@
                     'rejected'
             ).length;
 
+
         const currentDate =
-            new Date()
-                .toLocaleString(
-                    'ar-SA'
-                );
+            new Date().toLocaleString(
+                'ar-SA'
+            );
+
 
         const printWindow =
             window.open(
                 '',
                 '_blank'
             );
+
 
         if (!printWindow) {
 
@@ -3636,8 +3844,9 @@
             return;
         }
 
-        printWindow.document.write(
-            `
+
+        printWindow.document.write(`
+
             <html dir="rtl">
 
             <head>
@@ -3669,26 +3878,29 @@
                         display:flex;
                         justify-content:space-between;
                         align-items:center;
+
                         border-bottom:
                             2px solid #4a2e6f;
-                        padding-bottom:12px;
-                        margin-bottom:20px;
-                    }
 
-                    .header-title-area {
-                        text-align:right;
+                        padding-bottom:12px;
+
+                        margin-bottom:20px;
                     }
 
                     .header-title-area h2 {
                         color:#4a2e6f;
+
                         margin:
                             0 0 4px 0;
+
                         font-size:18px;
                     }
 
                     .header-title-area p {
                         color:#666;
+
                         font-size:12px;
+
                         margin:0;
                     }
 
@@ -3701,10 +3913,15 @@
                         display:flex;
                         justify-content:
                             space-around;
+
                         margin-bottom:25px;
+
                         background:#f8f5fc;
+
                         padding:15px;
+
                         border-radius:8px;
+
                         border:
                             1px solid #e2d9eb;
                     }
@@ -3716,21 +3933,28 @@
                     .stat-item h4 {
                         margin:
                             0 0 5px 0;
+
                         font-size:12px;
+
                         color:#666;
                     }
 
                     .stat-item span {
                         font-size:18px;
+
                         font-weight:bold;
+
                         color:#4a2e6f;
                     }
 
                     table {
                         width:100%;
+
                         border-collapse:
                             collapse;
+
                         margin-top:10px;
+
                         font-size:12px;
                     }
 
@@ -3738,14 +3962,17 @@
                     td {
                         border:
                             1px solid #ccc;
+
                         padding:
                             8px 10px;
+
                         text-align:right;
                     }
 
                     th {
                         background-color:
                             #4a2e6f;
+
                         color:white;
                     }
 
@@ -3756,11 +3983,16 @@
 
                     .footer-print {
                         margin-top:30px;
+
                         text-align:center;
+
                         font-size:11px;
+
                         color:#777;
+
                         border-top:
                             1px solid #eee;
+
                         padding-top:10px;
                     }
 
@@ -3782,38 +4014,29 @@
                             تقرير سجل الطلبات الإداري المعتمد
                         </p>
 
-                        <p style="
-                            font-size:11px;
-                            color:#888;
-                            margin-top:4px;
-                        ">
+                        <p style="font-size:11px; color:#888; margin-top:4px;">
                             تاريخ التقرير:
-                            ${escapeHTML(
-                                currentDate
-                            )}
+                            ${escapeHTML(currentDate)}
                         </p>
 
                     </div>
 
                     <div>
-
                         <img
                             src="https://i.ibb.co/ddsMPQH/logo.png"
                             alt="شعار المدرسة"
                             class="report-logo"
                         >
-
                     </div>
 
                 </div>
+
 
                 <div class="stats-box">
 
                     <div class="stat-item">
                         <h4>إجمالي اليوم</h4>
-                        <span>
-                            ${total}
-                        </span>
+                        <span>${total}</span>
                     </div>
 
                     <div class="stat-item">
@@ -3839,6 +4062,7 @@
 
                 </div>
 
+
                 <table>
 
                     <thead>
@@ -3858,8 +4082,8 @@
                     </thead>
 
                     <tbody>
-            `
-        );
+        `);
+
 
         allRequests.forEach(
             (r, index) => {
@@ -3867,44 +4091,54 @@
                 let statusText =
                     'معلق';
 
+
                 if (
                     r.status ===
                     'approved'
                 ) {
+
                     statusText =
                         'مقبولة ✅';
                 }
+
 
                 if (
                     r.status ===
                     'rejected'
                 ) {
+
                     statusText =
                         'مرفوضة ❌';
                 }
+
 
                 let reqType =
                     r.request_type ||
                     'نداء انصراف عادي';
 
+
                 if (
                     reqType ===
                     'pickup'
                 ) {
+
                     reqType =
                         'نداء انصراف عادي';
                 }
+
 
                 if (
                     reqType ===
                     'excuse'
                 ) {
+
                     reqType =
                         'استئذان مبكر (طارئ)';
                 }
 
-                printWindow.document.write(
-                    `
+
+                printWindow.document.write(`
+
                     <tr>
 
                         <td>
@@ -3913,9 +4147,7 @@
 
                         <td>
                             <b>
-                                ${escapeHTML(
-                                    r.student_name
-                                )}
+                                ${escapeHTML(r.student_name)}
                             </b>
                         </td>
 
@@ -3927,9 +4159,7 @@
                         </td>
 
                         <td>
-                            ${escapeHTML(
-                                reqType
-                            )}
+                            ${escapeHTML(reqType)}
                         </td>
 
                         <td>
@@ -3954,9 +4184,7 @@
                         </td>
 
                         <td>
-                            ${escapeHTML(
-                                statusText
-                            )}
+                            ${escapeHTML(statusText)}
                         </td>
 
                         <td>
@@ -3972,13 +4200,13 @@
                         </td>
 
                     </tr>
-                    `
-                );
+                `);
             }
         );
 
-        printWindow.document.write(
-            `
+
+        printWindow.document.write(`
+
                     </tbody>
 
                 </table>
@@ -3990,12 +4218,13 @@
             </body>
 
             </html>
-            `
-        );
+        `);
+
 
         printWindow.document.close();
 
         printWindow.focus();
+
 
         setTimeout(
             () => {
@@ -4007,8 +4236,7 @@
 
 
     /* =========================================================
-       فحص وجود جلسة عند فتح الصفحة
-       لا نعتمد على localStorage للأمان
+       تشغيل الصفحة واستعادة الجلسة
     ========================================================= */
 
     window.addEventListener(
@@ -4017,12 +4245,20 @@
 
             applyAdminTheme();
 
+
             const token =
                 getAdminToken();
 
+
             if (!token) {
+
+                updateConnectionStatus(
+                    navigator.onLine
+                );
+
                 return;
             }
+
 
             try {
 
@@ -4035,6 +4271,7 @@
                         true
                     );
 
+
                 if (
                     result &&
                     result.session_token
@@ -4044,11 +4281,14 @@
                         result.session_token
                     );
 
+
                     const now =
                         new Date();
 
+
                     sessionStartTime =
                         now;
+
 
                     sessionEndTime =
                         new Date(
@@ -4056,38 +4296,53 @@
                             (8 * 60 * 60 * 1000)
                         );
 
+
                     document
                         .getElementById(
                             'loginSection'
                         )
-                        .classList
-                        .add('hidden');
+                        .classList.add(
+                            'hidden'
+                        );
+
 
                     document
                         .getElementById(
                             'adminPanelSection'
                         )
-                        .classList
-                        .remove('hidden');
+                        .classList.remove(
+                            'hidden'
+                        );
+
 
                     document
                         .getElementById(
                             'sessionTimer'
                         )
-                        .classList
-                        .remove('hidden');
+                        .classList.remove(
+                            'hidden'
+                        );
+
 
                     updateSessionDisplay();
 
+
                     startSessionRefresh();
 
-                    await initAdminDashboard();
 
+                    updateConnectionStatus(
+                        navigator.onLine
+                    );
+
+
+                    await initAdminDashboard();
                 }
 
             } catch (err) {
 
                 clearAdminToken();
+
+                stopRealtimeSubscription();
 
                 console.warn(
                     'لا توجد جلسة إدارة صالحة.'
