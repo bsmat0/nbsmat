@@ -682,7 +682,7 @@
         'https://gtbgfndskfofcxgtgqlc.supabase.co';
 
     const SUPABASE_ANON_KEY =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0YmdmbmRza2ZvZmN4Z3RncWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MTYyNzgsImV4cCI6MjEwNDI5MjI3OH0.o2XZwDyYSJOgJVb6Ost-QwH5fRjVEHK0pppGLJutQ_I';
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0YmdmbmRza2ZvZmN4Z3RncWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MTYyNzgsImV4cCI6MjEwNDI5MjI3OH0.o2XZwDyYSJOgJVbO6st-QwH5fRjVEHK0pppGLJutQ_I';
 
     const db =
         supabase.createClient(
@@ -708,6 +708,10 @@
     let currentRequestToken = null;
 
     let statusPollingTimer = null;
+
+    let audioContext = null;
+
+    let audioUnlocked = false;
 
 
     /* =========================================================
@@ -875,61 +879,268 @@
 
 
     /* =========================================================
+       نظام الصوت
+       ========================================================= */
+
+    function getAudioContext() {
+
+        const AudioContextClass =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContextClass) {
+            return null;
+        }
+
+        if (!audioContext) {
+
+            audioContext =
+                new AudioContextClass();
+        }
+
+        return audioContext;
+    }
+
+
+    async function unlockAudio() {
+
+        try {
+
+            const ctx =
+                getAudioContext();
+
+            if (!ctx) {
+                return;
+            }
+
+            if (
+                ctx.state === 'suspended'
+            ) {
+
+                await ctx.resume();
+            }
+
+            audioUnlocked = true;
+
+        } catch (error) {
+
+            console.warn(
+                'Audio unlock failed:',
+                error
+            );
+        }
+    }
+
+
+    async function playUnifiedTone() {
+
+        try {
+
+            const ctx =
+                getAudioContext();
+
+            if (!ctx) {
+                return;
+            }
+
+            if (
+                ctx.state === 'suspended'
+            ) {
+
+                await ctx.resume();
+            }
+
+            const now =
+                ctx.currentTime;
+
+            const frequencies = [
+                523.25,
+                659.25,
+                783.99
+            ];
+
+            frequencies.forEach(
+                (frequency, index) => {
+
+                    const startTime =
+                        now +
+                        (index * 0.16);
+
+                    const oscillator =
+                        ctx.createOscillator();
+
+                    const gainNode =
+                        ctx.createGain();
+
+                    oscillator.type =
+                        'sine';
+
+                    oscillator.frequency.setValueAtTime(
+                        frequency,
+                        startTime
+                    );
+
+                    gainNode.gain.setValueAtTime(
+                        0.60,
+                        startTime
+                    );
+
+                    gainNode.gain.exponentialRampToValueAtTime(
+                        0.001,
+                        startTime + 0.48
+                    );
+
+                    oscillator.connect(
+                        gainNode
+                    );
+
+                    gainNode.connect(
+                        ctx.destination
+                    );
+
+                    oscillator.start(
+                        startTime
+                    );
+
+                    oscillator.stop(
+                        startTime + 0.48
+                    );
+                }
+            );
+
+        } catch (error) {
+
+            console.warn(
+                'Audio unavailable:',
+                error
+            );
+        }
+    }
+
+
+    /*
+     * المتصفح يمنع بعض الأصوات التي تعمل بدون تفاعل المستخدم.
+     * لذلك نفتح الصوت عند أول تفاعل حقيقي من ولي الأمر.
+     */
+
+    [
+        'pointerdown',
+        'touchstart',
+        'click',
+        'keydown'
+    ].forEach(
+        eventName => {
+
+            window.addEventListener(
+                eventName,
+                () => {
+
+                    if (!audioUnlocked) {
+                        unlockAudio();
+                    }
+
+                },
+                {
+                    passive: true,
+                    once: false
+                }
+            );
+
+        }
+    );
+
+
+    /* =========================================================
        استدعاء Edge Function
        ========================================================= */
 
     async function callParentApi(payload) {
 
-        const response =
-            await fetch(
-                PARENT_API_URL,
-                {
-                    method: 'POST',
+        const controller =
+            new AbortController();
 
-                    headers: {
-                        'Content-Type':
-                            'application/json',
-
-                        'apikey':
-                            SUPABASE_ANON_KEY,
-
-                        'Authorization':
-                            `Bearer ${SUPABASE_ANON_KEY}`
-                    },
-
-                    body:
-                        JSON.stringify(
-                            payload
-                        )
-                }
+        const timeout =
+            setTimeout(
+                () => controller.abort(),
+                15000
             );
-
-        let result = null;
 
         try {
 
-            result =
-                await response.json();
+            const response =
+                await fetch(
+                    PARENT_API_URL,
+                    {
+                        method: 'POST',
 
-        } catch (e) {
+                        headers: {
+                            'Content-Type':
+                                'application/json',
 
-            throw new Error(
-                'تعذر قراءة رد الخادم'
-            );
+                            'apikey':
+                                SUPABASE_ANON_KEY,
+
+                            'Authorization':
+                                `Bearer ${SUPABASE_ANON_KEY}`
+                        },
+
+                        body:
+                            JSON.stringify(
+                                payload
+                            ),
+
+                        signal:
+                            controller.signal,
+
+                        cache:
+                            'no-store'
+                    }
+                );
+
+            let result = null;
+
+            try {
+
+                result =
+                    await response.json();
+
+            } catch (e) {
+
+                throw new Error(
+                    'تعذر قراءة رد الخادم'
+                );
+            }
+
+            if (
+                !response.ok ||
+                !result.success
+            ) {
+
+                throw new Error(
+                    result.error ||
+                    'حدث خطأ في الخادم'
+                );
+            }
+
+            return result;
+
+        } catch (error) {
+
+            if (
+                error.name === 'AbortError'
+            ) {
+
+                throw new Error(
+                    'استغرق الاتصال وقتًا أطول من المتوقع، يرجى المحاولة مرة أخرى.'
+                );
+            }
+
+            throw error;
+
+        } finally {
+
+            clearTimeout(timeout);
         }
-
-        if (
-            !response.ok ||
-            !result.success
-        ) {
-
-            throw new Error(
-                result.error ||
-                'حدث خطأ في الخادم'
-            );
-        }
-
-        return result;
     }
 
 
@@ -1108,6 +1319,8 @@
 
         currentMode = mode;
 
+        unlockAudio();
+
         showScreen('service');
     }
 
@@ -1186,6 +1399,8 @@
        ========================================================= */
 
     async function fetchChildrenByCode() {
+
+        await unlockAudio();
 
         const input =
             document.getElementById(
@@ -1395,6 +1610,8 @@
         cardElement
     ) {
 
+        unlockAudio();
+
         if (
             selectedChildrenIds.has(
                 childId
@@ -1480,6 +1697,8 @@
        ========================================================= */
 
     async function submitFinalRequest() {
+
+        await unlockAudio();
 
         if (
             selectedChildrenIds.size === 0
@@ -1592,12 +1811,6 @@
                     ? 'excuse'
                     : 'pickup';
 
-            /*
-             * هنا تم إصلاح المشكلة:
-             * سبب الاستئذان يتم إرساله إلى Edge Function
-             * ليتم حفظه في school_requests.excuse_reason
-             */
-
             const result =
                 await callParentApi({
 
@@ -1655,10 +1868,23 @@
                 code
             );
 
-            startStatusPolling(
+            /*
+             * فحص فوري للحالة، ثم متابعة سريعة كل 1.5 ثانية.
+             */
+            await checkRequestStatus(
                 code,
                 currentRequestToken
             );
+
+            if (
+                currentRequestToken
+            ) {
+
+                startStatusPolling(
+                    code,
+                    currentRequestToken
+                );
+            }
 
         } catch (error) {
 
@@ -1698,7 +1924,7 @@
 
 
     /* =========================================================
-       متابعة حالة الطلب
+       متابعة حالة الطلب - أسرع
        ========================================================= */
 
     function startStatusPolling(
@@ -1723,7 +1949,7 @@
                     );
 
                 },
-                2500
+                1500
             );
     }
 
@@ -1823,6 +2049,9 @@
 
                 stopStatusPolling();
 
+                /*
+                 * صوت الموافقة
+                 */
                 playUnifiedTone();
 
                 statusCard.className =
@@ -1854,8 +2083,18 @@
 
                 stopStatusPolling();
 
+                /*
+                 * تم إضافة الصوت هنا.
+                 * سابقًا كان الرفض يظهر بدون صوت.
+                 */
+                playUnifiedTone();
+
                 statusCard.className =
                     'status-card status-rejected';
+
+                const rejectionReason =
+                    request.reject_reason ||
+                    'تم رفض الطلب من الإدارة.';
 
                 statusText.innerHTML =
                     `
@@ -1866,7 +2105,9 @@
                     <br>
 
                     <strong>
-                        تم رفض الطلب من الإدارة.
+                        ${escapeHtml(
+                            rejectionReason
+                        )}
                     </strong>
                     `;
 
@@ -1878,90 +2119,6 @@
             console.warn(
                 'Status check failed:',
                 error
-            );
-        }
-    }
-
-
-    /* =========================================================
-       الصوت عند الموافقة
-       ========================================================= */
-
-    function playUnifiedTone() {
-
-        try {
-
-            const AudioContext =
-                window.AudioContext ||
-                window.webkitAudioContext;
-
-            if (!AudioContext) {
-                return;
-            }
-
-            const audioCtx =
-                new AudioContext();
-
-            [
-                523.25,
-                659.25,
-                783.99
-            ].forEach(
-                (freq, index) => {
-
-                    const osc =
-                        audioCtx.createOscillator();
-
-                    const gain =
-                        audioCtx.createGain();
-
-                    osc.type =
-                        'sine';
-
-                    osc.frequency.setValueAtTime(
-                        freq,
-                        audioCtx.currentTime +
-                        (index * 0.15)
-                    );
-
-                    gain.gain.setValueAtTime(
-                        0.5,
-                        audioCtx.currentTime +
-                        (index * 0.15)
-                    );
-
-                    gain.gain.exponentialRampToValueAtTime(
-                        0.001,
-                        audioCtx.currentTime +
-                        (index * 0.15) +
-                        0.4
-                    );
-
-                    osc.connect(
-                        gain
-                    );
-
-                    gain.connect(
-                        audioCtx.destination
-                    );
-
-                    osc.start(
-                        audioCtx.currentTime +
-                        (index * 0.15)
-                    );
-
-                    osc.stop(
-                        audioCtx.currentTime +
-                        (index * 0.15) +
-                        0.4
-                    );
-                }
-            );
-
-        } catch (e) {
-
-            console.warn(
-                'Audio unavailable'
             );
         }
     }
@@ -1984,6 +2141,7 @@
                         /\D/g,
                         ''
                     );
+
             }
         );
 
