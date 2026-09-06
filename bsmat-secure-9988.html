@@ -1,2673 +1,2321 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>لوحة الإدارة - بسمات الوعد الأهلية</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#6d28d9">
 
-    <style>
-        :root {
-            --primary-purple: #4a2e6f;
-            --light-purple: #6a439c;
-            --accent-gold: #f3b137;
-            --bg-gradient: linear-gradient(135deg, #2b1f3d 0%, #4a2e6f 35%, #3d2e0f 70%, #1f1707 100%);
-            --text-color: #2c3e50;
-            --danger-red: #d9534f;
-            --success-green: #28a745;
-        }
+<title>لوحة الإدارة - بسمات الوعد الأهلية</title>
 
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-        body {
-            background: var(--bg-gradient);
-            margin: 0;
-            padding: 15px;
-            text-align: center;
-            color: var(--text-color);
-            position: relative;
-            overflow-x: hidden;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Tahoma, Arial, "Segoe UI", sans-serif;
+    background:
+        radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 30%),
+        linear-gradient(135deg, #4c1d95, #7c3aed, #581c87);
+    color: #24133f;
+    font-weight: 600;
+    overflow-x: hidden;
+}
 
-        .stars-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,.75) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,.45) 1px, transparent 1px);
+    background-size: 80px 80px, 130px 130px;
+    background-position: 0 0, 30px 50px;
+    animation: starsMove 18s linear infinite;
+    opacity: .35;
+}
 
-        .star {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.8;
-            animation: fall linear infinite;
-        }
+@keyframes starsMove {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(80px);
+    }
+}
 
-        .star.gold {
-            background: #ffeaa7;
-            box-shadow: 0 0 8px #ffeaa7;
-        }
+.container {
+    width: min(1100px, calc(100% - 30px));
+    margin: 30px auto;
+    position: relative;
+    z-index: 2;
+}
 
-        .star.bright {
-            background: #ffffff;
-            box-shadow: 0 0 10px #ffffff;
-        }
+.card {
+    background: rgba(255,255,255,.97);
+    border-radius: 28px;
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.25),
+        0 0 0 1px rgba(255,255,255,.3);
+    overflow: hidden;
+}
 
-        .star.orange {
-            background: #ff9f43;
-            box-shadow: 0 0 8px #ff9f43;
-        }
+.header {
+    text-align: center;
+    padding: 30px 20px 25px;
+    background: linear-gradient(135deg, #faf5ff, #ffffff);
+    border-bottom: 1px solid #eee;
+}
 
-        @keyframes fall {
-            0% {
-                transform: translateY(-20px) scale(0.7);
-                opacity: 0;
-            }
+.logo {
+    width: 95px;
+    height: 95px;
+    object-fit: contain;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 8px 25px rgba(109,40,217,.15);
+}
 
-            20% {
-                opacity: 0.8;
-            }
+.header h1 {
+    margin: 5px 0;
+    color: #4c1d95;
+    font-size: clamp(20px, 4vw, 30px);
+    font-weight: 900;
+}
 
-            80% {
-                opacity: 0.8;
-            }
+.header p {
+    margin: 8px 0 0;
+    color: #6b21a8;
+    font-size: 16px;
+    font-weight: 800;
+}
 
-            100% {
-                transform: translateY(105vh) scale(1.2);
-                opacity: 0;
-            }
-        }
+.login-section {
+    padding: 45px 25px;
+    text-align: center;
+}
 
-        .container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(12px);
-            padding: 24px;
-            border-radius: 24px;
-            box-shadow:
-                0 15px 45px rgba(0, 0, 0, 0.55),
-                0 0 30px rgba(243, 177, 55, 0.4);
-            border: 2px solid rgba(243, 177, 55, 0.75);
-        }
+.login-section h2 {
+    margin-top: 0;
+    color: #4c1d95;
+    font-size: 24px;
+    font-weight: 900;
+}
 
-        .logo-img {
-            max-width: 110px;
-            height: auto;
-            margin-bottom: 5px;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-        }
+.login-section p {
+    color: #666;
+    font-size: 16px;
+    font-weight: 700;
+}
 
-        h1 {
-            color: var(--primary-purple);
-            font-size: 17px;
-            margin-bottom: 5px;
-            font-weight: 800;
-        }
+.input-group {
+    max-width: 450px;
+    margin: 25px auto 15px;
+}
 
-        h2 {
-            color: var(--light-purple);
-            font-size: 15px;
-            margin-top: 8px;
-        }
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 15px 17px;
+    border: 2px solid #ddd6fe;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    outline: none;
+    transition: .2s;
+    background: white;
+}
 
-        .form-group {
-            margin-bottom: 14px;
-            text-align: right;
-        }
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+}
 
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
-            color: var(--primary-purple);
-            font-size: 13px;
-        }
+button {
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    font-weight: 900;
+    font-size: 15px;
+    transition: .2s;
+}
 
-        input {
-            width: 100%;
-            padding: 11px;
-            border: 2px solid #e2d9eb;
-            border-radius: 10px;
-            font-size: 14px;
-            outline: none;
-            background: #fff;
-        }
+button:hover {
+    transform: translateY(-1px);
+}
 
-        input:focus {
-            border-color: var(--primary-purple);
-            box-shadow: 0 0 6px rgba(74, 46, 111, 0.15);
-        }
+button:active {
+    transform: translateY(1px);
+}
 
-        .btn-submit {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--accent-gold);
-            color: #333;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(243, 177, 55, 0.3);
-            transition: 0.2s;
-        }
+.primary-btn {
+    background: linear-gradient(135deg, #6d28d9, #9333ea);
+    color: white;
+    padding: 14px 25px;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(109,40,217,.25);
+}
 
-        .btn-submit:active {
-            transform: scale(0.97);
-        }
+.primary-btn:hover {
+    box-shadow: 0 10px 25px rgba(109,40,217,.35);
+}
 
-        .btn-submit:disabled,
-        .btn-approve:disabled,
-        .btn-reject:disabled,
-        .btn-delete-student:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
+.danger-btn {
+    background: #dc2626;
+    color: white;
+    padding: 11px 18px;
+    border-radius: 11px;
+}
 
-        .request-item {
-            background: #faf8fc;
-            border: 1px solid #dcd6e8;
-            padding: 14px;
-            margin-bottom: 12px;
-            border-radius: 12px;
-            text-align: right;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
+.success-btn {
+    background: #16a34a;
+    color: white;
+    padding: 11px 18px;
+    border-radius: 11px;
+}
 
-        .request-item.done {
-            border-color: #a3d9a5;
-            background-color: #f7fff8;
-        }
+.secondary-btn {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 11px 18px;
+    border-radius: 11px;
+}
 
-        .request-item.rejected {
-            border-color: #f5c6cb;
-            background-color: #fff9f9;
-        }
+.error {
+    color: #dc2626;
+    font-size: 14px;
+    font-weight: 800;
+    margin-top: 12px;
+}
 
-        .request-box-content {
-            background: #ffffff;
-            border: 1px solid #e2d9eb;
-            padding: 10px 12px;
-            border-radius: 8px;
-            margin: 8px 0;
-        }
+.success {
+    color: #15803d;
+    font-size: 14px;
+    font-weight: 800;
+    margin-top: 12px;
+}
 
-        .type-badge-dismissal {
-            background: #e8f4fd;
-            color: #1a5276;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 12px;
-            display: inline-block;
-        }
+.admin-panel {
+    display: none;
+}
 
-        .type-badge-permission {
-            background: #fef5e7;
-            color: #b7950b;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 12px;
-            display: inline-block;
-        }
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 20px 25px;
+    background: #faf5ff;
+    border-bottom: 1px solid #e9d5ff;
+    flex-wrap: wrap;
+}
 
-        .btn-action-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
+.toolbar-title {
+    color: #4c1d95;
+    font-size: 20px;
+    font-weight: 900;
+}
 
-        .btn-approve {
-            background: var(--primary-purple);
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            flex: 1;
-        }
+.status-online {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #15803d;
+    font-size: 13px;
+    font-weight: 900;
+}
 
-        .btn-reject {
-            background: var(--danger-red);
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            flex: 1;
-        }
+.status-online::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(34,197,94,.8);
+}
 
-        .badge {
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: bold;
-        }
+.status-offline {
+    color: #dc2626;
+}
 
-        .badge-done {
-            background: #d4edda;
-            color: #155724;
-        }
+.tabs {
+    display: flex;
+    gap: 10px;
+    padding: 18px 25px 0;
+    background: white;
+}
 
-        .badge-rejected {
-            background: #f8d7da;
-            color: #721c24;
-        }
+.tab-btn {
+    padding: 13px 20px;
+    border-radius: 13px 13px 0 0;
+    background: #f3f4f6;
+    color: #555;
+    font-size: 15px;
+    font-weight: 900;
+}
 
-        .badge-reject-reason {
-            color: #900c3f;
-            font-size: 12px;
-            background: #fadbd8;
-            padding: 3px 8px;
-            border-radius: 6px;
-            display: inline-block;
-            margin-top: 4px;
-            font-weight: 600;
-        }
+.tab-btn.active {
+    background: #6d28d9;
+    color: white;
+}
 
-        .hidden {
-            display: none;
-        }
+.tab-content {
+    display: none;
+    padding: 25px;
+}
 
-        .admin-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
+.tab-content.active {
+    display: block;
+}
 
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            background: #e2d9eb;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-        }
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
 
-        .tab-btn.active {
-            background: var(--primary-purple);
-            color: white;
-            box-shadow: 0 4px 10px rgba(74, 46, 111, 0.2);
-        }
+.stat {
+    border-radius: 18px;
+    padding: 20px;
+    text-align: center;
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+}
 
-        .student-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fdfcff;
-            padding: 10px 12px;
-            border: 1px solid #e2d9eb;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            font-size: 13px;
-            gap: 10px;
-        }
+.stat-number {
+    font-size: 30px;
+    font-weight: 900;
+    color: #6d28d9;
+}
 
-        .student-row span {
-            flex: 1;
-        }
+.stat-label {
+    margin-top: 5px;
+    color: #555;
+    font-size: 14px;
+    font-weight: 800;
+}
 
-        .btn-delete-student {
-            background: var(--danger-red);
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 11px;
-            flex-shrink: 0;
-        }
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
 
-        @keyframes adminGlow {
-            0% {
-                border-color: var(--accent-gold);
-                box-shadow: 0 0 5px rgba(243,177,55,0.2);
-            }
+.request-card {
+    border: 2px solid #eee;
+    border-radius: 18px;
+    padding: 20px;
+    background: white;
+    transition: .2s;
+}
 
-            50% {
-                border-color: #ff4757;
-                box-shadow: 0 0 20px rgba(255,71,87,0.5);
-            }
+.request-card.pending {
+    border-color: #f59e0b;
+    box-shadow: 0 5px 25px rgba(245,158,11,.13);
+}
 
-            100% {
-                border-color: var(--accent-gold);
-                box-shadow: 0 0 5px rgba(243,177,55,0.2);
-            }
-        }
+.request-card.approved {
+    border-color: #86efac;
+    background: #f0fdf4;
+}
 
-        .admin-alert-glow {
-            animation: adminGlow 1.5s infinite;
-        }
+.request-card.rejected {
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
 
-        footer {
-            margin-top: 20px;
-            font-size: 11px;
-            color: #888;
-            border-top: 1px solid #f0f0f0;
-            padding-top: 8px;
-        }
+.request-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
 
-        .connection-status {
-            margin-top: 8px;
-            font-size: 11px;
-            color: #777;
-            min-height: 16px;
-        }
+.student-name {
+    color: #4c1d95;
+    font-size: 20px;
+    font-weight: 900;
+}
 
-        @media (max-width: 480px) {
-            .container {
-                padding: 18px;
-            }
+.request-type {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 7px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 900;
+}
 
-            .btn-action-group {
-                flex-direction: column;
-            }
+.request-type.pickup {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
 
-            .student-row {
-                align-items: flex-start;
-            }
-        }
-    </style>
+.request-type.excuse {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.request-info {
+    margin-top: 15px;
+    display: grid;
+    gap: 8px;
+    color: #444;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.request-info strong {
+    color: #24133f;
+    font-weight: 900;
+}
+
+.status-badge {
+    padding: 8px 13px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.request-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.reason-box {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 14px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+}
+
+.reason-box label {
+    display: block;
+    margin-bottom: 8px;
+    color: #9a3412;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.reason-box textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.empty {
+    text-align: center;
+    padding: 50px 20px;
+    color: #777;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.add-student {
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+    padding: 22px;
+    border-radius: 20px;
+    margin-bottom: 25px;
+}
+
+.add-student h3 {
+    margin-top: 0;
+    color: #4c1d95;
+    font-size: 19px;
+    font-weight: 900;
+}
+
+.student-form {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.students-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.student-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 17px;
+    border: 1px solid #e5e7eb;
+    border-radius: 15px;
+    background: white;
+}
+
+.student-row strong {
+    font-size: 16px;
+    font-weight: 900;
+    color: #3b176b;
+}
+
+.student-row span {
+    font-size: 14px;
+    font-weight: 800;
+    color: #555;
+}
+
+.logout-area {
+    padding: 20px 25px 25px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.logout-btn {
+    background: #f3f4f6;
+    color: #991b1b;
+    padding: 12px 25px;
+    border-radius: 12px;
+}
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 800;
+    background: #fafafa;
+}
+
+.loading {
+    text-align: center;
+    padding: 30px;
+    color: #6d28d9;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.alert-banner {
+    display: none;
+    margin: 0 25px 20px;
+    padding: 16px;
+    border-radius: 15px;
+    background: #fff7ed;
+    border: 2px solid #fb923c;
+    color: #9a3412;
+    text-align: center;
+    font-weight: 900;
+    animation: alertPulse 1s infinite;
+}
+
+@keyframes alertPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 rgba(251,146,60,0);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(251,146,60,.45);
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 800px) {
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .student-form {
+        grid-template-columns: 1fr;
+    }
+
+    .student-row {
+        grid-template-columns: 1fr;
+    }
+
+    .toolbar {
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        width: calc(100% - 14px);
+        margin: 7px auto;
+    }
+
+    .card {
+        border-radius: 20px;
+    }
+
+    .tabs {
+        padding-left: 12px;
+        padding-right: 12px;
+        gap: 6px;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 11px 8px;
+        font-size: 13px;
+    }
+
+    .tab-content {
+        padding: 15px;
+    }
+
+    .toolbar {
+        padding: 15px;
+    }
+
+    .request-card {
+        padding: 15px;
+    }
+}
+</style>
 </head>
 
 <body>
 
-<div class="stars-container" id="stars"></div>
+<div class="container">
+    <div class="card">
 
-<div class="container" id="adminContainerBox">
-
-    <img
-        src="https://i.ibb.co/ddsMPQH/logo.png"
-        alt="شعار بسمات الوعد"
-        class="logo-img"
-    >
-
-    <h1>روضة وابتدائية بسمات الوعد الأهلية بطريف</h1>
-    <h2>🔒 لوحة التحكم والإدارة المحصنة</h2>
-
-    <!-- تسجيل الدخول -->
-    <div id="loginSection" style="margin-top:20px;">
-
-        <div class="form-group">
-            <label>أدخل رمز المرور السري للإدارة:</label>
-
-            <input
-                type="password"
-                id="adminPasswordInput"
-                placeholder="أدخل كلمة المرور"
-                inputmode="numeric"
-                autocomplete="current-password"
-                maxlength="100"
-                onkeydown="if(event.key === 'Enter') checkAdminLogin()"
+        <div class="header">
+            <img
+                class="logo"
+                src="https://i.ibb.co/ddsMPQH/logo.png"
+                alt="شعار المدرسة"
             >
+
+            <h1>روضة وابتدائية بسمات الوعد الأهلية بطريف</h1>
+            <p>🔒 لوحة التحكم والإدارة المحصنة</p>
         </div>
 
-        <button
-            class="btn-submit"
-            id="loginButton"
-            onclick="checkAdminLogin()"
-        >
-            دخول لوحة التحكم
-        </button>
+        <!-- LOGIN -->
+        <section id="loginSection" class="login-section">
 
-        <div id="loginStatus" class="connection-status"></div>
-    </div>
+            <h2>🔐 دخول الإدارة</h2>
 
+            <p>
+                هذه الصفحة مخصصة لإدارة طلبات الطلاب وسجل الطلاب
+            </p>
 
-    <!-- لوحة الإدارة -->
-    <div id="adminPanelSection" class="hidden" style="margin-top: 15px;">
-
-        <div class="admin-tabs">
-
-            <button
-                class="tab-btn active"
-                id="tabRequests"
-                onclick="switchAdminTab('requests')"
-            >
-                الطلبات الواردة
-            </button>
-
-            <button
-                class="tab-btn"
-                id="tabStudents"
-                onclick="switchAdminTab('students')"
-            >
-                إدارة سجل الطلاب
-            </button>
-
-        </div>
-
-
-        <!-- الطلبات -->
-        <div id="adminRequestsView">
-
-            <div id="requestsList">
-                <p>جاري تحميل الطلبات...</p>
+            <div class="input-group">
+                <input
+                    id="adminPassword"
+                    type="password"
+                    placeholder="أدخل كلمة مرور الإدارة"
+                    autocomplete="current-password"
+                >
             </div>
 
-        </div>
+            <button
+                id="loginBtn"
+                class="primary-btn"
+                type="button"
+            >
+                دخول لوحة الإدارة
+            </button>
 
+            <div id="loginError" class="error"></div>
 
-        <!-- الطلاب -->
-        <div id="adminStudentsView" class="hidden" style="text-align: right;">
+        </section>
 
-            <div style="background: #f8f5fc; padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2d9eb;">
+        <!-- ADMIN -->
+        <section id="adminPanel" class="admin-panel">
 
-                <h3 style="color: var(--primary-purple); margin-top: 0; font-size:14px;">
-                    ➕ إضافة طالب جديد لقاعدة البيانات
-                </h3>
+            <div class="toolbar">
 
-                <div class="form-group" style="margin-bottom:8px;">
-                    <label>اسم الطالب الثلاثي:</label>
-
-                    <input
-                        type="text"
-                        id="newStudentName"
-                        placeholder="اسم الطالب أو الطالبة"
-                        maxlength="150"
-                    >
+                <div class="toolbar-title">
+                    🛡️ لوحة الإدارة
                 </div>
 
-                <div class="form-group" style="margin-bottom:8px;">
-                    <label>الصف / المستوى:</label>
-
-                    <input
-                        type="text"
-                        id="newStudentClass"
-                        placeholder="مثال: ثالث ابتدائي / روضة"
-                        maxlength="100"
-                    >
+                <div id="connectionStatus" class="status-online">
+                    متصل
                 </div>
 
-                <div class="form-group" style="margin-bottom:8px;">
-                    <label>كود الأمان الخاص به (للعائلة):</label>
+            </div>
 
-                    <input
-                        type="text"
-                        id="newStudentCode"
-                        placeholder="الكود الموحد (مثال: 1234)"
-                        inputmode="numeric"
-                        maxlength="30"
-                    >
-                </div>
+            <div id="alertBanner" class="alert-banner">
+                🔔 يوجد طلب استدعاء جديد يحتاج إلى إجراء
+            </div>
+
+            <div class="tabs">
 
                 <button
-                    class="btn-submit"
-                    id="addStudentButton"
-                    style="padding:9px; font-size:13px;"
-                    onclick="addNewStudent()"
+                    class="tab-btn active"
+                    data-tab="requestsTab"
+                    type="button"
                 >
-                    حفظ الطالب في النظام
+                    📋 الطلبات الواردة
+                </button>
+
+                <button
+                    class="tab-btn"
+                    data-tab="studentsTab"
+                    type="button"
+                >
+                    👨‍👩‍👧‍👦 إدارة سجل الطلاب
                 </button>
 
             </div>
 
-            <h3 style="font-size:14px; color:var(--primary-purple);">
-                قائمة الطلاب المسجلين حالياً:
-            </h3>
+            <!-- REQUESTS -->
+            <div id="requestsTab" class="tab-content active">
 
-            <div
-                id="studentsListContainer"
-                style="max-height: 220px; overflow-y: auto;"
-            >
-                <p>جاري التحميل...</p>
+                <div class="stats">
+
+                    <div class="stat">
+                        <div id="totalRequests" class="stat-number">0</div>
+                        <div class="stat-label">إجمالي الطلبات</div>
+                    </div>
+
+                    <div class="stat">
+                        <div id="pendingRequests" class="stat-number">0</div>
+                        <div class="stat-label">طلبات معلقة</div>
+                    </div>
+
+                    <div class="stat">
+                        <div id="approvedRequests" class="stat-number">0</div>
+                        <div class="stat-label">طلبات مقبولة</div>
+                    </div>
+
+                </div>
+
+                <div id="requestsList" class="requests-list">
+                    <div class="loading">
+                        جارٍ تحميل الطلبات...
+                    </div>
+                </div>
+
             </div>
 
+            <!-- STUDENTS -->
+            <div id="studentsTab" class="tab-content">
+
+                <div class="add-student">
+
+                    <h3>➕ إضافة طالب جديد</h3>
+
+                    <div class="student-form">
+
+                        <input
+                            id="newStudentName"
+                            type="text"
+                            placeholder="اسم الطالب"
+                        >
+
+                        <input
+                            id="newClassName"
+                            type="text"
+                            placeholder="الفصل"
+                        >
+
+                        <input
+                            id="newParentCode"
+                            type="text"
+                            inputmode="numeric"
+                            placeholder="كود ولي الأمر"
+                        >
+
+                        <button
+                            id="addStudentBtn"
+                            class="primary-btn"
+                            type="button"
+                        >
+                            إضافة الطالب
+                        </button>
+
+                    </div>
+
+                    <div id="studentMessage"></div>
+
+                </div>
+
+                <div id="studentsList" class="students-list">
+                    <div class="loading">
+                        جارٍ تحميل سجل الطلاب...
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="logout-area">
+
+                <button
+                    id="logoutBtn"
+                    class="logout-btn"
+                    type="button"
+                >
+                    🚪 تسجيل الخروج
+                </button>
+
+            </div>
+
+        </section>
+
+        <div class="footer">
+            تم إنشاء وتطوير النظام من قبل إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
         </div>
 
-
-        <!-- تسجيل خروج -->
-        <button
-            class="btn-submit"
-            style="background:#e2d9eb; color:#333; margin-top:15px; font-size:13px;"
-            onclick="logoutAdmin()"
-        >
-            تسجيل خروج 🔒
-        </button>
-
-        <div id="connectionStatus" class="connection-status"></div>
-
     </div>
-
-
-    <footer>
-        تم انشاء هذي الصفحه من قبل اخلاص الحضيري | وكيلة المدرسة
-    </footer>
-
 </div>
 
 
 <script>
+"use strict";
 
-    /* =========================================================
-       إعدادات الاتصال
-       ========================================================= */
+/* =========================================================
+   إعدادات الاتصال
+========================================================= */
 
-    const API_URL =
-        "https://gtbgfndskfofcxgtgqlc.supabase.co/functions/v1/parent-api";
+const API_URL =
+    "https://gtbgfndskfofcxgtgqlc.supabase.co/functions/v1/parent-api";
 
-    const SESSION_KEY =
-        "bsm_admin_session";
+const SESSION_KEY = "bsm_admin_session";
 
-    let soundInterval = null;
+let adminSession = sessionStorage.getItem(SESSION_KEY) || null;
 
-    let pollInterval = null;
+let requestTimer = null;
+let sessionRefreshTimer = null;
+let soundInterval = null;
+let lastPendingCount = 0;
+let audioContext = null;
 
-    let refreshInterval = null;
 
-    let isLoadingRequests = false;
+/* =========================================================
+   العناصر
+========================================================= */
 
-    let isLoadingStudents = false;
+const loginSection = document.getElementById("loginSection");
+const adminPanel = document.getElementById("adminPanel");
 
-    let lastPendingCount = 0;
+const adminPassword = document.getElementById("adminPassword");
+const loginBtn = document.getElementById("loginBtn");
+const loginError = document.getElementById("loginError");
 
+const requestsList = document.getElementById("requestsList");
+const studentsList = document.getElementById("studentsList");
 
-    /* =========================================================
-       النجوم
-       ========================================================= */
+const totalRequests = document.getElementById("totalRequests");
+const pendingRequests = document.getElementById("pendingRequests");
+const approvedRequests = document.getElementById("approvedRequests");
 
-    function createStars() {
+const connectionStatus =
+    document.getElementById("connectionStatus");
 
-        const container =
-            document.getElementById('stars');
+const alertBanner =
+    document.getElementById("alertBanner");
 
-        const types =
-            ['gold', 'bright', 'orange'];
+const newStudentName =
+    document.getElementById("newStudentName");
 
-        for (let i = 0; i < 35; i++) {
+const newClassName =
+    document.getElementById("newClassName");
 
-            const star =
-                document.createElement('div');
+const newParentCode =
+    document.getElementById("newParentCode");
 
-            star.classList.add(
-                'star',
-                types[
-                    Math.floor(
-                        Math.random() *
-                        types.length
-                    )
-                ]
-            );
+const addStudentBtn =
+    document.getElementById("addStudentBtn");
 
-            const size =
-                Math.random() * 2.5 + 1;
+const studentMessage =
+    document.getElementById("studentMessage");
 
-            star.style.width =
-                `${size}px`;
+const logoutBtn =
+    document.getElementById("logoutBtn");
 
-            star.style.height =
-                `${size}px`;
 
-            star.style.left =
-                `${Math.random() * 100}%`;
+/* =========================================================
+   حماية عرض النصوص
+========================================================= */
 
-            star.style.animationDuration =
-                `${Math.random() * 4 + 3}s`;
+function escapeHtml(value) {
 
-            star.style.animationDelay =
-                `${Math.random() * 5}s`;
-
-            container.appendChild(star);
-        }
-    }
-
-    createStars();
-
-
-    /* =========================================================
-       أدوات الجلسة
-       ========================================================= */
-
-    function getSessionToken() {
-
-        return (
-            sessionStorage.getItem(
-                SESSION_KEY
-            ) || ""
-        );
-    }
-
-
-    function saveSessionToken(token) {
-
-        if (
-            typeof token === "string" &&
-            token.trim() !== ""
-        ) {
-
-            sessionStorage.setItem(
-                SESSION_KEY,
-                token
-            );
-
-            return true;
-        }
-
-        return false;
-    }
-
-
-    function clearSessionToken() {
-
-        sessionStorage.removeItem(
-            SESSION_KEY
-        );
-    }
-
-
-    /* =========================================================
-       حالة الاتصال
-       ========================================================= */
-
-    function setConnectionStatus(
-        message,
-        isError = false
-    ) {
-
-        const loginStatus =
-            document.getElementById(
-                'loginStatus'
-            );
-
-        const panelStatus =
-            document.getElementById(
-                'connectionStatus'
-            );
-
-        if (loginStatus) {
-
-            loginStatus.textContent =
-                message || "";
-
-            loginStatus.style.color =
-                isError
-                    ? "#d9534f"
-                    : "#777";
-        }
-
-        if (panelStatus) {
-
-            panelStatus.textContent =
-                message || "";
-
-            panelStatus.style.color =
-                isError
-                    ? "#d9534f"
-                    : "#777";
-        }
-    }
-
-
-    /* =========================================================
-       حماية عرض النصوص
-       ========================================================= */
-
-    function escapeHtml(value) {
-
-        if (
-            value === null ||
-            value === undefined
-        ) {
-
-            return "";
-        }
-
-        return String(value)
-            .replace(
-                /&/g,
-                "&amp;"
-            )
-            .replace(
-                /</g,
-                "&lt;"
-            )
-            .replace(
-                />/g,
-                "&gt;"
-            )
-            .replace(
-                /"/g,
-                "&quot;"
-            )
-            .replace(
-                /'/g,
-                "&#039;"
-            );
-    }
-
-
-    function formatTime(dateString) {
-
-        try {
-
-            return new Date(
-                dateString
-            ).toLocaleTimeString(
-                'ar-SA',
-                {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }
-            );
-
-        } catch (e) {
-
-            return "";
-        }
-    }
-
-
-    /* =========================================================
-       الاتصال بـ Edge Function
-       ========================================================= */
-
-    async function apiRequest(
-        payload,
-        requireAuth = true
-    ) {
-
-        const headers = {
-            "Content-Type":
-                "application/json"
-        };
-
-
-        /*
-         * تسجيل الدخول لا يحتاج جلسة.
-         * بقية أوامر الإدارة تحتاج الجلسة.
-         */
-        if (requireAuth) {
-
-            const token =
-                getSessionToken();
-
-            if (!token) {
-
-                const error =
-                    new Error(
-                        "NO_SESSION"
-                    );
-
-                error.status = 401;
-
-                throw error;
-            }
-
-            headers["Authorization"] =
-                "Bearer " + token;
-        }
-
-
-        const response =
-            await fetch(
-                API_URL,
-                {
-                    method: "POST",
-                    headers: headers,
-                    body: JSON.stringify(
-                        payload
-                    ),
-                    cache: "no-store"
-                }
-            );
-
-
-        let result = null;
-
-        try {
-
-            result =
-                await response.json();
-
-        } catch (e) {
-
-            result = {
-                success: false,
-                message:
-                    "استجابة غير صالحة من الخادم"
-            };
-        }
-
-
-        if (
-            !response.ok ||
-            result.success === false
-        ) {
-
-            const error =
-                new Error(
-                    result.message ||
-                    "حدث خطأ في الاتصال بالخادم"
-                );
-
-            error.status =
-                response.status;
-
-            throw error;
-        }
-
-
-        return result;
-    }
-
-
-    /* =========================================================
-       استخراج جلسة الإدارة
-       ========================================================= */
-
-    function extractSessionToken(
-        result
-    ) {
-
-        /*
-         * الخادم الجديد يرجع:
-         * session_token
-         *
-         * تمت إضافة token كخيار احتياطي
-         * حتى لا تتعطل الصفحة لو تغير الاسم
-         * في إصدار مستقبلي.
-         */
-
-        if (
-            result &&
-            typeof result.session_token ===
-                "string" &&
-            result.session_token.trim() !== ""
-        ) {
-
-            return result.session_token;
-        }
-
-
-        if (
-            result &&
-            typeof result.token ===
-                "string" &&
-            result.token.trim() !== ""
-        ) {
-
-            return result.token;
-        }
-
-
+    if (value === null || value === undefined) {
         return "";
     }
 
-
-    /* =========================================================
-       تسجيل دخول الإدارة
-       ========================================================= */
-
-    async function checkAdminLogin() {
-
-        const input =
-            document.getElementById(
-                'adminPasswordInput'
-            );
-
-        const button =
-            document.getElementById(
-                'loginButton'
-            );
-
-        const password =
-            input.value.trim();
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 
-        if (!password) {
+/* =========================================================
+   طلبات API
+========================================================= */
 
-            alert(
-                "يرجى إدخال كلمة المرور."
-            );
+async function api(action, data = {}, useSession = true) {
 
-            return;
-        }
+    const headers = {
+        "Content-Type": "application/json"
+    };
 
-
-        button.disabled = true;
-
-        button.textContent =
-            "جاري التحقق...";
-
-
-        try {
-
-            /*
-             * مهم جداً:
-             * admin_login لا يحتاج Authorization
-             */
-            const result =
-                await apiRequest(
-                    {
-                        action:
-                            "admin_login",
-
-                        password:
-                            password
-                    },
-                    false
-                );
-
-
-            /*
-             * الإصلاح الرئيسي:
-             * الخادم يرجع session_token
-             */
-            const sessionToken =
-                extractSessionToken(
-                    result
-                );
-
-
-            if (!sessionToken) {
-
-                console.error(
-                    "Server login response:",
-                    result
-                );
-
-                throw new Error(
-                    "لم يتم استلام جلسة الإدارة من الخادم."
-                );
-            }
-
-
-            const saved =
-                saveSessionToken(
-                    sessionToken
-                );
-
-
-            if (!saved) {
-
-                throw new Error(
-                    "تعذر حفظ جلسة الإدارة."
-                );
-            }
-
-
-            input.value = "";
-
-
-            document
-                .getElementById(
-                    'loginSection'
-                )
-                .classList.add(
-                    'hidden'
-                );
-
-
-            document
-                .getElementById(
-                    'adminPanelSection'
-                )
-                .classList.remove(
-                    'hidden'
-                );
-
-
-            setConnectionStatus(
-                "🟢 تم تسجيل الدخول بنجاح"
-            );
-
-
-            playSoftTone();
-
-
-            /*
-             * تحميل البيانات بعد تسجيل الدخول
-             */
-            await loadAdminRequests();
-
-            await loadAdminStudents();
-
-
-            startAdminBackgroundServices();
-
-
-        } catch (error) {
-
-            console.error(
-                "Admin login error:",
-                error
-            );
-
-
-            alert(
-                error.message ||
-                "❌ تعذر تسجيل الدخول."
-            );
-
-
-            clearSessionToken();
-
-        } finally {
-
-            button.disabled = false;
-
-            button.textContent =
-                "دخول لوحة التحكم";
-        }
+    if (useSession && adminSession) {
+        headers["Authorization"] =
+            "Bearer " + adminSession;
     }
 
+    const response = await fetch(API_URL, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+            action,
+            ...data
+        })
+    });
 
-    /* =========================================================
-       استعادة الجلسة عند فتح الصفحة
-       ========================================================= */
+    let result = null;
 
-    async function restoreAdminSession() {
-
-        const token =
-            getSessionToken();
-
-
-        if (!token) {
-
-            return;
-        }
-
-
-        try {
-
-            const result =
-                await apiRequest(
-                    {
-                        action:
-                            "admin_refresh"
-                    },
-                    true
-                );
-
-
-            /*
-             * الإصلاح هنا أيضاً:
-             * نأخذ session_token
-             */
-            const newToken =
-                extractSessionToken(
-                    result
-                );
-
-
-            if (!newToken) {
-
-                throw new Error(
-                    "تعذر تجديد جلسة الإدارة."
-                );
-            }
-
-
-            saveSessionToken(
-                newToken
-            );
-
-
-            document
-                .getElementById(
-                    'loginSection'
-                )
-                .classList.add(
-                    'hidden'
-                );
-
-
-            document
-                .getElementById(
-                    'adminPanelSection'
-                )
-                .classList.remove(
-                    'hidden'
-                );
-
-
-            setConnectionStatus(
-                "🟢 تم استعادة جلسة الإدارة"
-            );
-
-
-            await loadAdminRequests();
-
-            await loadAdminStudents();
-
-
-            startAdminBackgroundServices();
-
-
-        } catch (error) {
-
-            console.log(
-                "لا توجد جلسة إدارة صالحة حالياً.",
-                error
-            );
-
-            clearSessionToken();
-        }
+    try {
+        result = await response.json();
+    } catch {
+        result = {
+            success: false,
+            message: "استجابة غير صالحة من الخادم"
+        };
     }
 
+    if (!response.ok) {
 
-    /* =========================================================
-       تحديث الجلسة تلقائياً
-       ========================================================= */
-
-    async function refreshAdminSession() {
-
-        const token =
-            getSessionToken();
-
-
-        if (!token) {
-
-            return false;
+        if (
+            response.status === 401 ||
+            result?.code === "SESSION_EXPIRED" ||
+            result?.message?.includes("authorization")
+        ) {
+            handleSessionExpired();
         }
 
-
-        try {
-
-            const result =
-                await apiRequest(
-                    {
-                        action:
-                            "admin_refresh"
-                    },
-                    true
-                );
-
-
-            /*
-             * الإصلاح هنا:
-             * session_token وليس token
-             */
-            const newToken =
-                extractSessionToken(
-                    result
-                );
-
-
-            if (!newToken) {
-
-                throw new Error(
-                    "لم يتم استلام جلسة جديدة من الخادم."
-                );
-            }
-
-
-            saveSessionToken(
-                newToken
-            );
-
-
-            setConnectionStatus(
-                "🟢 الجلسة نشطة"
-            );
-
-
-            return true;
-
-        } catch (error) {
-
-            console.error(
-                "Session refresh failed:",
-                error
-            );
-
-
-            if (
-                error.status === 401 ||
-                error.message ===
-                    "NO_SESSION"
-            ) {
-
-                await handleSessionExpired();
-            }
-
-
-            return false;
-        }
+        throw new Error(
+            result?.message ||
+            "حدث خطأ في الاتصال بالخادم"
+        );
     }
 
+    if (result?.success === false) {
 
-    /* =========================================================
-       تشغيل خدمات الإدارة الخلفية
-       ========================================================= */
+        if (
+            result?.code === "SESSION_EXPIRED" ||
+            result?.message?.includes("انتهت") ||
+            result?.message?.includes("جلسة")
+        ) {
+            handleSessionExpired();
+        }
 
-    function startAdminBackgroundServices() {
+        throw new Error(
+            result?.message ||
+            "تعذر تنفيذ العملية"
+        );
+    }
 
-        stopAdminBackgroundServices();
+    return result;
+}
 
+
+/* =========================================================
+   تسجيل الدخول
+========================================================= */
+
+loginBtn.addEventListener("click", loginAdmin);
+
+adminPassword.addEventListener("keydown", function(event) {
+
+    if (event.key === "Enter") {
+        loginAdmin();
+    }
+
+});
+
+
+async function loginAdmin() {
+
+    const password = adminPassword.value.trim();
+
+    loginError.textContent = "";
+
+    if (!password) {
+
+        loginError.textContent =
+            "فضلاً أدخل كلمة مرور الإدارة.";
+
+        return;
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = "جارٍ التحقق...";
+
+    try {
+
+        const result = await api(
+            "admin_login",
+            { password },
+            false
+        );
+
+        if (!result?.token) {
+            throw new Error(
+                "لم يتم استلام جلسة الإدارة."
+            );
+        }
+
+        adminSession = result.token;
+
+        sessionStorage.setItem(
+            SESSION_KEY,
+            adminSession
+        );
+
+        adminPassword.value = "";
+
+        showAdminPanel();
+
+        await loadAdminRequests();
+
+        await loadStudents();
+
+        startRequestPolling();
+
+        startSessionRefresh();
 
         /*
-         * تحديث الطلبات كل 5 ثوانٍ
+         * تسجيل الدخول عبارة عن تفاعل مباشر من المستخدم،
+         * لذلك نهيئ الصوت هنا حتى تسمح المتصفحات بالتشغيل.
          */
-        pollInterval =
-            setInterval(
-                async () => {
+        initializeAudio();
 
-                    if (
-                        document.visibilityState ===
-                        "visible"
-                    ) {
+    } catch (error) {
 
-                        await loadAdminRequests(
-                            true
-                        );
-                    }
+        console.error(error);
 
-                },
-                5000
-            );
+        loginError.textContent =
+            error.message ||
+            "كلمة المرور غير صحيحة أو حدث خطأ.";
+
+    } finally {
+
+        loginBtn.disabled = false;
+        loginBtn.textContent = "دخول لوحة الإدارة";
+    }
+}
 
 
-        /*
-         * تجديد الجلسة كل 30 دقيقة
-         */
-        refreshInterval =
-            setInterval(
-                async () => {
+/* =========================================================
+   عرض لوحة الإدارة
+========================================================= */
 
-                    await refreshAdminSession();
+function showAdminPanel() {
 
-                },
-                30 * 60 * 1000
-            );
+    loginSection.style.display = "none";
+    adminPanel.style.display = "block";
+}
+
+
+/* =========================================================
+   انتهاء الجلسة
+========================================================= */
+
+function handleSessionExpired() {
+
+    stopContinuousAlert();
+
+    if (requestTimer) {
+        clearInterval(requestTimer);
+        requestTimer = null;
     }
 
+    if (sessionRefreshTimer) {
+        clearInterval(sessionRefreshTimer);
+        sessionRefreshTimer = null;
+    }
 
-    function stopAdminBackgroundServices() {
+    adminSession = null;
 
-        if (pollInterval) {
+    sessionStorage.removeItem(SESSION_KEY);
 
-            clearInterval(
-                pollInterval
+    adminPanel.style.display = "none";
+    loginSection.style.display = "block";
+
+    loginError.textContent =
+        "انتهت جلسة الإدارة، يرجى تسجيل الدخول مرة أخرى.";
+}
+
+
+/* =========================================================
+   تحديث جلسة الإدارة
+========================================================= */
+
+async function refreshAdminSession() {
+
+    if (!adminSession) {
+        return;
+    }
+
+    try {
+
+        const result = await api(
+            "admin_refresh"
+        );
+
+        if (result?.token) {
+
+            adminSession = result.token;
+
+            sessionStorage.setItem(
+                SESSION_KEY,
+                adminSession
             );
-
-            pollInterval = null;
         }
 
+    } catch (error) {
 
-        if (refreshInterval) {
+        console.warn(
+            "تعذر تحديث جلسة الإدارة:",
+            error
+        );
 
-            clearInterval(
-                refreshInterval
-            );
+    }
+}
 
-            refreshInterval = null;
+
+function startSessionRefresh() {
+
+    if (sessionRefreshTimer) {
+        clearInterval(sessionRefreshTimer);
+    }
+
+    /*
+     * تجديد الجلسة كل 30 دقيقة طالما الصفحة مفتوحة.
+     */
+    sessionRefreshTimer = setInterval(
+        refreshAdminSession,
+        30 * 60 * 1000
+    );
+}
+
+
+/* =========================================================
+   تحميل الطلبات
+========================================================= */
+
+async function loadAdminRequests() {
+
+    if (!adminSession) {
+        return;
+    }
+
+    try {
+
+        const result = await api(
+            "admin_get_requests"
+        );
+
+        const requests =
+            Array.isArray(result?.requests)
+                ? result.requests
+                : [];
+
+        connectionStatus.className =
+            "status-online";
+
+        connectionStatus.textContent =
+            "متصل";
+
+        renderRequests(requests);
+
+    } catch (error) {
+
+        console.error(error);
+
+        connectionStatus.className =
+            "status-online status-offline";
+
+        connectionStatus.textContent =
+            "تعذر الاتصال";
+
+        /*
+         * لا نمسح الطلبات السابقة عند حدوث خطأ مؤقت.
+         */
+    }
+}
+
+
+/* =========================================================
+   تحديث الطلبات تلقائياً
+========================================================= */
+
+function startRequestPolling() {
+
+    if (requestTimer) {
+        clearInterval(requestTimer);
+    }
+
+    /*
+     * فحص الطلبات كل 5 ثوانٍ.
+     */
+    requestTimer = setInterval(
+        loadAdminRequests,
+        5000
+    );
+}
+
+
+/* =========================================================
+   عرض الطلبات
+========================================================= */
+
+function renderRequests(requests) {
+
+    const sortedRequests = [...requests].sort(
+        (a, b) =>
+            new Date(b.created_at) -
+            new Date(a.created_at)
+    );
+
+    const pending =
+        sortedRequests.filter(
+            item => item.status === "pending"
+        );
+
+    const approved =
+        sortedRequests.filter(
+            item => item.status === "approved"
+        );
+
+    totalRequests.textContent =
+        sortedRequests.length;
+
+    pendingRequests.textContent =
+        pending.length;
+
+    approvedRequests.textContent =
+        approved.length;
+
+
+    /*
+     * تنبيه عند وجود طلبات معلقة.
+     */
+    if (pending.length > 0) {
+
+        alertBanner.style.display = "block";
+
+        startContinuousAlert();
+
+        /*
+         * إذا زاد عدد الطلبات المعلقة،
+         * نشغل التنبيه فوراً.
+         */
+        if (pending.length > lastPendingCount) {
+            playAlertTone();
         }
 
+    } else {
+
+        alertBanner.style.display = "none";
 
         stopContinuousAlert();
     }
 
-
-    /* =========================================================
-       التبويبات
-       ========================================================= */
-
-    function switchAdminTab(tab) {
-
-        document
-            .getElementById(
-                'tabRequests'
-            )
-            .classList.remove(
-                'active'
-            );
+    lastPendingCount = pending.length;
 
 
-        document
-            .getElementById(
-                'tabStudents'
-            )
-            .classList.remove(
-                'active'
-            );
+    if (sortedRequests.length === 0) {
 
+        requestsList.innerHTML = `
+            <div class="empty">
+                📭 لا توجد طلبات واردة حالياً
+            </div>
+        `;
 
-        document
-            .getElementById(
-                'adminRequestsView'
-            )
-            .classList.add(
-                'hidden'
-            );
-
-
-        document
-            .getElementById(
-                'adminStudentsView'
-            )
-            .classList.add(
-                'hidden'
-            );
-
-
-        if (tab === 'requests') {
-
-            document
-                .getElementById(
-                    'tabRequests'
-                )
-                .classList.add(
-                    'active'
-                );
-
-
-            document
-                .getElementById(
-                    'adminRequestsView'
-                )
-                .classList.remove(
-                    'hidden'
-                );
-
-
-            loadAdminRequests();
-
-        } else {
-
-            document
-                .getElementById(
-                    'tabStudents'
-                )
-                .classList.add(
-                    'active'
-                );
-
-
-            document
-                .getElementById(
-                    'adminStudentsView'
-                )
-                .classList.remove(
-                    'hidden'
-                );
-
-
-            loadAdminStudents();
-        }
+        return;
     }
 
 
-    /* =========================================================
-       الصوت
-       ========================================================= */
-
-    function playSoftTone() {
-
-        try {
-
-            const AudioContext =
-                window.AudioContext ||
-                window.webkitAudioContext;
+    requestsList.innerHTML =
+        sortedRequests.map(
+            renderRequestCard
+        ).join("");
+}
 
 
-            if (!AudioContext) {
+/* =========================================================
+   بطاقة الطلب
+========================================================= */
 
-                return;
-            }
+function renderRequestCard(request) {
 
+    const student =
+        request.students || {};
 
-            const audioCtx =
-                new AudioContext();
+    const studentName =
+        student.student_name ||
+        "طالب غير معروف";
 
+    const className =
+        student.class_name ||
+        "غير محدد";
 
-            if (
-                audioCtx.state ===
-                "suspended"
-            ) {
+    const parentCode =
+        student.parent_code ||
+        "غير محدد";
 
-                audioCtx.resume();
-            }
+    const isPickup =
+        request.request_type === "pickup";
 
+    const typeText =
+        isPickup
+            ? "🚗 استدعاء لاستلام الطالب"
+            : "📝 استئذان / عذر";
 
-            [
-                523.25,
-                659.25,
-                783.99
-            ].forEach(
-                (freq, index) => {
-
-                    const osc =
-                        audioCtx
-                            .createOscillator();
-
-
-                    const gain =
-                        audioCtx
-                            .createGain();
-
-
-                    osc.type =
-                        'sine';
+    const typeClass =
+        isPickup
+            ? "pickup"
+            : "excuse";
 
 
-                    osc.frequency
-                        .setValueAtTime(
-                            freq,
-                            audioCtx.currentTime +
-                            (index * 0.15)
-                        );
+    let statusText = "معلق";
+    let statusClass = "status-pending";
+
+    if (request.status === "approved") {
+
+        statusText = "تم القبول";
+        statusClass = "status-approved";
+
+    } else if (request.status === "rejected") {
+
+        statusText = "تم الرفض";
+        statusClass = "status-rejected";
+    }
 
 
-                    gain.gain
-                        .setValueAtTime(
-                            0.3,
-                            audioCtx.currentTime +
-                            (index * 0.15)
-                        );
-
-
-                    gain.gain
-                        .exponentialRampToValueAtTime(
-                            0.001,
-                            audioCtx.currentTime +
-                            (index * 0.15) +
-                            0.3
-                        );
-
-
-                    osc.connect(gain);
-
-                    gain.connect(
-                        audioCtx.destination
-                    );
-
-
-                    osc.start(
-                        audioCtx.currentTime +
-                        (index * 0.15)
-                    );
-
-
-                    osc.stop(
-                        audioCtx.currentTime +
-                        (index * 0.15) +
-                        0.3
-                    );
+    const date =
+        request.created_at
+            ? new Date(
+                request.created_at
+            ).toLocaleString(
+                "ar-SA",
+                {
+                    dateStyle: "medium",
+                    timeStyle: "short"
                 }
-            );
-
-
-            setTimeout(
-                () => {
-
-                    try {
-
-                        audioCtx.close();
-
-                    } catch (e) {}
-                },
-                1500
-            );
-
-        } catch (e) {
-
-            console.log(
-                "Audio unavailable"
-            );
-        }
-    }
-
-
-    function startContinuousAlert() {
-
-        if (!soundInterval) {
-
-            playSoftTone();
-
-
-            soundInterval =
-                setInterval(
-                    playSoftTone,
-                    4000
-                );
-
-
-            document
-                .getElementById(
-                    'adminContainerBox'
-                )
-                .classList.add(
-                    'admin-alert-glow'
-                );
-        }
-    }
-
-
-    function stopContinuousAlert() {
-
-        if (soundInterval) {
-
-            clearInterval(
-                soundInterval
-            );
-
-            soundInterval = null;
-        }
-
-
-        document
-            .getElementById(
-                'adminContainerBox'
             )
-            .classList.remove(
-                'admin-alert-glow'
-            );
-    }
+            : "غير معروف";
 
 
-    /* =========================================================
-       تحميل الطلبات
-       ========================================================= */
+    let excuseReason = "";
 
-    async function loadAdminRequests(
-        silent = false
+    if (
+        request.request_type === "excuse" &&
+        request.excuse_reason
     ) {
 
-        if (isLoadingRequests) {
-
-            return;
-        }
-
-
-        if (!getSessionToken()) {
-
-            return;
-        }
-
-
-        isLoadingRequests = true;
-
-
-        try {
-
-            const result =
-                await apiRequest(
-                    {
-                        action:
-                            "admin_get_requests"
-                    },
-                    true
-                );
-
-
-            const requests =
-                Array.isArray(
-                    result.requests
-                )
-                    ? result.requests
-                    : [];
-
-
-            const pendingCount =
-                requests.filter(
-                    r =>
-                        r.status ===
-                        "pending"
-                ).length;
-
-
-            if (pendingCount > 0) {
-
-                startContinuousAlert();
-
-            } else {
-
-                stopContinuousAlert();
-            }
-
-
-            if (
-                pendingCount >
-                lastPendingCount
-            ) {
-
-                playSoftTone();
-            }
-
-
-            lastPendingCount =
-                pendingCount;
-
-
-            renderRequests(
-                requests
-            );
-
-
-            setConnectionStatus(
-                "🟢 آخر تحديث: " +
-                new Date()
-                    .toLocaleTimeString(
-                        'ar-SA',
-                        {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit'
-                        }
-                    )
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Load requests error:",
-                error
-            );
-
-
-            if (
-                error.status === 401 ||
-                error.message ===
-                    "NO_SESSION"
-            ) {
-
-                await handleSessionExpired();
-
-            } else if (!silent) {
-
-                document
-                    .getElementById(
-                        'requestsList'
-                    )
-                    .innerHTML =
-                    "<p>تعذر تحميل الطلبات حالياً.</p>";
-
-                setConnectionStatus(
-                    "🔴 تعذر الاتصال بالنظام",
-                    true
-                );
-            }
-
-        } finally {
-
-            isLoadingRequests = false;
-        }
+        excuseReason = `
+            <div>
+                <strong>سبب الاستئذان:</strong>
+                ${escapeHtml(request.excuse_reason)}
+            </div>
+        `;
     }
 
 
-    /* =========================================================
-       عرض الطلبات
-       ========================================================= */
+    let rejectReason = "";
 
-    function renderRequests(
-        requests
+    if (
+        request.status === "rejected" &&
+        request.reject_reason
     ) {
 
-        const listDiv =
-            document.getElementById(
-                'requestsList'
-            );
-
-
-        if (
-            !requests ||
-            requests.length === 0
-        ) {
-
-            listDiv.innerHTML =
-                "<p>لا توجد طلبات واردة حالياً.</p>";
-
-            return;
-        }
-
-
-        listDiv.innerHTML = "";
-
-
-        requests.forEach(
-            req => {
-
-                const student =
-                    req.students || {};
-
-
-                const studentName =
-                    student.student_name ||
-                    req.student_name ||
-                    "غير معروف";
-
-
-                const studentClass =
-                    student.class_name ||
-                    req.student_class ||
-                    "غير محدد";
-
-
-                const parentCode =
-                    student.parent_code ||
-                    req.parent_code ||
-                    "غير متوفر";
-
-
-                const isDone =
-                    req.status ===
-                    'approved';
-
-
-                const isRejected =
-                    req.status ===
-                    'rejected';
-
-
-                const isPending =
-                    req.status ===
-                    'pending';
-
-
-                let itemClass =
-                    'request-item';
-
-
-                if (isDone) {
-
-                    itemClass +=
-                        ' done';
-
-                } else if (isRejected) {
-
-                    itemClass +=
-                        ' rejected';
-                }
-
-
-                let statusBadge =
-                    `<span class="badge badge-done">
-                        تمت الموافقة ✅
-                    </span>`;
-
-
-                if (isPending) {
-
-                    statusBadge =
-                        `<span class="badge" style="background:#fff3cd; color:#856404;">
-                            ⏳ بانتظار الإجراء
-                        </span>`;
-                }
-
-
-                if (isRejected) {
-
-                    statusBadge =
-                        `<span class="badge badge-rejected">
-                            مرفوض ❌
-                        </span>`;
-                }
-
-
-                const isPermission =
-                    req.request_type ===
-                    "excuse";
-
-
-                let typeBadgeHtml;
-
-
-                if (isPermission) {
-
-                    typeBadgeHtml =
-                        `<span class="type-badge-permission">
-                            ⚡ استئذان مبكر
-                        </span>`;
-
-                } else {
-
-                    typeBadgeHtml =
-                        `<span class="type-badge-dismissal">
-                            🚶‍♂️ نداء انصراف
-                        </span>`;
-                }
-
-
-                let extraDetailsHtml =
-                    "";
-
-
-                if (
-                    isPermission &&
-                    req.excuse_reason
-                ) {
-
-                    extraDetailsHtml =
-                        `<div style="margin-top:5px; font-size:12px; color:#555;">
-                            سبب الاستئذان:
-                            <span class="badge">
-                                ${escapeHtml(
-                                    req.excuse_reason
-                                )}
-                            </span>
-                        </div>`;
-                }
-
-
-                if (
-                    isRejected &&
-                    req.reject_reason
-                ) {
-
-                    extraDetailsHtml +=
-                        `<div style="margin-top:5px; font-size:12px; color:#721c24;">
-                            سبب الرفض:
-                            <span class="badge-reject-reason">
-                                ${escapeHtml(
-                                    req.reject_reason
-                                )}
-                            </span>
-                        </div>`;
-                }
-
-
-                let actionButtons =
-                    "";
-
-
-                if (isPending) {
-
-                    actionButtons =
-                        `<div class="btn-action-group">
-
-                            <button
-                                class="btn-approve"
-                                onclick="updateRequestStatus('${escapeHtml(req.id)}', 'approved')"
-                            >
-                                موافقة وتجهيز
-                            </button>
-
-                            <button
-                                class="btn-reject"
-                                onclick="promptRejectReason('${escapeHtml(req.id)}')"
-                            >
-                                رفض الطلب
-                            </button>
-
-                        </div>`;
-                }
-
-
-                listDiv.innerHTML +=
-
-                    `<div class="${itemClass}">
-
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-
-                            <div>
-
-                                <strong style="font-size:15px; color:var(--primary-purple);">
-                                    ${escapeHtml(studentName)}
-                                </strong>
-
-                                <span style="font-size:12px; color:#555; margin-right:6px;">
-                                    (${escapeHtml(studentClass)})
-                                </span>
-
-                            </div>
-
-                            <span style="font-size:11px; color:#888;">
-                                ${escapeHtml(
-                                    formatTime(
-                                        req.created_at
-                                    )
-                                )}
-                            </span>
-
-                        </div>
-
-
-                        <div class="request-box-content">
-
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-
-                                <span>
-                                    نوع النداء:
-                                    ${typeBadgeHtml}
-                                </span>
-
-                            </div>
-
-                            ${extraDetailsHtml}
-
-                        </div>
-
-
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#666; margin-top:4px;">
-
-                            <div>
-
-                                <span>
-                                    الاسم:
-                                    <strong style="color:var(--success-green);">
-                                        صحيح ✅
-                                    </strong>
-                                </span>
-
-                                |
-
-                                <span>
-                                    الكود:
-                                    <strong style="color:var(--primary-purple);">
-                                        ${escapeHtml(parentCode)}
-                                    </strong>
-                                </span>
-
-                            </div>
-
-                            <div>
-                                ${statusBadge}
-                            </div>
-
-                        </div>
-
-
-                        ${actionButtons}
-
-                    </div>`;
-            }
-        );
+        rejectReason = `
+            <div>
+                <strong>سبب الرفض:</strong>
+                ${escapeHtml(request.reject_reason)}
+            </div>
+        `;
     }
 
 
-    /* =========================================================
-       قبول / رفض الطلب
-       ========================================================= */
+    /*
+     * مهم:
+     * عند القبول لا تظهر أي نافذة ولا خانة سبب.
+     *
+     * عند الرفض فقط نعرض خانة السبب.
+     */
+    let actions = "";
 
-    async function updateRequestStatus(
-        reqId,
-        newStatus,
-        reason = ''
-    ) {
+    if (request.status === "pending") {
 
-        if (!reqId) {
+        actions = `
+            <div class="request-actions">
 
-            return;
-        }
+                <button
+                    class="success-btn"
+                    type="button"
+                    onclick="approveRequest(${Number(request.id)})"
+                >
+                    ✅ قبول الطلب
+                </button>
 
+                <button
+                    class="danger-btn"
+                    type="button"
+                    onclick="showRejectBox(${Number(request.id)})"
+                >
+                    ❌ رفض الطلب
+                </button>
 
-        try {
+            </div>
 
-            const buttons =
-                document.querySelectorAll(
-                    `[onclick*="'${reqId}'"]`
-                );
+            <div
+                id="rejectBox-${Number(request.id)}"
+                class="reason-box hidden"
+            >
 
+                <label>
+                    سبب الرفض
+                </label>
 
-            buttons.forEach(
-                button => {
+                <textarea
+                    id="rejectReason-${Number(request.id)}"
+                    placeholder="اكتب سبب رفض الطلب..."
+                ></textarea>
 
-                    button.disabled =
-                        true;
-                }
-            );
+                <div class="request-actions">
 
+                    <button
+                        class="danger-btn"
+                        type="button"
+                        onclick="rejectRequest(${Number(request.id)})"
+                    >
+                        تأكيد الرفض
+                    </button>
 
-            const result =
-                await apiRequest(
-                    {
-                        action:
-                            "admin_update_request",
+                    <button
+                        class="secondary-btn"
+                        type="button"
+                        onclick="hideRejectBox(${Number(request.id)})"
+                    >
+                        إلغاء
+                    </button>
 
-                        id:
-                            Number(reqId),
+                </div>
 
-                        status:
-                            newStatus,
-
-                        reject_reason:
-                            reason || null
-                    },
-                    true
-                );
-
-
-            if (result.success) {
-
-                await loadAdminRequests();
-
-
-                if (
-                    newStatus ===
-                    'approved'
-                ) {
-
-                    alert(
-                        "تمت الموافقة على الطلب ✅"
-                    );
-
-                } else if (
-                    newStatus ===
-                    'rejected'
-                ) {
-
-                    alert(
-                        "تم رفض الطلب وحفظ السبب ✅"
-                    );
-                }
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                "Update request error:",
-                error
-            );
-
-
-            if (
-                error.status === 401 ||
-                error.message ===
-                    "NO_SESSION"
-            ) {
-
-                await handleSessionExpired();
-
-            } else {
-
-                alert(
-                    error.message ||
-                    "تعذر تحديث حالة الطلب."
-                );
-            }
-
-        } finally {
-
-            await loadAdminRequests(
-                true
-            );
-        }
+            </div>
+        `;
     }
 
 
-    function promptRejectReason(
-        reqId
-    ) {
+    return `
+        <div class="request-card ${escapeHtml(request.status)}">
 
-        const reason =
-            prompt(
-                "أدخل سبب الرفض (مثال: بيانات غير مطابقة، الطالب غائب...):"
-            );
+            <div class="request-top">
 
+                <div>
 
-        if (
-            reason !== null &&
-            reason.trim() !== ""
-        ) {
+                    <div class="student-name">
+                        ${escapeHtml(studentName)}
+                    </div>
 
-            updateRequestStatus(
-                reqId,
-                'rejected',
-                reason.trim()
-            );
+                    <span class="request-type ${typeClass}">
+                        ${typeText}
+                    </span>
 
-        } else if (
-            reason !== null
-        ) {
+                </div>
 
-            alert(
-                "يرجى إدخال سبب صحيح للرفض!"
-            );
-        }
-    }
+                <span class="status-badge ${statusClass}">
+                    ${statusText}
+                </span>
 
+            </div>
 
-    /* =========================================================
-       الطلاب
-       ========================================================= */
 
-    async function loadAdminStudents() {
+            <div class="request-info">
 
-        if (isLoadingStudents) {
+                <div>
+                    <strong>الفصل:</strong>
+                    ${escapeHtml(className)}
+                </div>
 
-            return;
-        }
+                <div>
+                    <strong>كود ولي الأمر:</strong>
+                    ${escapeHtml(parentCode)}
+                </div>
 
+                <div>
+                    <strong>وقت الطلب:</strong>
+                    ${escapeHtml(date)}
+                </div>
 
-        if (!getSessionToken()) {
+                ${excuseReason}
 
-            return;
-        }
+                ${rejectReason}
 
+            </div>
 
-        isLoadingStudents = true;
+            ${actions}
 
+        </div>
+    `;
+}
 
-        const container =
-            document.getElementById(
-                'studentsListContainer'
-            );
 
+/* =========================================================
+   إظهار مربع الرفض فقط
+========================================================= */
 
-        try {
+function showRejectBox(id) {
 
-            const result =
-                await apiRequest(
-                    {
-                        action:
-                            "admin_get_students"
-                    },
-                    true
-                );
-
-
-            const students =
-                Array.isArray(
-                    result.students
-                )
-                    ? result.students
-                    : [];
-
-
-            if (
-                !students ||
-                students.length === 0
-            ) {
-
-                container.innerHTML =
-                    "<p>لا توجد بيانات طلاب مسجلة.</p>";
-
-                return;
-            }
-
-
-            container.innerHTML =
-                "";
-
-
-            students.forEach(
-                student => {
-
-                    container.innerHTML +=
-
-                        `<div class="student-row">
-
-                            <span>
-
-                                <strong>
-                                    ${escapeHtml(
-                                        student.student_name
-                                    )}
-                                </strong>
-
-                                (${escapeHtml(
-                                    student.class_name ||
-                                    'بدون صف'
-                                )})
-
-                                -
-
-                                الكود:
-
-                                <strong>
-                                    ${escapeHtml(
-                                        student.parent_code
-                                    )}
-                                </strong>
-
-                            </span>
-
-
-                            <button
-                                class="btn-delete-student"
-                                onclick="deleteStudent(${Number(student.id)})"
-                            >
-                                حذف
-                            </button>
-
-                        </div>`;
-                }
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Load students error:",
-                error
-            );
-
-
-            if (
-                error.status === 401 ||
-                error.message ===
-                    "NO_SESSION"
-            ) {
-
-                await handleSessionExpired();
-
-            } else {
-
-                container.innerHTML =
-                    "<p>تعذر تحميل قائمة الطلاب.</p>";
-            }
-
-        } finally {
-
-            isLoadingStudents = false;
-        }
-    }
-
-
-    /* =========================================================
-       إضافة طالب
-       ========================================================= */
-
-    async function addNewStudent() {
-
-        const name =
-            document
-                .getElementById(
-                    'newStudentName'
-                )
-                .value
-                .trim();
-
-
-        const sClass =
-            document
-                .getElementById(
-                    'newStudentClass'
-                )
-                .value
-                .trim();
-
-
-        const code =
-            document
-                .getElementById(
-                    'newStudentCode'
-                )
-                .value
-                .trim();
-
-
-        if (
-            !name ||
-            !sClass ||
-            !code
-        ) {
-
-            alert(
-                'يرجى تعبئة جميع حقول الطالب والكود!'
-            );
-
-            return;
-        }
-
-
-        const button =
-            document.getElementById(
-                'addStudentButton'
-            );
-
-
-        button.disabled = true;
-
-        button.textContent =
-            "جاري الحفظ...";
-
-
-        try {
-
-            const result =
-                await apiRequest(
-                    {
-                        action:
-                            "admin_add_student",
-
-                        student_name:
-                            name,
-
-                        class_name:
-                            sClass,
-
-                        parent_code:
-                            code
-                    },
-                    true
-                );
-
-
-            if (result.success) {
-
-                alert(
-                    'تم إضافة الطالب بنجاح ✅'
-                );
-
-
-                document
-                    .getElementById(
-                        'newStudentName'
-                    )
-                    .value = "";
-
-
-                document
-                    .getElementById(
-                        'newStudentClass'
-                    )
-                    .value = "";
-
-
-                document
-                    .getElementById(
-                        'newStudentCode'
-                    )
-                    .value = "";
-
-
-                await loadAdminStudents();
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                "Add student error:",
-                error
-            );
-
-
-            if (
-                error.status === 401 ||
-                error.message ===
-                    "NO_SESSION"
-            ) {
-
-                await handleSessionExpired();
-
-            } else {
-
-                alert(
-                    error.message ||
-                    "تعذر إضافة الطالب."
-                );
-            }
-
-        } finally {
-
-            button.disabled = false;
-
-            button.textContent =
-                "حفظ الطالب في النظام";
-        }
-    }
-
-
-    /* =========================================================
-       حذف طالب
-       ========================================================= */
-
-    async function deleteStudent(
-        id
-    ) {
-
-        if (!id) {
-
-            return;
-        }
-
-
-        const confirmed =
-            confirm(
-                "هل أنت متأكد من حذف هذا الطالب؟\n\nسيؤدي حذف الطالب إلى حذف طلباته المرتبطة به أيضاً."
-            );
-
-
-        if (!confirmed) {
-
-            return;
-        }
-
-
-        try {
-
-            const result =
-                await apiRequest(
-                    {
-                        action:
-                            "admin_delete_student",
-
-                        id:
-                            Number(id)
-                    },
-                    true
-                );
-
-
-            if (result.success) {
-
-                alert(
-                    "تم حذف الطالب بنجاح ✅"
-                );
-
-
-                await loadAdminStudents();
-
-                await loadAdminRequests();
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                "Delete student error:",
-                error
-            );
-
-
-            if (
-                error.status === 401 ||
-                error.message ===
-                    "NO_SESSION"
-            ) {
-
-                await handleSessionExpired();
-
-            } else {
-
-                alert(
-                    error.message ||
-                    "تعذر حذف الطالب."
-                );
-            }
-        }
-    }
-
-
-    /* =========================================================
-       انتهاء الجلسة
-       ========================================================= */
-
-    async function handleSessionExpired() {
-
-        clearSessionToken();
-
-        stopAdminBackgroundServices();
-
-        stopContinuousAlert();
-
-
-        document
-            .getElementById(
-                'adminPanelSection'
-            )
-            .classList.add(
-                'hidden'
-            );
-
-
-        document
-            .getElementById(
-                'loginSection'
-            )
-            .classList.remove(
-                'hidden'
-            );
-
-
-        setConnectionStatus(
-            "انتهت جلسة الإدارة، يرجى تسجيل الدخول مرة أخرى.",
-            true
+    const box =
+        document.getElementById(
+            "rejectBox-" + id
         );
 
+    if (!box) {
+        return;
+    }
+
+    box.classList.remove("hidden");
+
+    const textarea =
+        document.getElementById(
+            "rejectReason-" + id
+        );
+
+    if (textarea) {
+        setTimeout(() => {
+            textarea.focus();
+        }, 50);
+    }
+}
+
+
+function hideRejectBox(id) {
+
+    const box =
+        document.getElementById(
+            "rejectBox-" + id
+        );
+
+    if (box) {
+        box.classList.add("hidden");
+    }
+}
+
+
+/* =========================================================
+   قبول الطلب
+========================================================= */
+
+async function approveRequest(id) {
+
+    /*
+     * القبول يتم مباشرة.
+     * لا توجد نافذة تأكيد.
+     * لا يوجد حقل سبب.
+     */
+
+    try {
+
+        const result = await api(
+            "admin_update_request",
+            {
+                id,
+                status: "approved"
+            }
+        );
+
+        if (result?.success === false) {
+            throw new Error(
+                result.message ||
+                "تعذر قبول الطلب"
+            );
+        }
+
+        await loadAdminRequests();
+
+    } catch (error) {
+
+        console.error(error);
 
         alert(
-            "انتهت جلسة الإدارة. يرجى تسجيل الدخول مرة أخرى."
+            error.message ||
+            "تعذر قبول الطلب."
         );
+    }
+}
+
+
+/* =========================================================
+   رفض الطلب
+========================================================= */
+
+async function rejectRequest(id) {
+
+    const textarea =
+        document.getElementById(
+            "rejectReason-" + id
+        );
+
+    const reason =
+        textarea
+            ? textarea.value.trim()
+            : "";
+
+
+    if (!reason) {
+
+        alert(
+            "فضلاً اكتب سبب رفض الطلب."
+        );
+
+        if (textarea) {
+            textarea.focus();
+        }
+
+        return;
     }
 
 
-    /* =========================================================
-       تسجيل الخروج
-       ========================================================= */
+    try {
 
-    function logoutAdmin(
-        showMessage = true
-    ) {
+        const result = await api(
+            "admin_update_request",
+            {
+                id,
+                status: "rejected",
+                reject_reason: reason
+            }
+        );
 
-        clearSessionToken();
+        if (result?.success === false) {
 
-        stopAdminBackgroundServices();
-
-        stopContinuousAlert();
-
-
-        if (showMessage) {
-
-            alert(
-                "تم تسجيل الخروج بأمان 🔒"
+            throw new Error(
+                result.message ||
+                "تعذر رفض الطلب"
             );
         }
 
+        await loadAdminRequests();
 
-        document
-            .getElementById(
-                'adminPanelSection'
-            )
-            .classList.add(
-                'hidden'
-            );
+    } catch (error) {
 
+        console.error(error);
 
-        document
-            .getElementById(
-                'loginSection'
-            )
-            .classList.remove(
-                'hidden'
-            );
-
-
-        document
-            .getElementById(
-                'adminPasswordInput'
-            )
-            .value = "";
-
-
-        setConnectionStatus(
-            ""
+        alert(
+            error.message ||
+            "تعذر رفض الطلب."
         );
+    }
+}
+
+
+/* =========================================================
+   الطلاب
+========================================================= */
+
+async function loadStudents() {
+
+    if (!adminSession) {
+        return;
+    }
+
+    try {
+
+        const result = await api(
+            "admin_get_students"
+        );
+
+        const students =
+            Array.isArray(result?.students)
+                ? result.students
+                : [];
+
+        renderStudents(students);
+
+    } catch (error) {
+
+        console.error(error);
+
+        studentsList.innerHTML = `
+            <div class="empty">
+                تعذر تحميل سجل الطلاب.
+            </div>
+        `;
+    }
+}
+
+
+/* =========================================================
+   عرض الطلاب
+========================================================= */
+
+function renderStudents(students) {
+
+    if (students.length === 0) {
+
+        studentsList.innerHTML = `
+            <div class="empty">
+                👨‍👩‍👧‍👦 لا يوجد طلاب في السجل حالياً
+            </div>
+        `;
+
+        return;
     }
 
 
-    /* =========================================================
-       عند عودة الصفحة للواجهة
-       ========================================================= */
+    const sorted =
+        [...students].sort(
+            (a, b) =>
+                String(a.student_name || "")
+                    .localeCompare(
+                        String(b.student_name || ""),
+                        "ar"
+                    )
+        );
 
-    document.addEventListener(
-        "visibilitychange",
-        async () => {
 
-            if (
-                document.visibilityState ===
-                "visible"
-            ) {
+    studentsList.innerHTML =
+        sorted.map(student => `
 
-                if (getSessionToken()) {
+            <div class="student-row">
 
-                    await refreshAdminSession();
+                <strong>
+                    ${escapeHtml(student.student_name)}
+                </strong>
 
-                    await loadAdminRequests(
-                        true
+                <span>
+                    الفصل:
+                    ${escapeHtml(student.class_name || "غير محدد")}
+                </span>
+
+                <span>
+                    كود ولي الأمر:
+                    ${escapeHtml(student.parent_code)}
+                </span>
+
+                <button
+                    class="danger-btn"
+                    type="button"
+                    onclick="deleteStudent(${Number(student.id)})"
+                >
+                    🗑️ حذف
+                </button>
+
+            </div>
+
+        `).join("");
+}
+
+
+/* =========================================================
+   إضافة طالب
+========================================================= */
+
+addStudentBtn.addEventListener(
+    "click",
+    addStudent
+);
+
+
+async function addStudent() {
+
+    const name =
+        newStudentName.value.trim();
+
+    const className =
+        newClassName.value.trim();
+
+    const parentCode =
+        newParentCode.value.trim();
+
+
+    studentMessage.innerHTML = "";
+
+
+    if (!name) {
+
+        studentMessage.innerHTML = `
+            <div class="error">
+                أدخل اسم الطالب.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    if (!parentCode) {
+
+        studentMessage.innerHTML = `
+            <div class="error">
+                أدخل كود ولي الأمر.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    addStudentBtn.disabled = true;
+    addStudentBtn.textContent =
+        "جارٍ الإضافة...";
+
+
+    try {
+
+        await api(
+            "admin_add_student",
+            {
+                student_name: name,
+                class_name: className,
+                parent_code: parentCode
+            }
+        );
+
+
+        newStudentName.value = "";
+        newClassName.value = "";
+        newParentCode.value = "";
+
+
+        studentMessage.innerHTML = `
+            <div class="success">
+                ✅ تمت إضافة الطالب بنجاح.
+            </div>
+        `;
+
+
+        await loadStudents();
+
+
+        setTimeout(() => {
+            studentMessage.innerHTML = "";
+        }, 3000);
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        studentMessage.innerHTML = `
+            <div class="error">
+                ${escapeHtml(
+                    error.message ||
+                    "تعذر إضافة الطالب."
+                )}
+            </div>
+        `;
+
+    } finally {
+
+        addStudentBtn.disabled = false;
+        addStudentBtn.textContent =
+            "إضافة الطالب";
+    }
+}
+
+
+/* =========================================================
+   حذف طالب
+========================================================= */
+
+async function deleteStudent(id) {
+
+    /*
+     * هنا فقط نطلب تأكيد الحذف لأنه إجراء نهائي
+     * وقد يحذف الطلبات المرتبطة بالطالب.
+     */
+
+    const confirmed =
+        confirm(
+            "هل أنتِ متأكدة من حذف هذا الطالب؟\n\nسيتم حذف الطلبات المرتبطة به أيضاً."
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        await api(
+            "admin_delete_student",
+            { id }
+        );
+
+        await loadStudents();
+
+        await loadAdminRequests();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            error.message ||
+            "تعذر حذف الطالب."
+        );
+    }
+}
+
+
+/* =========================================================
+   التبويبات
+========================================================= */
+
+document
+    .querySelectorAll(".tab-btn")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                document
+                    .querySelectorAll(".tab-btn")
+                    .forEach(btn =>
+                        btn.classList.remove(
+                            "active"
+                        )
                     );
+
+                document
+                    .querySelectorAll(".tab-content")
+                    .forEach(tab =>
+                        tab.classList.remove(
+                            "active"
+                        )
+                    );
+
+
+                this.classList.add("active");
+
+
+                const tabId =
+                    this.dataset.tab;
+
+                const tab =
+                    document.getElementById(
+                        tabId
+                    );
+
+                if (tab) {
+                    tab.classList.add("active");
                 }
+
+
+                if (tabId === "studentsTab") {
+                    loadStudents();
+                }
+
             }
-        }
+        );
+
+    });
+
+
+/* =========================================================
+   تسجيل الخروج
+========================================================= */
+
+logoutBtn.addEventListener(
+    "click",
+    logoutAdmin
+);
+
+
+function logoutAdmin() {
+
+    stopContinuousAlert();
+
+    if (requestTimer) {
+        clearInterval(requestTimer);
+        requestTimer = null;
+    }
+
+    if (sessionRefreshTimer) {
+        clearInterval(sessionRefreshTimer);
+        sessionRefreshTimer = null;
+    }
+
+
+    adminSession = null;
+
+    sessionStorage.removeItem(
+        SESSION_KEY
     );
 
 
-    /* =========================================================
-       عند عودة الإنترنت
-       ========================================================= */
+    adminPanel.style.display = "none";
+    loginSection.style.display = "block";
 
-    window.addEventListener(
-        "online",
-        async () => {
+    loginError.textContent = "";
 
-            if (getSessionToken()) {
+    lastPendingCount = 0;
 
-                setConnectionStatus(
-                    "🟢 عاد الاتصال بالنظام"
+    requestsList.innerHTML = `
+        <div class="loading">
+            جارٍ تسجيل الخروج...
+        </div>
+    `;
+
+    setTimeout(() => {
+
+        requestsList.innerHTML = `
+            <div class="empty">
+                📭 تم تسجيل الخروج
+            </div>
+        `;
+
+    }, 300);
+
+}
+
+
+/* =========================================================
+   نظام التنبيه الصوتي
+========================================================= */
+
+function initializeAudio() {
+
+    try {
+
+        const AudioCtx =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioCtx) {
+            return null;
+        }
+
+        if (!audioContext) {
+            audioContext = new AudioCtx();
+        }
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+
+            audioContext
+                .resume()
+                .catch(() => {});
+        }
+
+        return audioContext;
+
+    } catch (error) {
+
+        console.warn(
+            "الصوت غير متاح:",
+            error
+        );
+
+        return null;
+    }
+}
+
+
+/*
+ * تنبيه أقوى من السابق:
+ * ثلاث نغمات متتابعة،
+ * والصوت يتكرر كل 3 ثوانٍ
+ * عند وجود طلبات معلقة.
+ */
+
+function playAlertTone() {
+
+    try {
+
+        const ctx =
+            initializeAudio();
+
+        if (!ctx) {
+            return;
+        }
+
+
+        const now =
+            ctx.currentTime;
+
+
+        /*
+         * مستوى الصوت الرئيسي.
+         * تم رفعه ليكون واضحاً في جهاز الإدارة.
+         */
+        const master =
+            ctx.createGain();
+
+        master.gain.setValueAtTime(
+            0.0001,
+            now
+        );
+
+        master.gain.exponentialRampToValueAtTime(
+            0.78,
+            now + 0.03
+        );
+
+        master.gain.exponentialRampToValueAtTime(
+            0.0001,
+            now + 1.15
+        );
+
+        master.connect(
+            ctx.destination
+        );
+
+
+        const tones = [
+
+            {
+                frequency: 659.25,
+                start: 0,
+                duration: 0.38
+            },
+
+            {
+                frequency: 783.99,
+                start: 0.20,
+                duration: 0.38
+            },
+
+            {
+                frequency: 987.77,
+                start: 0.42,
+                duration: 0.55
+            }
+
+        ];
+
+
+        tones.forEach(
+            (tone, index) => {
+
+                const oscillator =
+                    ctx.createOscillator();
+
+                const gain =
+                    ctx.createGain();
+
+
+                /*
+                 * الموجة الثالثة أكثر وضوحاً
+                 * لجذب الانتباه.
+                 */
+                oscillator.type =
+                    index === 2
+                        ? "square"
+                        : "sine";
+
+
+                oscillator.frequency.setValueAtTime(
+                    tone.frequency,
+                    now + tone.start
                 );
 
 
-                await refreshAdminSession();
-
-                await loadAdminRequests(
-                    true
+                gain.gain.setValueAtTime(
+                    0.0001,
+                    now + tone.start
                 );
+
+
+                gain.gain.exponentialRampToValueAtTime(
+                    0.72,
+                    now + tone.start + 0.035
+                );
+
+
+                gain.gain.exponentialRampToValueAtTime(
+                    0.0001,
+                    now + tone.start + tone.duration
+                );
+
+
+                oscillator.connect(gain);
+                gain.connect(master);
+
+
+                oscillator.start(
+                    now + tone.start
+                );
+
+
+                oscillator.stop(
+                    now +
+                    tone.start +
+                    tone.duration +
+                    0.04
+                );
+
             }
+        );
+
+
+    } catch (error) {
+
+        console.warn(
+            "تعذر تشغيل صوت التنبيه:",
+            error
+        );
+    }
+}
+
+
+/*
+ * تشغيل التنبيه بشكل متكرر.
+ * كل 3 ثوانٍ طالما يوجد طلب معلق.
+ */
+
+function startContinuousAlert() {
+
+    if (soundInterval) {
+        return;
+    }
+
+
+    /*
+     * تشغيل فوري.
+     */
+    playAlertTone();
+
+
+    /*
+     * ثم تكراره كل 3 ثوانٍ.
+     */
+    soundInterval =
+        setInterval(
+            playAlertTone,
+            3000
+        );
+}
+
+
+function stopContinuousAlert() {
+
+    if (soundInterval) {
+
+        clearInterval(
+            soundInterval
+        );
+
+        soundInterval = null;
+    }
+}
+
+
+/* =========================================================
+   التعامل مع الاتصال
+========================================================= */
+
+window.addEventListener(
+    "online",
+    function() {
+
+        connectionStatus.className =
+            "status-online";
+
+        connectionStatus.textContent =
+            "متصل";
+
+        if (adminSession) {
+            loadAdminRequests();
         }
-    );
+
+    }
+);
 
 
-    window.addEventListener(
-        "offline",
-        () => {
+window.addEventListener(
+    "offline",
+    function() {
 
-            setConnectionStatus(
-                "🔴 لا يوجد اتصال بالإنترنت",
-                true
-            );
-        }
-    );
+        connectionStatus.className =
+            "status-online status-offline";
+
+        connectionStatus.textContent =
+            "لا يوجد اتصال";
+
+    }
+);
 
 
-    /* =========================================================
-       بدء الصفحة
-       ========================================================= */
+/* =========================================================
+   استعادة الجلسة عند فتح الصفحة
+========================================================= */
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        async () => {
+async function restoreSession() {
 
-            await restoreAdminSession();
-        }
-    );
+    if (!adminSession) {
+        return;
+    }
+
+
+    /*
+     * نعرض اللوحة مؤقتاً،
+     * ثم نتحقق من صلاحية الجلسة
+     * عن طريق جلب الطلبات.
+     */
+
+    showAdminPanel();
+
+
+    try {
+
+        await loadAdminRequests();
+
+        await loadStudents();
+
+        startRequestPolling();
+
+        startSessionRefresh();
+
+        initializeAudio();
+
+    } catch (error) {
+
+        console.warn(
+            "تعذر استعادة الجلسة:",
+            error
+        );
+
+    }
+}
+
+
+/* =========================================================
+   تشغيل الصفحة
+========================================================= */
+
+restoreSession();
 
 </script>
 
