@@ -6,1359 +6,856 @@
 
     <title>لوحة الإدارة - بسمات الوعد الأهلية</title>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-
         :root {
-
             --primary-purple: #4a2e6f;
             --light-purple: #6a439c;
             --accent-gold: #f3b137;
-
-            --bg-gradient:
-                linear-gradient(
-                    135deg,
-                    #2b1f3d 0%,
-                    #4a2e6f 35%,
-                    #3d2e0f 70%,
-                    #1f1707 100%
-                );
-
+            --bg-gradient: linear-gradient(135deg, #2b1f3d 0%, #4a2e6f 35%, #3d2e0f 70%, #1f1707 100%);
             --text-color: #2c3e50;
-
             --danger-red: #d9534f;
-
             --success-green: #28a745;
-
             --card-bg: rgba(255, 255, 255, 0.98);
-
-            --soft-bg: #f8f5fc;
-
-            --border-color: #e2d9eb;
-
-            --input-bg: #ffffff;
-
-            --muted-text: #666;
-
         }
-
-
-        /* =====================================================
-           الوضع الداكن
-        ===================================================== */
-
-        body.dark-mode {
-
-            --text-color: #eeeeee;
-
-            --card-bg: rgba(30, 24, 42, 0.97);
-
-            --soft-bg: #282033;
-
-            --border-color: #514364;
-
-            --input-bg: #211b2c;
-
-            --muted-text: #c8c2d0;
-
-        }
-
 
         * {
-
             box-sizing: border-box;
-
-            font-family:
-                'Segoe UI',
-                Tahoma,
-                Geneva,
-                Verdana,
-                sans-serif;
-
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             -webkit-tap-highlight-color: transparent;
-
         }
-
 
         body {
-
             background: var(--bg-gradient);
-
             margin: 0;
-
             padding: 20px;
-
             text-align: center;
-
             color: var(--text-color);
-
             position: relative;
-
             overflow-x: hidden;
-
             min-height: 100vh;
-
             display: flex;
-
             justify-content: center;
-
             align-items: center;
-
-            font-weight: 500;
-
-            transition:
-                background 0.25s ease,
-                color 0.25s ease;
-
         }
-
-
-        button,
-        input,
-        select,
-        textarea {
-
-            font-family:
-                'Segoe UI',
-                Tahoma,
-                Geneva,
-                Verdana,
-                sans-serif;
-
-        }
-
-
-        button {
-
-            font-weight: 700;
-
-        }
-
-
-        /* =====================================================
-           النجوم
-        ===================================================== */
 
         .stars-container {
-
             position: fixed;
-
             top: 0;
-
             left: 0;
-
             width: 100%;
-
             height: 100%;
-
             pointer-events: none;
-
             z-index: 0;
-
             overflow: hidden;
-
         }
-
 
         .star {
-
             position: absolute;
-
             border-radius: 50%;
-
             opacity: 0.9;
-
-            animation:
-                fall linear infinite;
-
+            animation: fall linear infinite;
         }
-
 
         .star.gold {
-
             background: #ffeaa7;
-
-            box-shadow:
-                0 0 10px #ffeaa7;
-
+            box-shadow: 0 0 10px #ffeaa7;
         }
-
 
         .star.bright {
-
             background: #ffffff;
-
-            box-shadow:
-                0 0 12px #ffffff;
-
+            box-shadow: 0 0 12px #ffffff;
         }
 
-
         @keyframes fall {
-
             0% {
-
-                transform:
-                    translateY(-20px)
-                    scale(0.6);
-
+                transform: translateY(-20px) scale(0.6);
                 opacity: 0;
-
             }
 
             50% {
-
                 opacity: 0.9;
-
             }
 
             100% {
-
-                transform:
-                    translateY(105vh)
-                    scale(1.3);
-
+                transform: translateY(105vh) scale(1.3);
                 opacity: 0;
-
             }
-
         }
 
-
-        /* =====================================================
-           الحاوية
-        ===================================================== */
-
         .container {
-
             position: relative;
-
             z-index: 1;
-
             width: 100%;
-
             max-width: 650px;
-
             margin: auto;
-
             background: var(--card-bg);
-
             backdrop-filter: blur(12px);
-
             padding: 28px;
-
             border-radius: 24px;
-
             box-shadow:
                 0 20px 50px rgba(0, 0, 0, 0.5),
                 0 0 30px rgba(243, 177, 55, 0.4);
-
-            border:
-                2px solid rgba(243, 177, 55, 0.8);
-
+            border: 2px solid rgba(243, 177, 55, 0.8);
             text-align: right;
-
-            transition:
-                background 0.25s ease,
-                color 0.25s ease;
-
+            transition: background 0.25s ease, color 0.25s ease;
         }
-
-
-        /* =====================================================
-           زر الوضع الداكن
-        ===================================================== */
-
-        .theme-toggle {
-
-            position: absolute;
-
-            top: 14px;
-
-            left: 14px;
-
-            width: 42px;
-
-            height: 42px;
-
-            border-radius: 50%;
-
-            border: 1px solid rgba(243, 177, 55, 0.7);
-
-            background: rgba(255, 255, 255, 0.92);
-
-            color: #4a2e6f;
-
-            cursor: pointer;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            font-size: 20px;
-
-            box-shadow:
-                0 4px 12px rgba(0,0,0,0.15);
-
-            transition:
-                transform 0.2s ease,
-                background 0.2s ease;
-
-            z-index: 10;
-
-        }
-
-
-        .theme-toggle:hover {
-
-            transform: scale(1.06);
-
-        }
-
-
-        body.dark-mode .theme-toggle {
-
-            background: #30263d;
-
-            color: #ffd36a;
-
-            border-color: #6d5b7d;
-
-        }
-
-
-        /* =====================================================
-           الهيدر
-        ===================================================== */
 
         .header-flex {
-
             display: flex;
-
             justify-content: space-between;
-
             align-items: center;
-
-            border-bottom:
-                2px solid var(--border-color);
-
+            border-bottom: 2px solid #eee;
             padding-bottom: 15px;
-
             margin-bottom: 20px;
-
+            gap: 12px;
         }
-
 
         .logo-title-group {
-
             display: flex;
-
             align-items: center;
-
             gap: 15px;
-
+            min-width: 0;
         }
-
 
         .logo-img {
-
             max-width: 65px;
-
             height: auto;
-
-            filter:
-                drop-shadow(
-                    0 2px 5px rgba(0,0,0,0.15)
-                );
-
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.15));
+            flex-shrink: 0;
         }
-
 
         h1 {
-
             color: var(--primary-purple);
-
             font-size: 19px;
-
             margin: 0;
-
             font-weight: 800;
-
         }
-
-
-        body.dark-mode h1 {
-
-            color: #d9b7ff;
-
-        }
-
 
         h2 {
-
             color: var(--light-purple);
-
             font-size: 14px;
-
             margin: 5px 0 0 0;
-
         }
 
-
-        body.dark-mode h2 {
-
-            color: #cda8f0;
-
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 7px;
+            flex-shrink: 0;
         }
-
 
         .connection-status {
-
             padding: 6px 12px;
-
             border-radius: 16px;
-
             font-size: 12px;
-
             font-weight: bold;
-
             display: inline-flex;
-
             align-items: center;
-
             gap: 6px;
-
+            white-space: nowrap;
         }
-
 
         .online {
-
             background: #d4edda;
-
             color: #155724;
-
+            animation: pulse 2s infinite;
         }
-
 
         .offline {
-
             background: #f8d7da;
-
             color: #721c24;
-
         }
 
-
-        /* =====================================================
-           التبويبات
-        ===================================================== */
-
-        .admin-tabs {
-
-            display: flex;
-
-            gap: 8px;
-
-            margin-bottom: 20px;
-
-            overflow-x: auto;
-
-            padding-bottom: 8px;
-
-        }
-
-
-        .tab-btn {
-
-            padding: 10px 16px;
-
+        .theme-toggle {
             border: none;
-
             background: #e2d9eb;
-
-            border-radius: 10px;
-
-            font-weight: bold;
-
-            cursor: pointer;
-
-            font-size: 13px;
-
-            white-space: nowrap;
-
             color: var(--primary-purple);
-
+            width: 38px;
+            height: 34px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 17px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             transition: 0.2s;
-
-            position: relative;
-
         }
 
-
-        body.dark-mode .tab-btn {
-
-            background: #352a43;
-
-            color: #dec9f3;
-
+        .theme-toggle:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
         }
 
-
-        .tab-btn.active {
-
-            background: var(--primary-purple);
-
-            color: white;
-
-        }
-
-
-        .notification-badge {
-
-            position: absolute;
-
-            top: -6px;
-
-            left: -6px;
-
-            background-color: var(--danger-red);
-
-            color: white;
-
-            font-size: 11px;
-
-            padding: 2px 8px;
-
-            border-radius: 50%;
-
-            font-weight: bold;
-
-            box-shadow:
-                0 2px 5px rgba(0,0,0,0.3);
-
-            animation:
-                pulseBadge 1.2s infinite;
-
-        }
-
-
-        @keyframes pulseBadge {
-
-            0% {
-
-                transform: scale(1);
-
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
             }
 
             50% {
+                opacity: 0.7;
+            }
+        }
 
+        .session-timer {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            border: none;
+            background: #e2d9eb;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            color: var(--primary-purple);
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-purple);
+            color: white;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            background-color: var(--danger-red);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 50%;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            animation: pulseBadge 1.2s infinite;
+        }
+
+        @keyframes pulseBadge {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
                 transform: scale(1.25);
-
             }
 
             100% {
-
                 transform: scale(1);
-
             }
-
         }
-
-
-        /* =====================================================
-           التنبيه
-        ===================================================== */
 
         .alert-banner {
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #ff4757,
-                    #ff6b81
-                );
-
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
             color: white;
-
             padding: 14px;
-
             border-radius: 12px;
-
             font-size: 13px;
-
             font-weight: bold;
-
             text-align: center;
-
             margin-bottom: 20px;
-
-            box-shadow:
-                0 0 18px rgba(255, 71, 87, 0.6);
-
-            animation:
-                alertGlowBox 1.2s infinite alternate;
-
+            box-shadow: 0 0 18px rgba(255, 71, 87, 0.6);
+            animation: alertGlowBox 1.2s infinite alternate;
             cursor: pointer;
-
             display: flex;
-
             align-items: center;
-
             justify-content: center;
-
             gap: 8px;
-
         }
 
-
         @keyframes alertGlowBox {
-
             0% {
-
                 transform: scale(1);
-
-                box-shadow:
-                    0 0 5px rgba(255,71,87,0.4);
-
+                box-shadow: 0 0 5px rgba(255,71,87,0.4);
             }
 
             100% {
-
                 transform: scale(1.02);
-
-                box-shadow:
-                    0 0 18px rgba(255,71,87,0.9);
-
+                box-shadow: 0 0 18px rgba(255,71,87,0.9);
             }
-
         }
-
-
-        /* =====================================================
-           الإحصائيات
-        ===================================================== */
 
         .stats-grid {
-
             display: grid;
-
-            grid-template-columns:
-                repeat(2, 1fr);
-
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-
             margin-bottom: 20px;
-
         }
-
 
         .stat-card {
-
-            background: var(--soft-bg);
-
-            border:
-                1px solid var(--border-color);
-
+            background: #f8f5fc;
+            border: 1px solid #e2d9eb;
             padding: 14px;
-
             border-radius: 14px;
-
             text-align: center;
-
         }
-
 
         .stat-card h3 {
-
             margin: 0;
-
             font-size: 13px;
-
-            color: var(--muted-text);
-
+            color: #666;
         }
-
 
         .stat-card .number {
-
             font-size: 20px;
-
             font-weight: 800;
-
             color: var(--primary-purple);
-
             margin: 6px 0 2px 0;
-
         }
-
-
-        body.dark-mode .stat-card .number {
-
-            color: #d9b7ff;
-
-        }
-
 
         .stat-card .trend {
-
             font-size: 11px;
-
             font-weight: 600;
-
         }
-
-
-        /* =====================================================
-           الرسم البياني
-        ===================================================== */
 
         .charts-grid {
-
             display: grid;
-
             grid-template-columns: 1fr;
-
             gap: 15px;
-
             margin-bottom: 20px;
-
         }
-
 
         .chart-container {
-
-            background: var(--input-bg);
-
-            border:
-                1px solid var(--border-color);
-
+            background: #fff;
+            border: 1px solid #e2d9eb;
             padding: 12px;
-
             border-radius: 14px;
-
             position: relative;
-
             height: 220px;
-
         }
-
-
-        /* =====================================================
-           الفلاتر
-        ===================================================== */
 
         .filter-bar {
-
             display: flex;
-
             gap: 10px;
-
             margin-bottom: 15px;
-
         }
-
 
         .filter-bar input,
         .filter-bar select {
-
             flex: 1;
-
             padding: 12px;
-
-            border:
-                1px solid var(--border-color);
-
+            border: 1px solid #dcd6e8;
             border-radius: 10px;
-
             font-size: 13px;
-
             outline: none;
-
-            background: var(--input-bg);
-
-            color: var(--text-color);
-
+            background: #fff;
+            color: #333;
         }
 
-
-        input,
-        textarea,
-        select {
-
-            color: var(--text-color);
-
+        .filter-bar input:focus,
+        .filter-bar select:focus {
+            border-color: var(--primary-purple);
+            box-shadow: 0 0 6px rgba(74, 46, 111, 0.15);
         }
-
-
-        ::placeholder {
-
-            color: #888;
-
-        }
-
-
-        body.dark-mode ::placeholder {
-
-            color: #aaa;
-
-        }
-
-
-        /* =====================================================
-           الطلبات
-        ===================================================== */
 
         .request-item {
-
-            background: var(--soft-bg);
-
-            border:
-                1px solid var(--border-color);
-
+            background: #faf8fc;
+            border: 1px solid #dcd6e8;
             padding: 15px;
-
             margin-bottom: 12px;
-
             border-radius: 14px;
-
             text-align: right;
-
         }
-
 
         .request-item.done {
-
             border-color: #a3d9a5;
-
             background-color: #f7fff8;
-
         }
-
 
         .request-item.rejected {
-
             border-color: #f5c6cb;
-
             background-color: #fff9f9;
-
         }
 
-
-        body.dark-mode .request-item.done {
-
-            background-color: #192d20;
-
-            border-color: #3e7650;
-
+        .request-name {
+            color: var(--primary-purple);
+            font-size: 14px;
+            font-weight: bold;
         }
 
-
-        body.dark-mode .request-item.rejected {
-
-            background-color: #321f23;
-
-            border-color: #7c4148;
-
+        .request-time {
+            font-size: 12px;
+            color: #666;
         }
 
+        .request-code {
+            color: #333;
+            font-size: 12px;
+        }
 
-        /* =====================================================
-           الأزرار
-        ===================================================== */
+        .request-type-box {
+            font-size: 13px;
+            margin: 8px 0;
+            color: #333;
+            background: #f2edf8;
+            padding: 8px 10px;
+            border-radius: 8px;
+        }
+
+        .request-type-box strong {
+            color: var(--primary-purple);
+        }
+
+        .excuse-reason-box {
+            font-size: 13px;
+            margin: 6px 0;
+            color: #34495e;
+            background: #eef3f8;
+            padding: 8px 10px;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .reject-reason-box {
+            font-size: 13px;
+            margin: 6px 0;
+            color: #721c24;
+            background: #f8d7da;
+            padding: 8px 10px;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .pending-badge {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .section-heading {
+            color: var(--primary-purple);
+        }
 
         .btn-submit {
-
             width: 100%;
-
             padding: 13px;
-
-            background-color:
-                var(--accent-gold);
-
+            background-color: var(--accent-gold);
             color: #333;
-
             border: none;
-
             border-radius: 10px;
-
             font-size: 15px;
-
             cursor: pointer;
-
             font-weight: bold;
-
         }
 
-
-        .btn-submit:disabled {
-
-            opacity: 0.6;
-
-            cursor: wait;
-
+        .btn-submit:hover {
+            opacity: 0.9;
         }
 
+        .btn-submit:active {
+            transform: scale(0.97);
+        }
 
         .hidden {
-
             display: none !important;
-
         }
-
 
         .badge {
-
             padding: 4px 10px;
-
             border-radius: 8px;
-
             font-size: 12px;
-
             font-weight: bold;
-
         }
-
 
         .badge-done {
-
             background: #d4edda;
-
             color: #155724;
-
         }
-
 
         .badge-rejected {
-
             background: #f8d7da;
-
             color: #721c24;
-
         }
-
 
         .btn-action-group {
-
             display: flex;
-
             gap: 10px;
-
             margin-top: 12px;
-
         }
-
 
         .btn-approve {
-
-            background:
-                var(--primary-purple);
-
+            background: var(--primary-purple);
             color: white;
-
             border: none;
-
             padding: 9px 14px;
-
             border-radius: 8px;
-
             cursor: pointer;
-
             font-weight: bold;
-
             font-size: 13px;
-
             flex: 1;
-
+            min-height: 44px;
         }
-
 
         .btn-reject {
-
-            background:
-                var(--danger-red);
-
+            background: var(--danger-red);
             color: white;
-
             border: none;
-
             padding: 9px 14px;
-
             border-radius: 8px;
-
             cursor: pointer;
-
             font-weight: bold;
-
             font-size: 13px;
-
             flex: 1;
-
+            min-height: 44px;
         }
 
-
-        .btn-approve:disabled,
-        .btn-reject:disabled {
-
-            opacity: 0.6;
-
-            cursor: wait;
-
+        .btn-approve:hover,
+        .btn-reject:hover {
+            opacity: 0.9;
         }
-
-
-        /* =====================================================
-           مربع الرفض
-        ===================================================== */
-
-        .reject-box {
-
-            background: #fff1f2;
-
-            border:
-                1px solid #f5c6cb;
-
-            padding: 12px;
-
-            border-radius: 10px;
-
-            margin-top: 12px;
-
-        }
-
-
-        body.dark-mode .reject-box {
-
-            background: #321f23;
-
-            border-color: #7c4148;
-
-        }
-
-
-        .reject-box textarea {
-
-            width: 100%;
-
-            min-height: 75px;
-
-            resize: vertical;
-
-            padding: 10px;
-
-            border:
-                1px solid #e3b3b8;
-
-            border-radius: 8px;
-
-            outline: none;
-
-            font-size: 13px;
-
-            background: var(--input-bg);
-
-            color: var(--text-color);
-
-        }
-
-
-        .reject-buttons {
-
-            display: flex;
-
-            gap: 8px;
-
-            margin-top: 8px;
-
-        }
-
-
-        .reject-confirm {
-
-            flex: 1;
-
-            background:
-                var(--danger-red);
-
-            color: white;
-
-            border: none;
-
-            padding: 9px;
-
-            border-radius: 8px;
-
-            cursor: pointer;
-
-            font-weight: bold;
-
-        }
-
-
-        .reject-cancel {
-
-            flex: 1;
-
-            background: #e2d9eb;
-
-            color: #333;
-
-            border: none;
-
-            padding: 9px;
-
-            border-radius: 8px;
-
-            cursor: pointer;
-
-            font-weight: bold;
-
-        }
-
-
-        body.dark-mode .reject-cancel {
-
-            background: #514364;
-
-            color: white;
-
-        }
-
-
-        /* =====================================================
-           الطلاب
-        ===================================================== */
-
-        .students-add-box {
-
-            background: var(--soft-bg);
-
-            border:
-                1px solid var(--border-color);
-
-            padding: 15px;
-
-            border-radius: 12px;
-
-            margin-bottom: 15px;
-
-        }
-
-
-        .student-row {
-
-            background: var(--input-bg);
-
-            border:
-                1px solid var(--border-color);
-
-            padding: 10px;
-
-            margin-bottom: 8px;
-
-            border-radius: 8px;
-
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-            font-size: 13px;
-
-        }
-
-
-        /* =====================================================
-           الفوتر
-        ===================================================== */
 
         footer {
-
             margin-top: 20px;
-
             font-size: 12px;
-
-            color: var(--muted-text);
-
-            border-top:
-                1px solid var(--border-color);
-
+            color: #777;
+            border-top: 1px solid #eee;
             padding-top: 10px;
-
             text-align: center;
-
-            font-weight: 600;
-
         }
 
+        .refresh-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #666;
+            margin-left: 8px;
+        }
 
-        /* =====================================================
-           الجوال
-        ===================================================== */
+        .spinner {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-purple);
+            animation: spin 0.6s linear infinite;
+        }
 
-        @media (max-width: 600px) {
-
-            body {
-
-                padding: 10px;
-
-                align-items: flex-start;
-
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
+        }
 
+        /* =========================
+           الوضع الليلي
+        ========================== */
+
+        .container.dark-mode {
+            background: rgba(25, 22, 34, 0.98);
+            color: #ffffff;
+            border-color: rgba(243, 177, 55, 0.8);
+        }
+
+        .container.dark-mode .header-flex {
+            border-bottom-color: #3d3749;
+        }
+
+        .container.dark-mode h1,
+        .container.dark-mode h2 {
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .theme-toggle {
+            background: #3a3347 !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .session-timer {
+            background: #403719 !important;
+            color: #ffeaa7 !important;
+            border-left-color: #ffc107 !important;
+        }
+
+        .container.dark-mode .refresh-status,
+        .container.dark-mode .spinner {
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .spinner {
+            border-color: rgba(255,255,255,0.18);
+            border-top-color: #ffffff;
+        }
+
+        .container.dark-mode .tab-btn {
+            background: #393244 !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .tab-btn.active {
+            background: var(--primary-purple) !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .stat-card {
+            background: #282430 !important;
+            border-color: #463e50 !important;
+        }
+
+        .container.dark-mode .stat-card h3,
+        .container.dark-mode .stat-card .number,
+        .container.dark-mode .stat-card .trend {
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .chart-container {
+            background: #282430 !important;
+            border-color: #463e50 !important;
+        }
+
+        .container.dark-mode .filter-bar input,
+        .container.dark-mode .filter-bar select {
+            background: #292531 !important;
+            color: #ffffff !important;
+            border-color: #50475b !important;
+        }
+
+        .container.dark-mode .filter-bar input::placeholder {
+            color: #aaa3b5 !important;
+        }
+
+        .container.dark-mode .request-item {
+            background: #292531 !important;
+            border-color: #4a4352 !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .request-item.done {
+            background: #1d3325 !important;
+            border-color: #39764a !important;
+        }
+
+        .container.dark-mode .request-item.rejected {
+            background: #382327 !important;
+            border-color: #7e424a !important;
+        }
+
+        .container.dark-mode .request-name,
+        .container.dark-mode .request-time,
+        .container.dark-mode .request-code,
+        .container.dark-mode .section-heading {
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .request-type-box {
+            background: #352d41 !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .request-type-box strong {
+            color: #e6c6ff !important;
+        }
+
+        .container.dark-mode .excuse-reason-box {
+            background: #293342 !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .reject-reason-box {
+            background: #49252b !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .pending-badge {
+            background: #4a3b20 !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .badge-done {
+            background: #21482e !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .badge-rejected {
+            background: #51262c !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode #viewStudents > div,
+        .container.dark-mode #studentsListContainer > div {
+            background: #292531 !important;
+            border-color: #4a4352 !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode #viewStudents input {
+            background: #292531 !important;
+            color: #ffffff !important;
+            border-color: #50475b !important;
+        }
+
+        .container.dark-mode #viewStudents input::placeholder {
+            color: #aaa3b5 !important;
+        }
+
+        .container.dark-mode #viewReports p,
+        .container.dark-mode #viewSettings p {
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode footer {
+            color: #aaa3b5 !important;
+            border-top-color: #3d3749 !important;
+        }
+
+        .container.dark-mode #loginSection label {
+            color: #e7d7ff !important;
+        }
+
+        .container.dark-mode #adminPasswordInput {
+            background: #292531 !important;
+            color: #ffffff !important;
+            border-color: #50475b !important;
+        }
+
+        .container.dark-mode #adminPasswordInput::placeholder {
+            color: #aaa3b5 !important;
+        }
+
+        .container.dark-mode .online {
+            background: #21482e !important;
+            color: #ffffff !important;
+        }
+
+        .container.dark-mode .offline {
+            background: #51262c !important;
+            color: #ffffff !important;
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 10px;
+            }
 
             .container {
-
-                padding: 20px;
-
-                margin-top: 10px;
-
+                padding: 18px;
+                border-radius: 20px;
             }
-
 
             .header-flex {
-
-                padding-top: 25px;
-
+                align-items: flex-start;
             }
-
 
             .logo-title-group {
-
-                gap: 10px;
-
+                gap: 9px;
             }
-
 
             .logo-img {
-
-                max-width: 55px;
-
+                max-width: 52px;
             }
-
 
             h1 {
-
-                font-size: 16px;
-
+                font-size: 15px;
             }
-
 
             h2 {
-
                 font-size: 12px;
-
             }
 
+            .header-actions {
+                flex-direction: column;
+                gap: 5px;
+            }
 
             .connection-status {
-
                 font-size: 10px;
-
                 padding: 5px 8px;
-
             }
 
+            .theme-toggle {
+                width: 34px;
+                height: 30px;
+                font-size: 15px;
+            }
 
             .filter-bar {
-
                 flex-direction: column;
-
             }
-
 
             .btn-action-group {
-
                 flex-direction: column;
-
             }
-
         }
-
     </style>
 </head>
-
 
 <body>
 
 <div class="stars-container" id="stars"></div>
 
-
 <div class="container" id="adminContainerBox">
-
-
-    <!-- =====================================================
-         زر الوضع الداكن
-    ====================================================== -->
-
-    <button
-        id="themeToggle"
-        class="theme-toggle"
-        type="button"
-        onclick="toggleAdminTheme()"
-        aria-label="تغيير الوضع">
-
-        🌙
-
-    </button>
-
-
-    <!-- =====================================================
-         الهيدر
-    ====================================================== -->
 
     <div class="header-flex">
 
         <div class="logo-title-group">
-
             <img
                 src="https://i.ibb.co/ddsMPQH/logo.png"
                 alt="شعار بسمات الوعد"
                 class="logo-img"
             >
 
-
             <div>
-
-                <h1>
-                    روضة وابتدائية بسمات الوعد
-                </h1>
-
-                <h2>
-                    لوحة الإدارة المتقدمة
-                </h2>
-
+                <h1>روضة وابتدائية بسمات الوعد</h1>
+                <h2>لوحة الإدارة المتقدمة</h2>
             </div>
-
         </div>
 
+        <div class="header-actions">
 
-        <div>
-
-            <span
-                id="connectionBadge"
-                class="connection-status online">
-
+            <span id="connectionBadge" class="connection-status online">
                 🟢 متصل
-
             </span>
+
+            <button
+                id="themeToggleBtn"
+                class="theme-toggle"
+                type="button"
+                onclick="toggleAdminTheme()"
+                title="تغيير الوضع"
+            >
+                🌙
+            </button>
 
         </div>
 
     </div>
 
+    <div id="sessionTimer" class="session-timer hidden">
+        ⏰ الجلسة النشطة:
+        من <span id="sessionStart">--:--</span>
+        إلى <span id="sessionEnd">--:--</span>
+        |
+        التحديث التلقائي:
+        <span class="refresh-status">
+            <span class="spinner"></span>
+            كل 5 ثواني
+        </span>
+    </div>
 
-    <!-- =====================================================
-         تسجيل الدخول
-    ====================================================== -->
+    <div id="loginSection" style="margin: 30px auto;">
 
-    <div
-        id="loginSection"
-        style="margin: 30px auto;">
-
-        <div
-            style="margin-bottom: 15px; text-align: right;">
+        <div style="margin-bottom: 15px; text-align: right;">
 
             <label
                 style="
@@ -1367,12 +864,10 @@
                     font-weight:bold;
                     font-size:14px;
                     color:var(--primary-purple);
-                ">
-
+                "
+            >
                 رمز المرور السري للإدارة:
-
             </label>
-
 
             <input
                 type="password"
@@ -1383,267 +878,153 @@
                 style="
                     width:100%;
                     padding:14px;
-                    border:2px solid var(--border-color);
+                    border:2px solid #e2d9eb;
                     border-radius:12px;
                     font-size:15px;
                     outline:none;
-                    background:var(--input-bg);
-                    color:var(--text-color);
                 "
-                onkeydown="
-                    if(event.key === 'Enter')
-                        checkAdminLogin();
-                "
+                onkeydown="if(event.key === 'Enter') checkAdminLogin();"
             >
 
         </div>
 
-
         <button
             class="btn-submit"
-            id="loginButton"
-            onclick="checkAdminLogin()">
-
+            onclick="checkAdminLogin()"
+        >
             دخول لوحة التحكم
-
         </button>
 
     </div>
 
-
-    <!-- =====================================================
-         لوحة الإدارة
-    ====================================================== -->
-
-    <div
-        id="adminPanelSection"
-        class="hidden">
-
-
-        <!-- التنبيه -->
+    <div id="adminPanelSection" class="hidden">
 
         <div
             id="dynamicAlertBanner"
             class="alert-banner hidden"
-            onclick="switchAdminTab('requests')">
-
+            onclick="switchAdminTab('requests')"
+        >
             🚨 تنبيه: يوجد
-
-            <span id="alertCountText">
-                0
-            </span>
-
+            <span id="alertCountText">0</span>
             طلب جديد بانتظار قبولك أو رفضك!
-
             (اضغط هنا للانتقال)
-
         </div>
 
-
-        <!-- التبويبات -->
-
         <div class="admin-tabs">
-
 
             <button
                 class="tab-btn active"
                 id="tabDashboard"
-                onclick="switchAdminTab('dashboard')">
-
+                onclick="switchAdminTab('dashboard')"
+            >
                 📊 الإحصائيات
-
             </button>
-
 
             <button
                 class="tab-btn"
                 id="tabRequests"
-                onclick="switchAdminTab('requests')">
-
+                onclick="switchAdminTab('requests')"
+            >
                 📥 الطلبات الحية
-
                 <span
                     id="tabNotificationBadge"
-                    class="notification-badge hidden">
-
+                    class="notification-badge hidden"
+                >
                     0
-
                 </span>
-
             </button>
-
 
             <button
                 class="tab-btn"
                 id="tabStudents"
-                onclick="switchAdminTab('students')">
-
+                onclick="switchAdminTab('students')"
+            >
                 👥 الطلاب
-
             </button>
-
 
             <button
                 class="tab-btn"
                 id="tabReports"
-                onclick="switchAdminTab('reports')">
-
+                onclick="switchAdminTab('reports')"
+            >
                 📋 التقارير
-
             </button>
-
 
             <button
                 class="tab-btn"
                 id="tabSettings"
-                onclick="switchAdminTab('settings')">
-
+                onclick="switchAdminTab('settings')"
+            >
                 ⚙️ الإعدادات
-
             </button>
-
 
         </div>
 
-
-        <!-- =================================================
-             الإحصائيات
-        ================================================== -->
+        <!-- الإحصائيات -->
 
         <div id="viewDashboard">
 
-
             <div class="stats-grid">
 
-
                 <div class="stat-card">
-
-                    <h3>
-                        إجمالي اليوم
-                    </h3>
-
-                    <div
-                        class="number"
-                        id="statTotalToday">
-
-                        0
-
-                    </div>
-
+                    <h3>إجمالي اليوم</h3>
+                    <div class="number" id="statTotalToday">0</div>
                     <div
                         class="trend"
-                        style="color:var(--primary-purple);">
-
+                        style="color:var(--primary-purple);"
+                    >
                         سجل الطلبات ⚡
-
                     </div>
-
                 </div>
 
-
                 <div class="stat-card">
-
-                    <h3>
-                        الطلبات المعلقة
-                    </h3>
-
-                    <div
-                        class="number"
-                        id="statPending">
-
-                        0
-
-                    </div>
-
+                    <h3>الطلبات المعلقة</h3>
+                    <div class="number" id="statPending">0</div>
                     <div
                         class="trend"
-                        style="color:var(--danger-red);">
-
+                        style="color:var(--danger-red);"
+                    >
                         تحتاج إجراء عاجل
-
                     </div>
-
                 </div>
 
-
                 <div class="stat-card">
-
-                    <h3>
-                        الطلبات المقبولة
-                    </h3>
-
-                    <div
-                        class="number"
-                        id="statApproved">
-
-                        0
-
-                    </div>
-
+                    <h3>الطلبات المقبولة</h3>
+                    <div class="number" id="statApproved">0</div>
                     <div
                         class="trend"
-                        style="color:var(--success-green);">
-
+                        style="color:var(--success-green);"
+                    >
                         تم التجهيز بنجاح ✅
-
                     </div>
-
                 </div>
-
 
                 <div class="stat-card">
-
-                    <h3>
-                        الطلبات المرفوضة
-                    </h3>
-
-                    <div
-                        class="number"
-                        id="statRejected">
-
-                        0
-
-                    </div>
-
+                    <h3>الطلبات المرفوضة</h3>
+                    <div class="number" id="statRejected">0</div>
                     <div
                         class="trend"
-                        style="color:#d9534f;">
-
+                        style="color:#d9534f;"
+                    >
                         مرفوضة ❌
-
                     </div>
-
                 </div>
-
 
             </div>
-
 
             <div class="charts-grid">
-
                 <div class="chart-container">
-
                     <canvas id="statusPieChart"></canvas>
-
                 </div>
-
             </div>
-
 
         </div>
 
+        <!-- الطلبات -->
 
-        <!-- =================================================
-             الطلبات
-        ================================================== -->
-
-        <div
-            id="viewRequests"
-            class="hidden">
-
+        <div id="viewRequests" class="hidden">
 
             <div class="filter-bar">
-
 
                 <input
                     type="text"
@@ -1652,32 +1033,17 @@
                     oninput="filterRequests()"
                 >
 
-
                 <select
                     id="filterStatus"
-                    onchange="filterRequests()">
-
-                    <option value="all">
-                        الكل
-                    </option>
-
-                    <option value="pending">
-                        المعلقة
-                    </option>
-
-                    <option value="approved">
-                        الموافق عليها
-                    </option>
-
-                    <option value="rejected">
-                        المرفوضة
-                    </option>
-
+                    onchange="filterRequests()"
+                >
+                    <option value="all">الكل</option>
+                    <option value="pending">المعلقة</option>
+                    <option value="approved">الموافق عليها</option>
+                    <option value="rejected">المرفوضة</option>
                 </select>
 
-
             </div>
-
 
             <div
                 id="requestsList"
@@ -1685,42 +1051,42 @@
                     max-height:400px;
                     overflow-y:auto;
                     padding-left:6px;
-                ">
-
+                "
+            >
                 <p style="font-size:13px;">
                     جاري التحميل...
                 </p>
-
             </div>
-
 
         </div>
 
-
-        <!-- =================================================
-             الطلاب
-        ================================================== -->
+        <!-- الطلاب -->
 
         <div
             id="viewStudents"
             class="hidden"
-            style="text-align:right;">
+            style="text-align:right;"
+        >
 
-
-            <div class="students-add-box">
-
+            <div
+                style="
+                    background:#f8f5fc;
+                    padding:15px;
+                    border-radius:12px;
+                    margin-bottom:15px;
+                    border:1px solid #e2d9eb;
+                "
+            >
 
                 <h3
+                    class="section-heading"
                     style="
-                        color:var(--primary-purple);
                         margin-top:0;
                         font-size:14px;
-                    ">
-
+                    "
+                >
                     ➕ إضافة طالب جديد
-
                 </h3>
-
 
                 <div
                     style="
@@ -1728,8 +1094,8 @@
                         flex-direction:column;
                         gap:10px;
                         margin-bottom:10px;
-                    ">
-
+                    "
+                >
 
                     <input
                         type="text"
@@ -1738,13 +1104,10 @@
                         style="
                             padding:11px;
                             border-radius:10px;
-                            border:1px solid var(--border-color);
+                            border:1px solid #ccc;
                             font-size:13px;
-                            background:var(--input-bg);
-                            color:var(--text-color);
                         "
                     >
-
 
                     <input
                         type="text"
@@ -1753,13 +1116,10 @@
                         style="
                             padding:11px;
                             border-radius:10px;
-                            border:1px solid var(--border-color);
+                            border:1px solid #ccc;
                             font-size:13px;
-                            background:var(--input-bg);
-                            color:var(--text-color);
                         "
                     >
-
 
                     <input
                         type="text"
@@ -1768,90 +1128,72 @@
                         style="
                             padding:11px;
                             border-radius:10px;
-                            border:1px solid var(--border-color);
+                            border:1px solid #ccc;
                             font-size:13px;
-                            background:var(--input-bg);
-                            color:var(--text-color);
                         "
                     >
 
                 </div>
 
-
                 <button
                     class="btn-submit"
-                    id="addStudentButton"
                     style="
                         padding:11px;
                         font-size:13px;
                     "
-                    onclick="addNewStudent()">
-
+                    onclick="addNewStudent()"
+                >
                     حفظ الطالب
-
                 </button>
 
-
             </div>
-
 
             <div
                 id="studentsListContainer"
                 style="
                     max-height:250px;
                     overflow-y:auto;
-                ">
-
+                "
+            >
                 <p style="font-size:13px;">
                     جاري التحميل...
                 </p>
-
             </div>
-
 
         </div>
 
-
-        <!-- =================================================
-             التقارير
-        ================================================== -->
+        <!-- التقارير -->
 
         <div
             id="viewReports"
             class="hidden"
-            style="text-align:right;">
-
+            style="text-align:right;"
+        >
 
             <h3
-                style="
-                    color:var(--primary-purple);
-                    font-size:14px;
-                ">
-
+                class="section-heading"
+                style="font-size:14px;"
+            >
                 📋 تصدير التقارير المدرسية
-
             </h3>
-
 
             <p
                 style="
                     font-size:12px;
-                    color:var(--muted-text);
+                    color:#666;
                     margin-bottom:12px;
-                ">
-
+                "
+            >
                 اختر صيغة الملف المناسبة لتحميل سجل الطلبات:
-
             </p>
-
 
             <div
                 style="
                     display:flex;
                     gap:10px;
                     flex-wrap:wrap;
-                ">
-
+                "
+            >
 
                 <button
                     class="btn-submit"
@@ -1860,12 +1202,10 @@
                         padding:12px;
                         font-size:13px;
                     "
-                    onclick="exportTableToCSV('requests.csv')">
-
+                    onclick="exportTableToCSV('requests.csv')"
+                >
                     📥 Excel (CSV)
-
                 </button>
-
 
                 <button
                     class="btn-submit"
@@ -1876,12 +1216,10 @@
                         background:#4a2e6f;
                         color:white;
                     "
-                    onclick="exportTableToWord()">
-
+                    onclick="exportTableToWord()"
+                >
                     📄 Word (DOC)
-
                 </button>
-
 
                 <button
                     class="btn-submit"
@@ -1892,53 +1230,41 @@
                         background:#d9534f;
                         color:white;
                     "
-                    onclick="exportTableToPDF()">
-
+                    onclick="exportTableToPDF()"
+                >
                     📑 PDF تقرير رسمي
-
                 </button>
-
 
             </div>
 
-
         </div>
 
-
-        <!-- =================================================
-             الإعدادات
-        ================================================== -->
+        <!-- الإعدادات -->
 
         <div
             id="viewSettings"
             class="hidden"
-            style="text-align:right;">
-
+            style="text-align:right;"
+        >
 
             <h3
-                style="
-                    color:var(--primary-purple);
-                    font-size:14px;
-                ">
-
+                class="section-heading"
+                style="font-size:14px;"
+            >
                 ⚙️ الإعدادات المتقدمة
-
             </h3>
-
 
             <p
                 style="
                     font-size:12px;
-                    color:var(--muted-text);
+                    color:#666;
                     line-height:1.5;
-                ">
-
+                "
+            >
                 ملاحظة: تفريغ الكاش يقوم بتنظيف الذاكرة المؤقتة
-                للمتصفح فقط لتحديث النظام، ولا يؤدي أبداً إلى حذف
+                للمتصفح فقط لتحديث النظام، ولا يؤدي إلى حذف
                 الطلبات الأصلية المحفوظة في قاعدة بيانات السيرفر.
-
             </p>
-
 
             <button
                 class="btn-submit"
@@ -1949,17 +1275,12 @@
                     font-size:13px;
                     margin-top:10px;
                 "
-                onclick="clearLocalStorageCache()">
-
+                onclick="clearLocalStorageCache()"
+            >
                 تفريغ الذاكرة المؤقتة (الكاش)
-
             </button>
 
-
         </div>
-
-
-        <!-- تسجيل الخروج -->
 
         <button
             class="btn-submit"
@@ -1969,29 +1290,18 @@
                 margin-top:20px;
                 font-size:13px;
             "
-            onclick="logoutAdmin()">
-
+            onclick="adminLogout()"
+        >
             تسجيل خروج 🔒
-
         </button>
-
 
     </div>
 
-
-    <!-- =====================================================
-         الفوتر
-    ====================================================== -->
-
     <footer>
-
         تم إنشاء وتطوير النظام من قبل إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
-
     </footer>
 
-
 </div>
-
 
 <script>
 
@@ -2001,80 +1311,52 @@
 
     function createStars() {
 
-        const container =
-            document.getElementById('stars');
+        const container = document.getElementById('stars');
 
+        for (let i = 0; i < 50; i++) {
 
-        if (!container) return;
-
-
-        for (
-            let i = 0;
-            i < 50;
-            i++
-        ) {
-
-            const star =
-                document.createElement('div');
-
+            const star = document.createElement('div');
 
             star.classList.add(
                 'star',
-                Math.random() > 0.4
-                    ? 'gold'
-                    : 'bright'
+                Math.random() > 0.4 ? 'gold' : 'bright'
             );
 
+            const size = Math.random() * 3 + 1.5;
 
-            const size =
-                Math.random() * 3 + 1.5;
-
-
-            star.style.width =
-                `${size}px`;
-
-
-            star.style.height =
-                `${size}px`;
-
-
-            star.style.left =
-                `${Math.random() * 100}%`;
-
-
-            star.style.animationDuration =
-                `${Math.random() * 3 + 2}s`;
-
-
-            star.style.animationDelay =
-                `${Math.random() * 5}s`;
-
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.animationDuration = `${Math.random() * 3 + 2}s`;
+            star.style.animationDelay = `${Math.random() * 5}s`;
 
             container.appendChild(star);
-
         }
-
     }
-
 
     createStars();
 
 
     /* =========================================================
-       الثوابت الآمنة
+       إعداد Supabase
+       مهم:
+       لا يوجد Service Role هنا.
     ========================================================= */
 
-    const API_URL =
-        'https://gtbgfndskfofcxgtgqlc.supabase.co/functions/v1/parent-api';
+    const SUPABASE_URL =
+        'https://gtbgfndskfofcxgtgqlc.supabase.co';
+
+    const SUPABASE_ANON_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0YmdmbmRza2ZvZmN4Z3RncWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MTYyNzgsImV4cCI6MjEwNDI5MjI3OH0.o2XZwDyYSJOgJVbO6st-QwH5fRjVEHK0pppGLJutQ_I';
+
+    const PARENT_API_URL =
+        SUPABASE_URL.replace(/\/$/, '') +
+        '/functions/v1/parent-api';
 
 
-    const SESSION_KEY =
-        'bsm_admin_session';
-
-
-    const THEME_KEY =
-        'admin_card_theme';
-
+    /* =========================================================
+       متغيرات النظام
+    ========================================================= */
 
     let allRequests = [];
 
@@ -2082,75 +1364,63 @@
 
     let pieChartInstance = null;
 
-    let refreshInterval = null;
+    let autoRefreshInterval = null;
 
-    let requestPollingInterval = null;
+    let sessionRefreshInterval = null;
 
-    let audioContext = null;
+    let sessionStartTime = null;
+
+    let sessionEndTime = null;
 
     let lastRequestsFingerprint = '';
 
+    let audioContext = null;
+
+    let masterGain = null;
+
 
     /* =========================================================
-       الوضع الداكن
+       أدوات عامة
     ========================================================= */
 
-    function applyAdminTheme() {
+    function escapeHTML(value) {
 
-        const savedTheme =
-            localStorage.getItem(THEME_KEY);
-
-
-        const dark =
-            savedTheme === 'dark';
-
-
-        document.body.classList.toggle(
-            'dark-mode',
-            dark
-        );
-
-
-        const button =
-            document.getElementById(
-                'themeToggle'
-            );
-
-
-        if (button) {
-
-            button.innerText =
-                dark
-                    ? '☀️'
-                    : '🌙';
-
+        if (value === null || value === undefined) {
+            return '';
         }
 
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
 
-    function toggleAdminTheme() {
+    function getAdminToken() {
 
-        const isDark =
-            document.body.classList.contains(
-                'dark-mode'
+        return sessionStorage.getItem('admin_session_token') || '';
+    }
+
+
+    function saveAdminToken(token) {
+
+        if (token) {
+            sessionStorage.setItem(
+                'admin_session_token',
+                token
             );
-
-
-        localStorage.setItem(
-            THEME_KEY,
-            isDark
-                ? 'light'
-                : 'dark'
-        );
-
-
-        applyAdminTheme();
-
+        }
     }
 
 
-    applyAdminTheme();
+    function clearAdminToken() {
+
+        sessionStorage.removeItem(
+            'admin_session_token'
+        );
+    }
 
 
     /* =========================================================
@@ -2159,474 +1429,260 @@
 
     window.addEventListener(
         'online',
-        () => {
-
-            updateConnectionStatus(true);
-
-        }
+        () => updateConnectionStatus(true)
     );
-
 
     window.addEventListener(
         'offline',
-        () => {
-
-            updateConnectionStatus(false);
-
-        }
+        () => updateConnectionStatus(false)
     );
 
 
-    function updateConnectionStatus(
-        isOnline
-    ) {
+    function updateConnectionStatus(isOnline) {
 
         const badge =
-            document.getElementById(
-                'connectionBadge'
-            );
-
+            document.getElementById('connectionBadge');
 
         if (!badge) return;
-
 
         if (isOnline) {
 
             badge.className =
                 'connection-status online';
 
-
             badge.innerHTML =
-                '🟢 متصل';
+                '🟢 متصل - ليڤ';
 
         } else {
 
             badge.className =
                 'connection-status offline';
 
-
             badge.innerHTML =
                 '🔴 أوفلاين';
-
         }
-
     }
 
 
     /* =========================================================
-       API الآمن
+       استدعاء API الإدارة
     ========================================================= */
 
-    async function api(
-        action,
-        payload = {},
-        options = {}
-    ) {
+    async function callAdminApi(payload, requireAuth = true) {
 
         const headers = {
-
-            'Content-Type':
-                'application/json'
-
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization':
+                `Bearer ${SUPABASE_ANON_KEY}`
         };
 
+        if (requireAuth) {
 
-        const sessionToken =
-            sessionStorage.getItem(
-                SESSION_KEY
-            );
+            const token = getAdminToken();
 
+            if (!token) {
+                throw new Error('NO_ADMIN_SESSION');
+            }
 
-        if (sessionToken) {
-
-            headers['Authorization'] =
-                'Bearer ' + sessionToken;
-
+            headers['X-Admin-Session'] = token;
         }
-
 
         const controller =
             new AbortController();
 
-
         const timeout =
             setTimeout(
                 () => controller.abort(),
-                options.timeout || 15000
+                15000
             );
-
 
         try {
 
-            const response =
-                await fetch(
-                    API_URL,
-                    {
+            const response = await fetch(
+                PARENT_API_URL,
+                {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload),
+                    cache: 'no-store',
+                    signal: controller.signal
+                }
+            );
 
-                        method: 'POST',
-
-                        headers: headers,
-
-                        cache: 'no-store',
-
-                        signal:
-                            controller.signal,
-
-                        body:
-                            JSON.stringify(
-                                {
-                                    action:
-                                        action,
-                                    ...payload
-                                }
-                            )
-
-                    }
-                );
-
+            const text =
+                await response.text();
 
             let result = {};
 
-
             try {
-
-                result =
-                    await response.json();
-
+                result = text ? JSON.parse(text) : {};
             } catch (e) {
-
-                result = {};
-
+                result = {
+                    success: false,
+                    message: text || 'استجابة غير مفهومة من السيرفر.'
+                };
             }
 
+            if (!response.ok) {
 
-            if (
-                !response.ok ||
-                result.success === false
-            ) {
+                if (
+                    response.status === 401 ||
+                    result.code === 'ADMIN_SESSION_EXPIRED'
+                ) {
+                    clearAdminToken();
+                    stopSessionRefresh();
+                }
 
                 throw new Error(
                     result.message ||
-                    result.error ||
-                    `تعذر تنفيذ العملية (${response.status})`
+                    `HTTP ${response.status}`
                 );
-
             }
 
+            if (result.success === false) {
+                throw new Error(
+                    result.message ||
+                    'تعذر تنفيذ العملية.'
+                );
+            }
 
             return result;
-
-
-        } catch (error) {
-
-            if (
-                error &&
-                error.name === 'AbortError'
-            ) {
-
-                throw new Error(
-                    'انتهت مهلة الاتصال بالسيرفر.'
-                );
-
-            }
-
-
-            throw error;
-
 
         } finally {
 
             clearTimeout(timeout);
-
         }
-
     }
 
 
     /* =========================================================
-       تهيئة الصوت
+       الصوت
+       نفس فكرة صوت الأهالي لكن أقوى وأنظف
     ========================================================= */
 
-    function initializeAudio() {
+    function getAudioContext() {
 
-        try {
+        if (!audioContext) {
 
-            const AudioCtx =
-                window.AudioContext ||
-                window.webkitAudioContext;
+            audioContext =
+                new (
+                    window.AudioContext ||
+                    window.webkitAudioContext
+                )();
 
+            masterGain =
+                audioContext.createGain();
 
-            if (!AudioCtx) {
+            masterGain.gain.value = 0.76;
 
-                return null;
-
-            }
-
-
-            if (!audioContext) {
-
-                audioContext =
-                    new AudioCtx();
-
-            }
-
-
-            if (
-                audioContext.state ===
-                'suspended'
-            ) {
-
-                audioContext
-                    .resume()
-                    .catch(() => {});
-
-            }
-
-
-            return audioContext;
-
-
-        } catch (e) {
-
-            return null;
-
+            masterGain.connect(
+                audioContext.destination
+            );
         }
 
+        return audioContext;
     }
 
 
-    /* =========================================================
-       فتح الصوت بعد تفاعل المستخدم
-    ========================================================= */
-
-    function unlockAudio() {
+    async function unlockAudio() {
 
         try {
 
-            const ctx =
-                initializeAudio();
+            const ctx = getAudioContext();
 
-
-            if (
-                ctx &&
-                ctx.state === 'suspended'
-            ) {
-
-                ctx.resume()
-                    .catch(() => {});
-
+            if (ctx.state === 'suspended') {
+                await ctx.resume();
             }
 
         } catch (e) {}
-
     }
 
 
-    document.addEventListener(
-        'pointerdown',
-        unlockAudio,
-        {
-            passive: true
-        }
-    );
-
-
-    document.addEventListener(
-        'touchstart',
-        unlockAudio,
-        {
-            passive: true
-        }
-    );
-
-
-    document.addEventListener(
-        'keydown',
-        unlockAudio,
-        {
-            passive: true
-        }
-    );
-
-
-    /* =========================================================
-       نغمة الإدارة
-       نفس نغمة صفحة الأهالي مع رفع الصوت
-    ========================================================= */
-
-    function playAlertTone() {
+    function playCloseTone() {
 
         try {
 
-            const ctx =
-                initializeAudio();
+            const ctx = getAudioContext();
 
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
 
-            if (!ctx) return;
-
-
-            const now =
+            const start =
                 ctx.currentTime;
 
-
-            const master =
-                ctx.createGain();
-
-
-            /*
-               صوت أعلى وأوضح من صفحة الأهالي.
-            */
-
-            master.gain.setValueAtTime(
-                0.0001,
-                now
-            );
-
-
-            master.gain.exponentialRampToValueAtTime(
-                0.88,
-                now + 0.025
-            );
-
-
-            master.gain.exponentialRampToValueAtTime(
-                0.0001,
-                now + 1.35
-            );
-
-
-            master.connect(
-                ctx.destination
-            );
-
-
-            /*
-               نفس تسلسل النغمة المستخدم
-               في صفحة الأهالي.
-            */
-
-            const tones = [
-
-                {
-                    frequency: 523.25,
-                    start: 0,
-                    duration: 0.38
-                },
-
-                {
-                    frequency: 659.25,
-                    start: 0.20,
-                    duration: 0.38
-                },
-
-                {
-                    frequency: 783.99,
-                    start: 0.42,
-                    duration: 0.52
-                }
-
+            const notes = [
+                523.25,
+                659.25,
+                783.99
             ];
 
+            notes.forEach(
+                (freq, index) => {
 
-            tones.forEach(
-                (tone) => {
-
-                    const oscillator =
+                    const osc =
                         ctx.createOscillator();
-
 
                     const gain =
                         ctx.createGain();
 
+                    const noteStart =
+                        start + (index * 0.12);
 
-                    oscillator.type =
-                        'sine';
+                    const noteEnd =
+                        noteStart + 0.48;
 
+                    osc.type = 'sine';
 
-                    oscillator.frequency.setValueAtTime(
-                        tone.frequency,
-                        now + tone.start
+                    osc.frequency.setValueAtTime(
+                        freq,
+                        noteStart
                     );
-
 
                     gain.gain.setValueAtTime(
                         0.0001,
-                        now + tone.start
+                        noteStart
                     );
 
+                    gain.gain.linearRampToValueAtTime(
+                        0.60,
+                        noteStart + 0.035
+                    );
 
                     gain.gain.exponentialRampToValueAtTime(
-                        0.80,
-                        now +
-                        tone.start +
-                        0.035
+                        0.001,
+                        noteEnd
                     );
 
+                    osc.connect(gain);
 
-                    gain.gain.exponentialRampToValueAtTime(
-                        0.0001,
-                        now +
-                        tone.start +
-                        tone.duration
-                    );
+                    gain.connect(masterGain);
 
+                    osc.start(noteStart);
 
-                    oscillator.connect(gain);
-
-
-                    gain.connect(master);
-
-
-                    oscillator.start(
-                        now + tone.start
-                    );
-
-
-                    oscillator.stop(
-                        now +
-                        tone.start +
-                        tone.duration +
-                        0.05
-                    );
-
+                    osc.stop(noteEnd + 0.02);
                 }
             );
 
-
         } catch (e) {}
-
     }
 
 
-    /* =========================================================
-       التنبيه المستمر
-    ========================================================= */
-
     function startContinuousAlert() {
 
-        if (soundInterval) {
+        if (!soundInterval) {
 
-            return;
+            unlockAudio();
 
+            playCloseTone();
+
+            soundInterval =
+                setInterval(
+                    playCloseTone,
+                    3000
+                );
         }
-
-
-        initializeAudio();
-
-
-        playAlertTone();
-
-
-        soundInterval =
-            setInterval(
-                () => {
-
-                    playAlertTone();
-
-                },
-                3000
-            );
-
     }
 
 
@@ -2634,20 +1690,85 @@
 
         if (soundInterval) {
 
-            clearInterval(
-                soundInterval
-            );
-
+            clearInterval(soundInterval);
 
             soundInterval = null;
-
         }
-
     }
 
 
     /* =========================================================
-       تسجيل الدخول
+       الوضع الليلي
+    ========================================================= */
+
+    function applyAdminTheme() {
+
+        const container =
+            document.getElementById(
+                'adminContainerBox'
+            );
+
+        const button =
+            document.getElementById(
+                'themeToggleBtn'
+            );
+
+        const dark =
+            localStorage.getItem(
+                'admin_card_theme'
+            ) === 'dark';
+
+        if (dark) {
+
+            container.classList.add(
+                'dark-mode'
+            );
+
+            button.textContent = '☀️';
+
+            button.title =
+                'التحويل إلى الوضع النهاري';
+
+        } else {
+
+            container.classList.remove(
+                'dark-mode'
+            );
+
+            button.textContent = '🌙';
+
+            button.title =
+                'التحويل إلى الوضع الليلي';
+        }
+    }
+
+
+    function toggleAdminTheme() {
+
+        const container =
+            document.getElementById(
+                'adminContainerBox'
+            );
+
+        const isDark =
+            container.classList.toggle(
+                'dark-mode'
+            );
+
+        localStorage.setItem(
+            'admin_card_theme',
+            isDark ? 'dark' : 'light'
+        );
+
+        applyAdminTheme();
+    }
+
+
+    applyAdminTheme();
+
+
+    /* =========================================================
+       تسجيل دخول الإدارة
     ========================================================= */
 
     async function checkAdminLogin() {
@@ -2657,370 +1778,337 @@
                 'adminPasswordInput'
             );
 
-
-        const button =
-            document.getElementById(
-                'loginButton'
-            );
-
-
         const pass =
             input.value.trim();
-
 
         if (!pass) {
 
             alert(
-                'فضلاً أدخل كلمة مرور الإدارة.'
+                'يرجى إدخال كلمة المرور.'
             );
 
+            input.focus();
+
             return;
-
         }
 
+        const button =
+            document.querySelector(
+                '#loginSection .btn-submit'
+            );
 
-        unlockAudio();
+        const originalText =
+            button.textContent;
 
+        button.disabled = true;
 
-        if (button) {
-
-            button.disabled = true;
-
-            button.innerText =
-                'جاري التحقق...';
-
-        }
-
+        button.textContent =
+            'جاري التحقق...';
 
         try {
 
-            /*
-               admin_login لا يحتاج جلسة
-               سابقة.
-            */
+            await unlockAudio();
 
             const result =
-                await api(
-                    'admin_login',
+                await callAdminApi(
                     {
+                        action: 'admin_login',
                         password: pass
                     },
-                    {
-                        noSession: true,
-                        timeout: 15000
-                    }
+                    false
                 );
-
 
             if (
-                !result.session_token &&
-                !result.token
+                !result ||
+                !result.session_token
             ) {
-
                 throw new Error(
-                    'تم الدخول ولكن لم يتم استلام جلسة الإدارة.'
+                    'لم يستلم النظام جلسة الإدارة.'
                 );
-
             }
 
-
-            const token =
-                result.session_token ||
-                result.token;
-
-
-            sessionStorage.setItem(
-                SESSION_KEY,
-                token
+            saveAdminToken(
+                result.session_token
             );
-
 
             input.value = '';
 
+            const now =
+                new Date();
+
+            sessionStartTime =
+                now;
+
+            sessionEndTime =
+                new Date(
+                    now.getTime() +
+                    (8 * 60 * 60 * 1000)
+                );
 
             document
                 .getElementById(
                     'loginSection'
                 )
-                .classList.add(
-                    'hidden'
-                );
-
+                .classList.add('hidden');
 
             document
                 .getElementById(
                     'adminPanelSection'
                 )
-                .classList.remove(
-                    'hidden'
-                );
+                .classList.remove('hidden');
 
+            document
+                .getElementById(
+                    'sessionTimer'
+                )
+                .classList.remove('hidden');
+
+            updateSessionDisplay();
+
+            startSessionRefresh();
 
             await initAdminDashboard();
 
+        } catch (err) {
 
-        } catch (error) {
-
-            console.error(
-                'Admin login error:',
-                error
-            );
-
+            console.error(err);
 
             alert(
-                error.message ||
-                'تعذر تسجيل الدخول إلى لوحة الإدارة.'
+                err.message ||
+                'تعذر تسجيل الدخول. تأكدي من إعدادات الدالة.'
             );
-
 
         } finally {
 
-            if (button) {
+            button.disabled = false;
 
-                button.disabled = false;
-
-                button.innerText =
-                    'دخول لوحة التحكم';
-
-            }
-
+            button.textContent =
+                originalText;
         }
-
     }
 
 
     /* =========================================================
-       استعادة الجلسة عند إعادة فتح الصفحة
+       عرض الجلسة
     ========================================================= */
 
-    async function restoreExistingSession() {
+    function updateSessionDisplay() {
 
-        const token =
-            sessionStorage.getItem(
-                SESSION_KEY
-            );
-
-
-        if (!token) {
-
-            return false;
-
+        if (!sessionStartTime ||
+            !sessionEndTime) {
+            return;
         }
 
-
-        try {
-
-            const result =
-                await api(
-                    'admin_refresh',
-                    {},
-                    {
-                        timeout: 10000
-                    }
-                );
-
-
-            const newToken =
-                result.session_token ||
-                result.token;
-
-
-            if (!newToken) {
-
-                throw new Error(
-                    'لم يتم تجديد الجلسة.'
-                );
-
-            }
-
-
-            sessionStorage.setItem(
-                SESSION_KEY,
-                newToken
+        const startStr =
+            sessionStartTime.toLocaleTimeString(
+                'ar-SA',
+                {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }
             );
 
-
-            document
-                .getElementById(
-                    'loginSection'
-                )
-                .classList.add(
-                    'hidden'
-                );
-
-
-            document
-                .getElementById(
-                    'adminPanelSection'
-                )
-                .classList.remove(
-                    'hidden'
-                );
-
-
-            await initAdminDashboard();
-
-
-            return true;
-
-
-        } catch (error) {
-
-            console.warn(
-                'Existing admin session is invalid:',
-                error
+        const endStr =
+            sessionEndTime.toLocaleTimeString(
+                'ar-SA',
+                {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }
             );
 
+        document
+            .getElementById(
+                'sessionStart'
+            )
+            .textContent =
+            startStr;
 
-            sessionStorage.removeItem(
-                SESSION_KEY
-            );
-
-
-            return false;
-
-        }
-
+        document
+            .getElementById(
+                'sessionEnd'
+            )
+            .textContent =
+            endStr;
     }
 
 
     /* =========================================================
-       تجديد الجلسة
+       تجديد جلسة الإدارة
+       كل 30 دقيقة أثناء بقاء الصفحة مفتوحة
     ========================================================= */
 
     function startSessionRefresh() {
 
-        if (refreshInterval) {
+        stopSessionRefresh();
 
-            clearInterval(
-                refreshInterval
-            );
-
-        }
-
-
-        /*
-           كل 30 دقيقة.
-           طالما الصفحة مفتوحة تبقى الجلسة متجددة.
-        */
-
-        refreshInterval =
+        sessionRefreshInterval =
             setInterval(
                 refreshAdminSession,
                 30 * 60 * 1000
             );
+    }
 
+
+    function stopSessionRefresh() {
+
+        if (sessionRefreshInterval) {
+
+            clearInterval(
+                sessionRefreshInterval
+            );
+
+            sessionRefreshInterval = null;
+        }
     }
 
 
     async function refreshAdminSession() {
 
-        const token =
-            sessionStorage.getItem(
-                SESSION_KEY
-            );
-
-
-        if (!token) return;
-
+        if (!getAdminToken()) {
+            return;
+        }
 
         try {
 
             const result =
-                await api(
-                    'admin_refresh',
-                    {},
+                await callAdminApi(
                     {
-                        timeout: 10000
-                    }
+                        action: 'admin_refresh'
+                    },
+                    true
                 );
 
+            if (
+                result &&
+                result.session_token
+            ) {
 
-            const newToken =
-                result.session_token ||
-                result.token;
-
-
-            if (newToken) {
-
-                sessionStorage.setItem(
-                    SESSION_KEY,
-                    newToken
+                saveAdminToken(
+                    result.session_token
                 );
 
+                const now =
+                    new Date();
+
+                sessionStartTime =
+                    sessionStartTime || now;
+
+                sessionEndTime =
+                    new Date(
+                        now.getTime() +
+                        (8 * 60 * 60 * 1000)
+                    );
+
+                updateSessionDisplay();
             }
 
-
-        } catch (error) {
+        } catch (err) {
 
             console.warn(
-                'تعذر تجديد جلسة الإدارة:',
-                error
+                'تعذر تجديد الجلسة:',
+                err
             );
-
         }
-
     }
 
 
     /* =========================================================
-       لوحة الإدارة
+       التنقل بين الصفحات
+    ========================================================= */
+
+    function switchAdminTab(tab) {
+
+        [
+            'dashboard',
+            'requests',
+            'students',
+            'reports',
+            'settings'
+        ].forEach(
+            t => {
+
+                const tabElement =
+                    document.getElementById(
+                        'tab' +
+                        t.charAt(0).toUpperCase() +
+                        t.slice(1)
+                    );
+
+                const viewElement =
+                    document.getElementById(
+                        'view' +
+                        t.charAt(0).toUpperCase() +
+                        t.slice(1)
+                    );
+
+                if (tabElement) {
+                    tabElement.classList.remove(
+                        'active'
+                    );
+                }
+
+                if (viewElement) {
+                    viewElement.classList.add(
+                        'hidden'
+                    );
+                }
+            }
+        );
+
+        const activeTab =
+            document.getElementById(
+                'tab' +
+                tab.charAt(0).toUpperCase() +
+                tab.slice(1)
+            );
+
+        const activeView =
+            document.getElementById(
+                'view' +
+                tab.charAt(0).toUpperCase() +
+                tab.slice(1)
+            );
+
+        if (activeTab) {
+            activeTab.classList.add(
+                'active'
+            );
+        }
+
+        if (activeView) {
+            activeView.classList.remove(
+                'hidden'
+            );
+        }
+
+        if (tab === 'dashboard') {
+            updateChartsData();
+        }
+
+        if (tab === 'students') {
+            loadStudentsFromDb();
+        }
+
+        if (tab === 'requests') {
+            filterRequests();
+        }
+    }
+
+
+    /* =========================================================
+       تشغيل لوحة الإدارة
     ========================================================= */
 
     async function initAdminDashboard() {
 
-        startSessionRefresh();
-
-
         await loadRequestsFromDb();
-
 
         await loadStudentsFromDb();
 
+        setupRealtimeSubscription();
 
-        startRequestPolling();
-
-    }
-
-
-    /* =========================================================
-       تحديث الطلبات بسرعة
-    ========================================================= */
-
-    function startRequestPolling() {
-
-        if (requestPollingInterval) {
-
-            clearInterval(
-                requestPollingInterval
-            );
-
-        }
-
-
-        /*
-           تحديث كل 1.5 ثانية.
-           هذا يجعل ظهور طلب ولي الأمر سريعًا جدًا.
-        */
-
-        requestPollingInterval =
-            setInterval(
-                async () => {
-
-                    try {
-
-                        await loadRequestsFromDb();
-
-                    } catch (e) {
-
-                        console.warn(e);
-
-                    }
-
-                },
-                1500
-            );
-
+        setupAutoRefresh();
     }
 
 
@@ -3033,71 +2121,35 @@
         try {
 
             const result =
-                await api(
-                    'admin_get_requests',
-                    {},
+                await callAdminApi(
                     {
-                        timeout: 10000
-                    }
+                        action: 'admin_get_requests'
+                    },
+                    true
                 );
 
-
-            let data =
-                result.requests ||
-                result.data ||
-                [];
-
-
-            if (!Array.isArray(data)) {
-
-                data = [];
-
-            }
-
+            const data =
+                Array.isArray(result.requests)
+                    ? result.requests
+                    : [];
 
             const normalized =
-                data.map(
-                    normalizeRequest
+                data.map(normalizeRequest);
+
+            const newFingerprint =
+                createRequestsFingerprint(
+                    normalized
                 );
-
-
-            /*
-               نستخدم بصمة للبيانات حتى لا نعيد
-               بناء القائمة والرسم البياني بلا داعٍ.
-            */
-
-            const fingerprint =
-                JSON.stringify(
-                    normalized.map(
-                        r => ({
-
-                            id: r.id,
-
-                            status: r.status,
-
-                            reject_reason:
-                                r.reject_reason,
-
-                            created_at:
-                                r.created_at
-
-                        })
-                    )
-                );
-
 
             const changed =
-                fingerprint !==
+                newFingerprint !==
                 lastRequestsFingerprint;
-
 
             allRequests =
                 normalized;
 
-
             lastRequestsFingerprint =
-                fingerprint;
-
+                newFingerprint;
 
             localStorage.setItem(
                 'cached_requests',
@@ -3106,24 +2158,15 @@
                 )
             );
 
+            updateDashboardStats();
 
             if (changed) {
-
-                filterRequests();
-
-                updateChartsData();
-
-            } else {
-
-                /*
-                   نحتاج تحديث الإحصائيات دائمًا
-                   للتأكد من حالة التنبيه.
-                */
-
-                updateDashboardStats();
-
+                renderRequestsList(
+                    getFilteredRequests()
+                );
             }
 
+            updateChartsData();
 
         } catch (err) {
 
@@ -3132,109 +2175,110 @@
                 err
             );
 
-
             const cached =
                 localStorage.getItem(
                     'cached_requests'
                 );
 
+            if (cached) {
 
-            try {
+                try {
 
-                allRequests =
-                    cached
-                        ? JSON.parse(cached)
-                        : [];
+                    allRequests =
+                        JSON.parse(cached);
 
+                } catch (e) {
 
-            } catch (e) {
-
-                allRequests = [];
-
+                    allRequests = [];
+                }
             }
 
+            updateDashboardStats();
 
-            filterRequests();
+            renderRequestsList(
+                getFilteredRequests()
+            );
 
             updateChartsData();
-
         }
-
     }
 
-
-    /* =========================================================
-       توحيد الطلب
-    ========================================================= */
 
     function normalizeRequest(req) {
 
         const student =
-            Array.isArray(req.students)
-                ? req.students[0]
-                : (req.students || {});
-
+            req.students ||
+            req.student ||
+            {};
 
         return {
 
-            id: req.id,
+            id:
+                req.id,
 
             student_id:
-                req.student_id ||
-                student.id ||
-                '',
-
+                req.student_id,
 
             student_name:
                 req.student_name ||
                 student.student_name ||
-                'طالب غير محدد',
-
+                '',
 
             student_class:
                 req.student_class ||
-                req.class_name ||
                 student.class_name ||
-                'غير محدد',
-
+                '',
 
             parent_code:
                 req.parent_code ||
                 student.parent_code ||
                 '',
 
-
             request_type:
                 req.request_type ||
                 'pickup',
-
 
             status:
                 req.status ||
                 'pending',
 
-
             request_token:
                 req.request_token ||
                 '',
 
+            created_at:
+                req.created_at,
 
             excuse_reason:
                 req.excuse_reason ||
                 '',
 
-
             reject_reason:
                 req.reject_reason ||
-                '',
-
-
-            created_at:
-                req.created_at ||
-                new Date().toISOString()
-
+                ''
         };
+    }
 
+
+    function createRequestsFingerprint(requests) {
+
+        return requests
+            .map(
+                r =>
+                    [
+                        r.id,
+                        r.student_id,
+                        r.student_name,
+                        r.student_class,
+                        r.parent_code,
+                        r.request_type,
+                        r.status,
+                        r.created_at,
+                        r.excuse_reason,
+                        r.reject_reason
+                    ].join('|')
+            )
+            .join('||');
     }
 
 
@@ -3247,89 +2291,81 @@
         const total =
             allRequests.length;
 
-
         const pending =
             allRequests.filter(
                 r => r.status === 'pending'
             ).length;
-
 
         const approved =
             allRequests.filter(
                 r => r.status === 'approved'
             ).length;
 
-
         const rejected =
             allRequests.filter(
                 r => r.status === 'rejected'
             ).length;
 
-
-        document.getElementById(
-            'statTotalToday'
-        ).innerText =
+        document
+            .getElementById(
+                'statTotalToday'
+            )
+            .innerText =
             total;
 
-
-        document.getElementById(
-            'statPending'
-        ).innerText =
+        document
+            .getElementById(
+                'statPending'
+            )
+            .innerText =
             pending;
 
-
-        document.getElementById(
-            'statApproved'
-        ).innerText =
+        document
+            .getElementById(
+                'statApproved'
+            )
+            .innerText =
             approved;
 
-
-        document.getElementById(
-            'statRejected'
-        ).innerText =
+        document
+            .getElementById(
+                'statRejected'
+            )
+            .innerText =
             rejected;
-
 
         const tabBadge =
             document.getElementById(
                 'tabNotificationBadge'
             );
 
-
         const alertBanner =
             document.getElementById(
                 'dynamicAlertBanner'
             );
-
 
         const alertCountText =
             document.getElementById(
                 'alertCountText'
             );
 
-
         if (pending > 0) {
 
             tabBadge.innerText =
                 pending;
 
-
             tabBadge.classList.remove(
                 'hidden'
             );
 
-
             alertCountText.innerText =
                 pending;
-
 
             alertBanner.classList.remove(
                 'hidden'
             );
 
-
             startContinuousAlert();
-
 
         } else {
 
@@ -3337,190 +2373,97 @@
                 'hidden'
             );
 
-
             alertBanner.classList.add(
                 'hidden'
             );
 
-
             stopContinuousAlert();
-
         }
-
     }
 
 
     /* =========================================================
-       التبويبات
+       الطلبات
     ========================================================= */
 
-    function switchAdminTab(tab) {
+    function getFilteredRequests() {
 
-        [
+        const searchElement =
+            document.getElementById(
+                'searchInput'
+            );
 
-            'dashboard',
+        const statusElement =
+            document.getElementById(
+                'filterStatus'
+            );
 
-            'requests',
+        const query =
+            searchElement
+                ? searchElement.value
+                    .trim()
+                    .toLowerCase()
+                : '';
 
-            'students',
+        const statusFilter =
+            statusElement
+                ? statusElement.value
+                : 'all';
 
-            'reports',
+        return allRequests.filter(
+            r => {
 
-            'settings'
+                const studentName =
+                    String(
+                        r.student_name || ''
+                    ).toLowerCase();
 
-        ].forEach(
-            t => {
+                const parentCode =
+                    String(
+                        r.parent_code || ''
+                    ).toLowerCase();
 
-                const tabElement =
-                    document.getElementById(
-                        'tab' +
-                        t.charAt(0).toUpperCase() +
-                        t.slice(1)
-                    );
+                const matchQuery =
+                    !query ||
+                    studentName.includes(query) ||
+                    parentCode.includes(query);
 
+                const matchStatus =
+                    statusFilter === 'all' ||
+                    r.status === statusFilter;
 
-                const viewElement =
-                    document.getElementById(
-                        'view' +
-                        t.charAt(0).toUpperCase() +
-                        t.slice(1)
-                    );
-
-
-                if (tabElement) {
-
-                    tabElement.classList.remove(
-                        'active'
-                    );
-
-                }
-
-
-                if (viewElement) {
-
-                    viewElement.classList.add(
-                        'hidden'
-                    );
-
-                }
-
+                return (
+                    matchQuery &&
+                    matchStatus
+                );
             }
         );
-
-
-        const activeTab =
-            document.getElementById(
-                'tab' +
-                tab.charAt(0).toUpperCase() +
-                tab.slice(1)
-            );
-
-
-        const activeView =
-            document.getElementById(
-                'view' +
-                tab.charAt(0).toUpperCase() +
-                tab.slice(1)
-            );
-
-
-        if (activeTab) {
-
-            activeTab.classList.add(
-                'active'
-            );
-
-        }
-
-
-        if (activeView) {
-
-            activeView.classList.remove(
-                'hidden'
-            );
-
-        }
-
-
-        if (
-            tab === 'dashboard'
-        ) {
-
-            updateChartsData();
-
-        }
-
-
-        if (
-            tab === 'students'
-        ) {
-
-            loadStudentsFromDb();
-
-        }
-
     }
 
 
-    /* =========================================================
-       حماية HTML
-    ========================================================= */
-
-    function escapeHtml(value) {
-
-        return String(
-            value ?? ''
-        )
-        .replace(
-            /&/g,
-            '&amp;'
-        )
-        .replace(
-            /</g,
-            '&lt;'
-        )
-        .replace(
-            />/g,
-            '&gt;'
-        )
-        .replace(
-            /"/g,
-            '&quot;'
-        )
-        .replace(
-            /'/g,
-            '&#039;'
-        );
-
-    }
-
-
-    /* =========================================================
-       عرض الطلبات
-    ========================================================= */
-
-    function renderRequestsList(
-        requests
-    ) {
+    function renderRequestsList(requests) {
 
         const listDiv =
             document.getElementById(
                 'requestsList'
             );
 
-
         if (!requests.length) {
 
             listDiv.innerHTML =
-                "<p style='text-align:center; font-size:13px;'>لا توجد طلبات مطابقة.</p>";
+                `
+                <p style="
+                    text-align:center;
+                    font-size:13px;
+                ">
+                    لا توجد طلبات مطابقة.
+                </p>
+                `;
 
             return;
-
         }
 
-
         listDiv.innerHTML = '';
-
 
         requests.forEach(
             req => {
@@ -3528,66 +2471,60 @@
                 const isDone =
                     req.status === 'approved';
 
-
                 const isRejected =
                     req.status === 'rejected';
 
-
                 const timeStr =
-                    new Date(
-                        req.created_at
-                    ).toLocaleTimeString(
-                        'ar-SA',
-                        {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        }
-                    );
-
+                    req.created_at
+                        ? new Date(
+                            req.created_at
+                        ).toLocaleTimeString(
+                            'ar-SA',
+                            {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }
+                        )
+                        : '--:--';
 
                 let itemClass =
                     'request-item';
 
-
                 if (isDone) {
-
-                    itemClass +=
-                        ' done';
-
+                    itemClass += ' done';
                 } else if (isRejected) {
-
-                    itemClass +=
-                        ' rejected';
-
+                    itemClass += ' rejected';
                 }
-
 
                 let statusBadge =
-                    `<span class="badge badge-done">تمت الموافقة ✅</span>`;
+                    `
+                    <span class="badge badge-done">
+                        تمت الموافقة ✅
+                    </span>
+                    `;
 
-
-                if (
-                    req.status ===
-                    'pending'
-                ) {
+                if (req.status === 'pending') {
 
                     statusBadge =
-                        `<span class="badge" style="background:#fff3cd; color:#856404;">⏳ بانتظار الإجراء</span>`;
-
+                        `
+                        <span class="badge pending-badge">
+                            ⏳ بانتظار الإجراء
+                        </span>
+                        `;
                 }
-
 
                 if (isRejected) {
 
                     statusBadge =
-                        `<span class="badge badge-rejected">مرفوض ❌</span>`;
-
+                        `
+                        <span class="badge badge-rejected">
+                            مرفوض ❌
+                        </span>
+                        `;
                 }
-
 
                 let mainRequestType =
                     'نداء انصراف عادي';
-
 
                 if (
                     req.request_type ===
@@ -3595,7 +2532,7 @@
                 ) {
 
                     mainRequestType =
-                        'استئذان مبكر';
+                        'استئذان مبكر (طارئ)';
 
                 } else if (
                     req.request_type ===
@@ -3611,330 +2548,156 @@
 
                     mainRequestType =
                         req.request_type;
-
                 }
 
-
-                let detailsSection = `
-
-                    <div
-                        style="
-                            font-size:13px;
-                            margin:8px 0;
-                            color:var(--text-color);
-                            background:#f2edf8;
-                            padding:8px 10px;
-                            border-radius:8px;
-                        ">
-
+                let detailsSection =
+                    `
+                    <div class="request-type-box">
                         📌 نوع الطلب:
-
-                        <strong
-                            style="
-                                color:var(--primary-purple);
-                            ">
-
-                            ${escapeHtml(mainRequestType)}
-
+                        <strong>
+                            ${escapeHTML(
+                                mainRequestType
+                            )}
                         </strong>
-
                     </div>
-
-                `;
-
+                    `;
 
                 if (
                     req.request_type ===
-                        'excuse' &&
+                    'excuse' &&
                     req.excuse_reason
                 ) {
 
-                    detailsSection += `
-
-                        <div
-                            style="
-                                font-size:13px;
-                                margin:6px 0;
-                                color:#333;
-                                background:#fff8df;
-                                padding:8px 10px;
-                                border-radius:8px;
-                            ">
-
+                    detailsSection +=
+                        `
+                        <div class="excuse-reason-box">
                             📝 سبب الاستئذان:
-
                             <strong>
-
-                                ${escapeHtml(
+                                ${escapeHTML(
                                     req.excuse_reason
                                 )}
-
                             </strong>
-
                         </div>
-
-                    `;
-
+                        `;
                 }
-
 
                 if (
                     isRejected &&
                     req.reject_reason
                 ) {
 
-                    detailsSection += `
-
-                        <div
-                            style="
-                                font-size:13px;
-                                margin:6px 0;
-                                color:#721c24;
-                                background:#f8d7da;
-                                padding:8px 10px;
-                                border-radius:8px;
-                            ">
-
+                    detailsSection +=
+                        `
+                        <div class="reject-reason-box">
                             ❌ سبب الرفض:
-
                             <strong>
-
-                                ${escapeHtml(
+                                ${escapeHTML(
                                     req.reject_reason
                                 )}
-
                             </strong>
-
                         </div>
-
-                    `;
-
+                        `;
                 }
 
-
                 let actionButtons = '';
-
-
-                /*
-                   الموافقة مباشرة.
-                   لا confirm.
-                   لا prompt.
-                   لا alert.
-                */
 
                 if (
                     req.status ===
                     'pending'
                 ) {
 
-                    actionButtons = `
+                    const safeId =
+                        escapeHTML(
+                            req.id
+                        );
 
-                        <div
-                            class="btn-action-group">
+                    actionButtons =
+                        `
+                        <div class="btn-action-group">
 
                             <button
                                 class="btn-approve"
-                                id="approve-${escapeHtml(req.id)}"
-                                onclick="updateStatus('${escapeHtml(req.id)}', 'approved')">
-
+                                onclick="updateStatus('${safeId}', 'approved')"
+                            >
                                 موافقة وتجهيز
-
                             </button>
-
 
                             <button
                                 class="btn-reject"
-                                id="reject-${escapeHtml(req.id)}"
-                                onclick="showRejectBox('${escapeHtml(req.id)}')">
-
+                                onclick="promptReject('${safeId}')"
+                            >
                                 رفض
-
                             </button>
 
                         </div>
-
-
-                        <div
-                            id="rejectBox-${escapeHtml(req.id)}"
-                            class="reject-box hidden">
-
-                            <textarea
-                                id="rejectReason-${escapeHtml(req.id)}"
-                                placeholder="اكتبي سبب رفض الطلب هنا..."
-                            ></textarea>
-
-
-                            <div
-                                class="reject-buttons">
-
-                                <button
-                                    class="reject-confirm"
-                                    onclick="confirmReject('${escapeHtml(req.id)}')">
-
-                                    تأكيد الرفض
-
-                                </button>
-
-
-                                <button
-                                    class="reject-cancel"
-                                    onclick="hideRejectBox('${escapeHtml(req.id)}')">
-
-                                    إلغاء
-
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    `;
-
+                        `;
                 }
 
+                listDiv.innerHTML +=
+                    `
+                    <div class="${itemClass}">
 
-                listDiv.innerHTML += `
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            gap:8px;
+                        ">
 
-                    <div
-                        class="${itemClass}">
-
-                        <div
-                            style="
-                                display:flex;
-                                justify-content:space-between;
-                                align-items:center;
-                            ">
-
-                            <strong
-                                style="
-                                    color:var(--primary-purple);
-                                    font-size:14px;
-                                ">
-
-                                ${escapeHtml(
-                                    req.student_name
+                            <strong class="request-name">
+                                ${escapeHTML(
+                                    req.student_name ||
+                                    'طالب غير محدد'
                                 )}
-
-                                (${escapeHtml(
-                                    req.student_class
+                                (${escapeHTML(
+                                    req.student_class ||
+                                    'غير محدد'
                                 )})
-
                             </strong>
 
-
-                            <span
-                                style="
-                                    font-size:12px;
-                                    color:var(--muted-text);
-                                ">
-
+                            <span class="request-time">
                                 ${timeStr}
-
                             </span>
 
                         </div>
-
 
                         ${detailsSection}
 
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            font-size:12px;
+                            gap:8px;
+                        ">
 
-                        <div
-                            style="
-                                display:flex;
-                                justify-content:space-between;
-                                align-items:center;
-                                font-size:12px;
-                            ">
-
-                            <span>
-
+                            <span class="request-code">
                                 الكود:
-
                                 <strong>
-                                    ${escapeHtml(
-                                        req.parent_code
+                                    ${escapeHTML(
+                                        req.parent_code ||
+                                        '-'
                                     )}
                                 </strong>
-
                             </span>
 
-
                             <div>
-
                                 ${statusBadge}
-
                             </div>
 
                         </div>
-
 
                         ${actionButtons}
 
                     </div>
-
-                `;
-
+                    `;
             }
         );
-
     }
 
 
     /* =========================================================
-       فتح سبب الرفض
-    ========================================================= */
-
-    function showRejectBox(id) {
-
-        const box =
-            document.getElementById(
-                'rejectBox-' + id
-            );
-
-
-        if (!box) return;
-
-
-        box.classList.remove(
-            'hidden'
-        );
-
-
-        const textarea =
-            document.getElementById(
-                'rejectReason-' + id
-            );
-
-
-        if (textarea) {
-
-            textarea.focus();
-
-        }
-
-    }
-
-
-    function hideRejectBox(id) {
-
-        const box =
-            document.getElementById(
-                'rejectBox-' + id
-            );
-
-
-        if (!box) return;
-
-
-        box.classList.add(
-            'hidden'
-        );
-
-    }
-
-
-    /* =========================================================
-       تحديث الحالة
+       تحديث حالة الطلب
     ========================================================= */
 
     async function updateStatus(
@@ -3943,144 +2706,92 @@
         reason = ''
     ) {
 
-        unlockAudio();
-
-
-        const approveButton =
-            document.getElementById(
-                'approve-' + id
-            );
-
-
-        const rejectButton =
-            document.getElementById(
-                'reject-' + id
-            );
-
-
-        /*
-           منع الضغط المتكرر.
-        */
-
-        if (approveButton) {
-
-            approveButton.disabled = true;
-
-        }
-
-
-        if (rejectButton) {
-
-            rejectButton.disabled = true;
-
-        }
-
-
         try {
 
-            await api(
-                'admin_update_request',
-                {
+            if (
+                status === 'rejected' &&
+                !reason
+            ) {
+                return;
+            }
 
-                    id: id,
+            const result =
+                await callAdminApi(
+                    {
+                        action:
+                            'admin_update_request',
 
-                    status: status,
+                        request_id:
+                            id,
 
-                    reject_reason:
-                        reason || null
+                        status:
+                            status,
 
-                },
-                {
-                    timeout: 10000
+                        reject_reason:
+                            reason || ''
+                    },
+                    true
+                );
+
+            if (
+                result &&
+                result.success !== false
+            ) {
+
+                await loadRequestsFromDb();
+
+                if (
+                    status === 'approved'
+                ) {
+
+                    playCloseTone();
+
                 }
-            );
 
+            }
 
-            /*
-               تحميل فوري بعد العملية.
-               لا ننتظر دورة الـ 1.5 ثانية.
-            */
+        } catch (err) {
 
-            await loadRequestsFromDb();
-
-
-        } catch (error) {
-
-            console.error(
-                'Update request error:',
-                error
-            );
-
+            console.error(err);
 
             alert(
-                error.message ||
-                'تعذر تحديث حالة الطلب.'
+                err.message ||
+                'تعذر تحديث الطلب.'
             );
-
-
-            if (approveButton) {
-
-                approveButton.disabled =
-                    false;
-
-            }
-
-
-            if (rejectButton) {
-
-                rejectButton.disabled =
-                    false;
-
-            }
-
         }
-
     }
 
 
-    /* =========================================================
-       تأكيد الرفض
-    ========================================================= */
-
-    async function confirmReject(id) {
-
-        const textarea =
-            document.getElementById(
-                'rejectReason-' + id
-            );
-
+    function promptReject(id) {
 
         const reason =
-            textarea
-                ? textarea.value.trim()
-                : '';
-
-
-        if (!reason) {
-
-            alert(
-                'فضلاً اكتبي سبب رفض الطلب.'
+            prompt(
+                'أدخل سبب الرفض:'
             );
 
-
-            if (textarea) {
-
-                textarea.focus();
-
-            }
-
-
+        if (
+            reason === null
+        ) {
             return;
-
         }
 
+        const cleanReason =
+            reason.trim();
 
-        await updateStatus(
+        if (!cleanReason) {
+
+            alert(
+                'يجب كتابة سبب الرفض.'
+            );
+
+            return;
+        }
+
+        updateStatus(
             id,
             'rejected',
-            reason
+            cleanReason
         );
-
     }
 
 
@@ -4090,77 +2801,9 @@
 
     function filterRequests() {
 
-        const searchElement =
-            document.getElementById(
-                'searchInput'
-            );
-
-
-        const filterElement =
-            document.getElementById(
-                'filterStatus'
-            );
-
-
-        const query =
-            searchElement
-                ? searchElement.value
-                    .trim()
-                    .toLowerCase()
-                : '';
-
-
-        const statusFilter =
-            filterElement
-                ? filterElement.value
-                : 'all';
-
-
-        const filtered =
-            allRequests.filter(
-                r => {
-
-                    const name =
-                        String(
-                            r.student_name ||
-                            ''
-                        ).toLowerCase();
-
-
-                    const code =
-                        String(
-                            r.parent_code ||
-                            ''
-                        ).toLowerCase();
-
-
-                    const matchQuery =
-                        !query ||
-                        name.includes(query) ||
-                        code.includes(query);
-
-
-                    const matchStatus =
-                        statusFilter === 'all' ||
-                        r.status === statusFilter;
-
-
-                    return (
-                        matchQuery &&
-                        matchStatus
-                    );
-
-                }
-            );
-
-
         renderRequestsList(
-            filtered
+            getFilteredRequests()
         );
-
-
-        updateDashboardStats();
-
     }
 
 
@@ -4175,76 +2818,77 @@
                 'studentsListContainer'
             );
 
-
-        if (!container) return;
-
-
         try {
 
             const result =
-                await api(
-                    'admin_get_students',
-                    {},
+                await callAdminApi(
                     {
-                        timeout: 10000
-                    }
+                        action:
+                            'admin_get_students'
+                    },
+                    true
                 );
 
-
-            let data =
-                result.students ||
-                result.data ||
-                [];
-
-
-            if (!Array.isArray(data)) {
-
-                data = [];
-
-            }
-
+            const data =
+                Array.isArray(
+                    result.students
+                )
+                    ? result.students
+                    : [];
 
             if (!data.length) {
 
                 container.innerHTML =
-                    "<p style='font-size:13px;'>لا توجد بيانات طلاب.</p>";
-
+                    `
+                    <p style="font-size:13px;">
+                        لا توجد بيانات طلاب.
+                    </p>
+                    `;
 
                 return;
-
             }
 
-
             container.innerHTML = '';
-
 
             data.forEach(
                 s => {
 
-                    container.innerHTML += `
-
-                        <div
-                            class="student-row">
+                    container.innerHTML +=
+                        `
+                        <div style="
+                            background:#fff;
+                            border:1px solid #e2d9eb;
+                            padding:10px;
+                            margin-bottom:8px;
+                            border-radius:8px;
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            font-size:13px;
+                            gap:8px;
+                        ">
 
                             <span>
-
                                 <strong>
-
-                                    ${escapeHtml(
+                                    ${escapeHTML(
                                         s.student_name
                                     )}
-
                                 </strong>
 
-                                (
-                                ${escapeHtml(
+                                (${escapeHTML(
                                     s.class_name ||
                                     'غير محدد'
-                                )}
-                                )
+                                )})
 
+                                <br>
+
+                                <small>
+                                    كود العائلة:
+                                    ${escapeHTML(
+                                        s.parent_code
+                                    )}
+                                </small>
                             </span>
-
 
                             <button
                                 style="
@@ -4255,51 +2899,34 @@
                                     border-radius:6px;
                                     cursor:pointer;
                                     font-size:12px;
+                                    flex-shrink:0;
                                 "
-                                onclick="deleteStudent('${escapeHtml(s.id)}')">
-
+                                onclick="deleteStudent('${escapeHTML(s.id)}')"
+                            >
                                 حذف
-
                             </button>
 
                         </div>
-
-                    `;
-
+                        `;
                 }
             );
 
+        } catch (err) {
 
-        } catch (error) {
+            console.error(err);
 
-            console.error(
-                'Students error:',
-                error
-            );
-
-
-            container.innerHTML = `
-
-                <p
-                    style="
-                        font-size:13px;
-                        color:#d9534f;
-                    ">
-
-                    تعذر تحميل سجل الطلاب.
-
+            container.innerHTML =
+                `
+                <p style="
+                    font-size:13px;
+                    color:#d9534f;
+                ">
+                    تعذر تحميل الطلاب.
                 </p>
-
-            `;
-
+                `;
         }
-
     }
 
-
-    /* =========================================================
-       إضافة طالب
-    ========================================================= */
 
     async function addNewStudent() {
 
@@ -4311,7 +2938,6 @@
                 .value
                 .trim();
 
-
         const sClass =
             document
                 .getElementById(
@@ -4320,7 +2946,6 @@
                 .value
                 .trim();
 
-
         const code =
             document
                 .getElementById(
@@ -4328,13 +2953,6 @@
                 )
                 .value
                 .trim();
-
-
-        const button =
-            document.getElementById(
-                'addStudentButton'
-            );
-
 
         if (
             !name ||
@@ -4346,136 +2964,118 @@
                 'يرجى تعبئة كافة الحقول!'
             );
 
-
             return;
-
         }
-
-
-        if (button) {
-
-            button.disabled = true;
-
-            button.innerText =
-                'جاري الحفظ...';
-
-        }
-
 
         try {
 
-            await api(
-                'admin_add_student',
-                {
+            const result =
+                await callAdminApi(
+                    {
+                        action:
+                            'admin_add_student',
 
-                    student_name:
-                        name,
+                        student_name:
+                            name,
 
-                    class_name:
-                        sClass,
+                        class_name:
+                            sClass,
 
-                    parent_code:
-                        code
+                        parent_code:
+                            code
+                    },
+                    true
+                );
 
-                },
-                {
-                    timeout: 10000
-                }
-            );
+            if (
+                result &&
+                result.success !== false
+            ) {
 
+                alert(
+                    'تم إضافة الطالب بنجاح ✅'
+                );
 
-            alert(
-                'تم إضافة الطالب بنجاح ✅'
-            );
+                document
+                    .getElementById(
+                        'newStudentName'
+                    )
+                    .value = '';
 
+                document
+                    .getElementById(
+                        'newStudentClass'
+                    )
+                    .value = '';
 
-            document.getElementById(
-                'newStudentName'
-            ).value = '';
+                document
+                    .getElementById(
+                        'newStudentCode'
+                    )
+                    .value = '';
 
-
-            document.getElementById(
-                'newStudentClass'
-            ).value = '';
-
-
-            document.getElementById(
-                'newStudentCode'
-            ).value = '';
-
-
-            await loadStudentsFromDb();
-
-
-        } catch (error) {
-
-            alert(
-                error.message ||
-                'تعذر إضافة الطالب.'
-            );
-
-
-        } finally {
-
-            if (button) {
-
-                button.disabled = false;
-
-                button.innerText =
-                    'حفظ الطالب';
-
+                await loadStudentsFromDb();
             }
 
-        }
+        } catch (err) {
 
+            console.error(err);
+
+            alert(
+                err.message ||
+                'تعذر إضافة الطالب.'
+            );
+        }
     }
 
-
-    /* =========================================================
-       حذف طالب
-    ========================================================= */
 
     async function deleteStudent(id) {
 
         if (
             !confirm(
-                'هل أنت متأكد من حذف الطالب؟ سيتم حذف طلباته المرتبطة أيضاً.'
+                'هل أنت متأكد من حذف الطالب؟\n\nسيؤدي حذف الطالب إلى حذف طلباته المرتبطة به أيضًا.'
             )
         ) {
-
             return;
-
         }
-
 
         try {
 
-            await api(
-                'admin_delete_student',
-                {
-                    id: id
-                },
-                {
-                    timeout: 10000
-                }
-            );
+            const result =
+                await callAdminApi(
+                    {
+                        action:
+                            'admin_delete_student',
 
+                        student_id:
+                            id
+                    },
+                    true
+                );
 
-            await loadStudentsFromDb();
+            if (
+                result &&
+                result.success !== false
+            ) {
 
+                alert(
+                    'تم حذف الطالب بنجاح.'
+                );
 
-            await loadRequestsFromDb();
+                await loadStudentsFromDb();
 
+                await loadRequestsFromDb();
+            }
 
-        } catch (error) {
+        } catch (err) {
+
+            console.error(err);
 
             alert(
-                error.message ||
+                err.message ||
                 'تعذر حذف الطالب.'
             );
-
         }
-
     }
 
 
@@ -4490,9 +3090,7 @@
                 'statusPieChart'
             );
 
-
         if (!canvas) return;
-
 
         const approved =
             allRequests.filter(
@@ -4501,14 +3099,12 @@
                     'approved'
             ).length;
 
-
         const rejected =
             allRequests.filter(
                 r =>
                     r.status ===
                     'rejected'
             ).length;
-
 
         const pending =
             allRequests.filter(
@@ -4517,91 +3113,207 @@
                     'pending'
             ).length;
 
-
-        if (
-            typeof Chart ===
-            'undefined'
-        ) {
-
-            return;
-
-        }
-
-
         const pieCtx =
-            canvas.getContext(
-                '2d'
-            );
-
+            canvas.getContext('2d');
 
         if (pieChartInstance) {
 
             pieChartInstance.destroy();
-
         }
-
 
         pieChartInstance =
             new Chart(
                 pieCtx,
                 {
-
                     type: 'doughnut',
 
                     data: {
 
                         labels: [
-
                             'موافق',
-
                             'مرفوض',
-
                             'معلق'
-
                         ],
 
                         datasets: [
-
                             {
-
                                 data: [
-
                                     approved,
-
                                     rejected,
-
                                     pending
-
                                 ],
 
                                 backgroundColor: [
-
                                     '#28a745',
-
                                     '#d9534f',
-
                                     '#f3b137'
-
                                 ]
-
                             }
-
                         ]
-
                     },
 
-
                     options: {
-
                         responsive: true,
+                        maintainAspectRatio: false,
 
-                        maintainAspectRatio: false
-
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    font: {
+                                        family:
+                                            'Segoe UI'
+                                    }
+                                }
+                            }
+                        }
                     }
-
                 }
             );
+    }
 
+
+    /* =========================================================
+       التحديث التلقائي
+    ========================================================= */
+
+    function setupAutoRefresh() {
+
+        if (autoRefreshInterval) {
+
+            clearInterval(
+                autoRefreshInterval
+            );
+        }
+
+        autoRefreshInterval =
+            setInterval(
+                () => {
+
+                    if (
+                        navigator.onLine &&
+                        !document
+                            .getElementById(
+                                'adminPanelSection'
+                            )
+                            .classList
+                            .contains('hidden')
+                    ) {
+
+                        loadRequestsFromDb();
+                    }
+
+                },
+                5000
+            );
+    }
+
+
+    /* =========================================================
+       Realtime
+       يبقى كتحديث إضافي، مع وجود Polling أساسي
+    ========================================================= */
+
+    function setupRealtimeSubscription() {
+
+        try {
+
+            const realtimeClient =
+                supabase.createClient(
+                    SUPABASE_URL,
+                    SUPABASE_ANON_KEY
+                );
+
+            realtimeClient
+                .channel(
+                    'admin_live_channel_24_7'
+                )
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'school_requests'
+                    },
+                    () => {
+                        loadRequestsFromDb();
+                    }
+                )
+                .subscribe();
+
+        } catch (err) {
+
+            console.warn(
+                'Realtime غير متاح:',
+                err
+            );
+        }
+    }
+
+
+    /* =========================================================
+       تسجيل الخروج
+    ========================================================= */
+
+    function adminLogout() {
+
+        stopContinuousAlert();
+
+        stopSessionRefresh();
+
+        if (autoRefreshInterval) {
+
+            clearInterval(
+                autoRefreshInterval
+            );
+
+            autoRefreshInterval = null;
+        }
+
+        clearAdminToken();
+
+        allRequests = [];
+
+        lastRequestsFingerprint = '';
+
+        if (pieChartInstance) {
+
+            pieChartInstance.destroy();
+
+            pieChartInstance = null;
+        }
+
+        document
+            .getElementById(
+                'adminPanelSection'
+            )
+            .classList
+            .add('hidden');
+
+        document
+            .getElementById(
+                'sessionTimer'
+            )
+            .classList
+            .add('hidden');
+
+        document
+            .getElementById(
+                'loginSection'
+            )
+            .classList
+            .remove('hidden');
+
+        document
+            .getElementById(
+                'adminPasswordInput'
+            )
+            .value = '';
+
+        document
+            .getElementById(
+                'adminPasswordInput'
+            )
+            .focus();
     }
 
 
@@ -4611,73 +3323,31 @@
 
     function clearLocalStorageCache() {
 
-        /*
-           نمسح الكاش الخاص بالتطبيق فقط.
-           لا نمسح sessionStorage حتى لا يتم إخراج الإدارة
-           من الحساب بلا داعٍ.
-        */
+        const keepTheme =
+            localStorage.getItem(
+                'admin_card_theme'
+            );
 
-        localStorage.removeItem(
-            'cached_requests'
-        );
+        localStorage.clear();
 
+        if (keepTheme) {
+
+            localStorage.setItem(
+                'admin_card_theme',
+                keepTheme
+            );
+        }
 
         alert(
-            'تم تفريغ الكاش وتحديث المتصفح بنجاح! (الطلبات الأصلية بقيت محفوظة بأمان في السيرفر).'
+            'تم تفريغ الكاش وتحديث المتصفح بنجاح!\n\nالطلبات الأصلية بقيت محفوظة في قاعدة البيانات.'
         );
 
-
         location.reload();
-
     }
 
 
     /* =========================================================
-       تسجيل الخروج
-    ========================================================= */
-
-    function logoutAdmin() {
-
-        stopContinuousAlert();
-
-
-        if (refreshInterval) {
-
-            clearInterval(
-                refreshInterval
-            );
-
-
-            refreshInterval = null;
-
-        }
-
-
-        if (requestPollingInterval) {
-
-            clearInterval(
-                requestPollingInterval
-            );
-
-
-            requestPollingInterval =
-                null;
-
-        }
-
-
-        sessionStorage.removeItem(
-            SESSION_KEY
-        );
-
-
-        location.reload();
-
-    }
-
-
-    /* =========================================================
-       تصدير CSV
+       CSV
     ========================================================= */
 
     function exportTableToCSV(
@@ -4685,93 +3355,73 @@
     ) {
 
         let csv =
-            "ID,Student Name,Class,Request Type,Status,Excuse Reason,Reject Reason,Time\n";
-
+            'ID,Student Name,Class,Request Type,Excuse Reason,Reject Reason,Status,Parent Code,Time\n';
 
         allRequests.forEach(
             r => {
 
+                const row = [
+                    r.id,
+                    r.student_name,
+                    r.student_class || '',
+                    r.request_type || '',
+                    r.excuse_reason || '',
+                    r.reject_reason || '',
+                    r.status || '',
+                    r.parent_code || '',
+                    r.created_at || ''
+                ];
+
                 csv +=
-
-                    `"${escapeCsv(r.id)}",` +
-
-                    `"${escapeCsv(r.student_name)}",` +
-
-                    `"${escapeCsv(r.student_class)}",` +
-
-                    `"${escapeCsv(r.request_type)}",` +
-
-                    `"${escapeCsv(r.status)}",` +
-
-                    `"${escapeCsv(r.excuse_reason)}",` +
-
-                    `"${escapeCsv(r.reject_reason)}",` +
-
-                    `"${escapeCsv(r.created_at)}"\n`;
-
+                    row
+                        .map(
+                            value =>
+                                `"${String(
+                                    value
+                                )
+                                .replace(
+                                    /"/g,
+                                    '""'
+                                )}"`
+                        )
+                        .join(',') +
+                    '\n';
             }
         );
-
 
         const blob =
             new Blob(
                 [
-
-                    "\ufeff" +
+                    '\ufeff' +
                     csv
-
                 ],
                 {
-
                     type:
                         'text/csv;charset=utf-8;'
-
                 }
             );
-
 
         const link =
             document.createElement(
                 'a'
             );
 
-
         link.href =
             URL.createObjectURL(
                 blob
             );
 
-
         link.download =
             filename;
 
-
         link.click();
 
-
         setTimeout(
-            () => {
-
-                URL.revokeObjectURL(
-                    link.href
-                );
-
-            },
+            () => URL.revokeObjectURL(
+                link.href
+            ),
             1000
         );
-
-    }
-
-
-    function escapeCsv(value) {
-
-        return String(
-            value ?? ''
-        ).replace(
-            /"/g,
-            '""'
-        );
-
     }
 
 
@@ -4781,215 +3431,157 @@
 
     function exportTableToWord() {
 
-        let htmlContent = `
-
+        let htmlContent =
+            `
             <html dir="rtl">
-
             <head>
-
                 <meta charset="utf-8">
-
-                <title>
-                    التقرير
-                </title>
-
+                <title>التقرير</title>
             </head>
-
             <body>
+            `;
 
-        `;
-
-
-        htmlContent += `
-
-            <h2
-                style="
-                    text-align:center;
-                    color:#4a2e6f;
-                ">
-
+        htmlContent +=
+            `
+            <h2 style="
+                text-align:center;
+                color:#4a2e6f;
+            ">
                 تقرير روضة وابتدائية بسمات الوعد
-
             </h2>
+            `;
 
-        `;
-
-
-        htmlContent += `
-
+        htmlContent +=
+            `
             <table
                 border="1"
                 style="
                     width:100%;
                     border-collapse:collapse;
                     text-align:right;
+                "
+            >
+                <tr style="
+                    background:#f2edf8;
                 ">
-
-                <tr
-                    style="
-                        background:#f2edf8;
-                    ">
-
-                    <th>
-                        اسم الطالب
-                    </th>
-
-                    <th>
-                        الصف
-                    </th>
-
-                    <th>
-                        نوع الطلب
-                    </th>
-
-                    <th>
-                        الحالة
-                    </th>
-
-                    <th>
-                        سبب الاستئذان
-                    </th>
-
-                    <th>
-                        سبب الرفض
-                    </th>
-
-                    <th>
-                        الوقت
-                    </th>
-
+                    <th>اسم الطالب</th>
+                    <th>الصف</th>
+                    <th>نوع الطلب</th>
+                    <th>سبب الاستئذان</th>
+                    <th>سبب الرفض</th>
+                    <th>الحالة</th>
+                    <th>الكود</th>
+                    <th>الوقت</th>
                 </tr>
-
-        `;
-
+            `;
 
         allRequests.forEach(
             r => {
 
-                htmlContent += `
-
+                htmlContent +=
+                    `
                     <tr>
 
                         <td>
-                            ${escapeHtml(
+                            ${escapeHTML(
                                 r.student_name
                             )}
                         </td>
 
                         <td>
-                            ${escapeHtml(
-                                r.student_class
+                            ${escapeHTML(
+                                r.student_class ||
+                                ''
                             )}
                         </td>
 
                         <td>
-                            ${escapeHtml(
-                                r.request_type
+                            ${escapeHTML(
+                                r.request_type ||
+                                ''
                             )}
                         </td>
 
                         <td>
-                            ${escapeHtml(
-                                r.status
+                            ${escapeHTML(
+                                r.excuse_reason ||
+                                ''
                             )}
                         </td>
 
                         <td>
-                            ${escapeHtml(
-                                r.excuse_reason
+                            ${escapeHTML(
+                                r.reject_reason ||
+                                ''
                             )}
                         </td>
 
                         <td>
-                            ${escapeHtml(
-                                r.reject_reason
+                            ${escapeHTML(
+                                r.status ||
+                                ''
                             )}
                         </td>
 
                         <td>
-                            ${escapeHtml(
-                                r.created_at
+                            ${escapeHTML(
+                                r.parent_code ||
+                                ''
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHTML(
+                                r.created_at ||
+                                ''
                             )}
                         </td>
 
                     </tr>
-
-                `;
-
+                    `;
             }
         );
 
-
-        htmlContent += `
-
+        htmlContent +=
+            `
             </table>
-
-            <br>
-
-            <div
-                style="
-                    text-align:center;
-                    color:#777;
-                ">
-
-                تم إنشاء وتطوير النظام من قبل إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
-
-            </div>
-
             </body>
-
             </html>
-
-        `;
-
+            `;
 
         const blob =
             new Blob(
                 [
-
                     '\ufeff' +
                     htmlContent
-
                 ],
                 {
-
                     type:
                         'application/msword'
-
                 }
             );
-
 
         const link =
             document.createElement(
                 'a'
             );
 
-
         link.href =
             URL.createObjectURL(
                 blob
             );
 
-
         link.download =
             'school_report.doc';
 
-
         link.click();
 
-
         setTimeout(
-            () => {
-
-                URL.revokeObjectURL(
-                    link.href
-                );
-
-            },
+            () => URL.revokeObjectURL(
+                link.href
+            ),
             1000
         );
-
     }
 
 
@@ -5002,14 +3594,12 @@
         const total =
             allRequests.length;
 
-
         const pending =
             allRequests.filter(
                 r =>
                     r.status ===
                     'pending'
             ).length;
-
 
         const approved =
             allRequests.filter(
@@ -5018,7 +3608,6 @@
                     'approved'
             ).length;
 
-
         const rejected =
             allRequests.filter(
                 r =>
@@ -5026,12 +3615,11 @@
                     'rejected'
             ).length;
 
-
         const currentDate =
-            new Date().toLocaleString(
-                'ar-SA'
-            );
-
+            new Date()
+                .toLocaleString(
+                    'ar-SA'
+                );
 
         const printWindow =
             window.open(
@@ -5039,21 +3627,17 @@
                 '_blank'
             );
 
-
         if (!printWindow) {
 
             alert(
-                'يرجى السماح بفتح النوافذ المنبثقة حتى يتم إنشاء التقرير.'
+                'المتصفح منع نافذة التقرير. اسمحي بالنوافذ المنبثقة ثم حاولي مرة أخرى.'
             );
 
-
             return;
-
         }
 
-
-        printWindow.document.write(`
-
+        printWindow.document.write(
+            `
             <html dir="rtl">
 
             <head>
@@ -5061,14 +3645,12 @@
                 <meta charset="utf-8">
 
                 <title>
-                    تقرير روضة وابتدائية بسمات الوعد - الرسمي
+                    تقرير روضة وابتدائية بسمات الوعد
                 </title>
-
 
                 <style>
 
                     body {
-
                         font-family:
                             'Segoe UI',
                             Tahoma,
@@ -5081,371 +3663,203 @@
                         direction:rtl;
 
                         text-align:right;
-
                     }
-
 
                     .report-header {
-
                         display:flex;
-
                         justify-content:space-between;
-
                         align-items:center;
-
                         border-bottom:
                             2px solid #4a2e6f;
-
                         padding-bottom:12px;
-
                         margin-bottom:20px;
-
                     }
-
 
                     .header-title-area {
-
                         text-align:right;
-
                     }
-
 
                     .header-title-area h2 {
-
                         color:#4a2e6f;
-
                         margin:
                             0 0 4px 0;
-
                         font-size:18px;
-
                     }
-
 
                     .header-title-area p {
-
                         color:#666;
-
                         font-size:12px;
-
                         margin:0;
-
                     }
-
 
                     .report-logo {
-
                         max-width:65px;
-
                         height:auto;
-
                     }
-
 
                     .stats-box {
-
                         display:flex;
-
-                        justify-content:space-around;
-
+                        justify-content:
+                            space-around;
                         margin-bottom:25px;
-
                         background:#f8f5fc;
-
                         padding:15px;
-
                         border-radius:8px;
-
                         border:
                             1px solid #e2d9eb;
-
                     }
-
 
                     .stat-item {
-
                         text-align:center;
-
                     }
-
 
                     .stat-item h4 {
-
                         margin:
                             0 0 5px 0;
-
                         font-size:12px;
-
                         color:#666;
-
                     }
-
 
                     .stat-item span {
-
                         font-size:18px;
-
                         font-weight:bold;
-
                         color:#4a2e6f;
-
                     }
-
 
                     table {
-
                         width:100%;
-
-                        border-collapse:collapse;
-
+                        border-collapse:
+                            collapse;
                         margin-top:10px;
-
                         font-size:12px;
-
                     }
-
 
                     th,
                     td {
-
                         border:
                             1px solid #ccc;
-
                         padding:
                             8px 10px;
-
                         text-align:right;
-
                     }
-
 
                     th {
-
                         background-color:
                             #4a2e6f;
-
                         color:white;
-
                     }
-
 
                     tr:nth-child(even) {
-
                         background-color:
                             #faf8fc;
-
                     }
 
-
                     .footer-print {
-
                         margin-top:30px;
-
                         text-align:center;
-
                         font-size:11px;
-
                         color:#777;
-
                         border-top:
                             1px solid #eee;
-
                         padding-top:10px;
-
                     }
 
                 </style>
 
             </head>
 
-
             <body>
 
+                <div class="report-header">
 
-                <div
-                    class="report-header">
-
-
-                    <div
-                        class="header-title-area">
-
+                    <div class="header-title-area">
 
                         <h2>
-
                             روضة وابتدائية بسمات الوعد الأهلية
-
                         </h2>
 
-
                         <p>
-
                             تقرير سجل الطلبات الإداري المعتمد
-
                         </p>
 
-
-                        <p
-                            style="
-                                font-size:11px;
-                                color:#888;
-                                margin-top:4px;
-                            ">
-
+                        <p style="
+                            font-size:11px;
+                            color:#888;
+                            margin-top:4px;
+                        ">
                             تاريخ التقرير:
-
-                            ${escapeHtml(
+                            ${escapeHTML(
                                 currentDate
                             )}
-
                         </p>
 
-
                     </div>
-
 
                     <div>
 
                         <img
                             src="https://i.ibb.co/ddsMPQH/logo.png"
                             alt="شعار المدرسة"
-                            class="report-logo">
+                            class="report-logo"
+                        >
 
                     </div>
 
-
                 </div>
 
+                <div class="stats-box">
 
-                <div
-                    class="stats-box">
-
-
-                    <div
-                        class="stat-item">
-
-                        <h4>
-                            إجمالي اليوم
-                        </h4>
-
+                    <div class="stat-item">
+                        <h4>إجمالي اليوم</h4>
                         <span>
                             ${total}
                         </span>
-
                     </div>
 
-
-                    <div
-                        class="stat-item">
-
-                        <h4>
-                            المعلقة
-                        </h4>
-
-                        <span
-                            style="
-                                color:#f3b137;
-                            ">
-
+                    <div class="stat-item">
+                        <h4>المعلقة</h4>
+                        <span style="color:#f3b137;">
                             ${pending}
-
                         </span>
-
                     </div>
 
-
-                    <div
-                        class="stat-item">
-
-                        <h4>
-                            المقبولة
-                        </h4>
-
-                        <span
-                            style="
-                                color:#28a745;
-                            ">
-
+                    <div class="stat-item">
+                        <h4>المقبولة</h4>
+                        <span style="color:#28a745;">
                             ${approved}
-
                         </span>
-
                     </div>
 
-
-                    <div
-                        class="stat-item">
-
-                        <h4>
-                            المرفوضة
-                        </h4>
-
-                        <span
-                            style="
-                                color:#d9534f;
-                            ">
-
+                    <div class="stat-item">
+                        <h4>المرفوضة</h4>
+                        <span style="color:#d9534f;">
                             ${rejected}
-
                         </span>
-
                     </div>
-
 
                 </div>
 
-
                 <table>
-
 
                     <thead>
 
                         <tr>
-
-                            <th>
-                                م
-                            </th>
-
-                            <th>
-                                اسم الطالب
-                            </th>
-
-                            <th>
-                                الصف
-                            </th>
-
-                            <th>
-                                نوع الطلب
-                            </th>
-
-                            <th>
-                                سبب الاستئذان
-                            </th>
-
-                            <th>
-                                سبب الرفض
-                            </th>
-
-                            <th>
-                                كود العائلة
-                            </th>
-
-                            <th>
-                                الحالة
-                            </th>
-
-                            <th>
-                                الوقت
-                            </th>
-
+                            <th>م</th>
+                            <th>اسم الطالب</th>
+                            <th>الصف</th>
+                            <th>نوع الطلب</th>
+                            <th>سبب الاستئذان</th>
+                            <th>سبب الرفض</th>
+                            <th>كود العائلة</th>
+                            <th>الحالة</th>
+                            <th>الوقت</th>
                         </tr>
 
                     </thead>
 
-
                     <tbody>
-
-        `);
-
+            `
+        );
 
         allRequests.forEach(
             (r, index) => {
@@ -5453,212 +3867,236 @@
                 let statusText =
                     'معلق';
 
-
                 if (
                     r.status ===
                     'approved'
                 ) {
-
                     statusText =
                         'مقبولة ✅';
-
                 }
-
 
                 if (
                     r.status ===
                     'rejected'
                 ) {
-
                     statusText =
                         'مرفوضة ❌';
-
                 }
 
-
                 let reqType =
-                    r.request_type ===
+                    r.request_type ||
+                    'نداء انصراف عادي';
+
+                if (
+                    reqType ===
+                    'pickup'
+                ) {
+                    reqType =
+                        'نداء انصراف عادي';
+                }
+
+                if (
+                    reqType ===
                     'excuse'
+                ) {
+                    reqType =
+                        'استئذان مبكر (طارئ)';
+                }
 
-                        ? 'استئذان مبكر'
-
-                        : 'نداء انصراف عادي';
-
-
-                printWindow.document.write(`
-
+                printWindow.document.write(
+                    `
                     <tr>
-
 
                         <td>
                             ${index + 1}
                         </td>
 
-
                         <td>
-
                             <b>
-
-                                ${escapeHtml(
+                                ${escapeHTML(
                                     r.student_name
                                 )}
-
                             </b>
-
                         </td>
 
-
                         <td>
-
-                            ${escapeHtml(
-                                r.student_class
+                            ${escapeHTML(
+                                r.student_class ||
+                                '-'
                             )}
-
                         </td>
 
-
                         <td>
-
-                            ${escapeHtml(
+                            ${escapeHTML(
                                 reqType
                             )}
-
                         </td>
 
-
                         <td>
-
-                            ${escapeHtml(
+                            ${escapeHTML(
                                 r.excuse_reason ||
                                 '-'
                             )}
-
                         </td>
 
-
                         <td>
-
-                            ${escapeHtml(
+                            ${escapeHTML(
                                 r.reject_reason ||
                                 '-'
                             )}
-
                         </td>
 
-
                         <td>
-
-                            ${escapeHtml(
-                                r.parent_code
+                            ${escapeHTML(
+                                r.parent_code ||
+                                '-'
                             )}
-
                         </td>
 
-
                         <td>
-
-                            ${escapeHtml(
+                            ${escapeHTML(
                                 statusText
                             )}
-
                         </td>
-
 
                         <td>
-
-                            ${escapeHtml(
-                                new Date(
-                                    r.created_at
-                                ).toLocaleTimeString(
-                                    'ar-SA'
-                                )
+                            ${escapeHTML(
+                                r.created_at
+                                    ? new Date(
+                                        r.created_at
+                                    ).toLocaleTimeString(
+                                        'ar-SA'
+                                    )
+                                    : '-'
                             )}
-
                         </td>
 
-
                     </tr>
-
-                `);
-
+                    `
+                );
             }
         );
 
-
-        printWindow.document.write(`
-
+        printWindow.document.write(
+            `
                     </tbody>
 
                 </table>
 
-
-                <div
-                    class="footer-print">
-
-                    تم إنشاء وتطوير النظام من قبل إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
-
+                <div class="footer-print">
+                    تم إنشاء وتطوير النظام بواسطة إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
                 </div>
-
 
             </body>
 
             </html>
-
-        `);
-
+            `
+        );
 
         printWindow.document.close();
 
-
         printWindow.focus();
-
 
         setTimeout(
             () => {
-
                 printWindow.print();
-
             },
             500
         );
-
     }
 
 
     /* =========================================================
-       بدء الصفحة
+       فحص وجود جلسة عند فتح الصفحة
+       لا نعتمد على localStorage للأمان
     ========================================================= */
 
     window.addEventListener(
         'load',
         async () => {
 
-            updateConnectionStatus(
-                navigator.onLine
-            );
+            applyAdminTheme();
 
+            const token =
+                getAdminToken();
 
-            /*
-               إذا كانت هناك جلسة محفوظة،
-               نحاول استعادتها تلقائيًا.
-            */
+            if (!token) {
+                return;
+            }
 
-            await restoreExistingSession();
+            try {
 
+                const result =
+                    await callAdminApi(
+                        {
+                            action:
+                                'admin_refresh'
+                        },
+                        true
+                    );
+
+                if (
+                    result &&
+                    result.session_token
+                ) {
+
+                    saveAdminToken(
+                        result.session_token
+                    );
+
+                    const now =
+                        new Date();
+
+                    sessionStartTime =
+                        now;
+
+                    sessionEndTime =
+                        new Date(
+                            now.getTime() +
+                            (8 * 60 * 60 * 1000)
+                        );
+
+                    document
+                        .getElementById(
+                            'loginSection'
+                        )
+                        .classList
+                        .add('hidden');
+
+                    document
+                        .getElementById(
+                            'adminPanelSection'
+                        )
+                        .classList
+                        .remove('hidden');
+
+                    document
+                        .getElementById(
+                            'sessionTimer'
+                        )
+                        .classList
+                        .remove('hidden');
+
+                    updateSessionDisplay();
+
+                    startSessionRefresh();
+
+                    await initAdminDashboard();
+
+                }
+
+            } catch (err) {
+
+                clearAdminToken();
+
+                console.warn(
+                    'لا توجد جلسة إدارة صالحة.'
+                );
+            }
         }
     );
 
 </script>
-
-
-<!-- =========================================================
-     Chart.js
-========================================================= -->
-
-<script
-    src="https://cdn.jsdelivr.net/npm/chart.js">
-</script>
-
 
 </body>
 </html>
