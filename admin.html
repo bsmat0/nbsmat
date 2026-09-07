@@ -779,9 +779,9 @@
             color: #ffffff !important;
         }
 
-        /* =====================================================
-           الجوال
-        ===================================================== */
+        /* =========================
+           تحسين الجوال
+        ========================= */
 
         @media (max-width: 700px) {
 
@@ -790,10 +790,6 @@
                 min-height: 100vh;
                 min-height: 100dvh;
 
-                /*
-                   يبقى المحتوى في الوسط عندما
-                   تكون الشاشة أكبر من المحتوى.
-                */
                 justify-content: center;
                 align-items: center;
             }
@@ -801,20 +797,9 @@
             .container {
                 width: calc(100% - 8px);
                 max-width: 650px;
-
-                /*
-                   مهم جدًا:
-                   لا نجعل البطاقة بطول الشاشة.
-                */
                 min-height: auto;
-
                 padding: 18px;
                 border-radius: 20px;
-
-                /*
-                   مسافة واضحة حول البطاقة
-                   لإظهار النجوم والخلفية.
-                */
                 margin: 10px auto;
             }
         }
@@ -823,26 +808,15 @@
 
             body {
                 padding: 12px 8px 20px 8px;
-
-                /*
-                   الصفحة تبدأ في المنتصف،
-                   والخلفية تبقى ظاهرة.
-                */
                 align-items: center;
                 justify-content: center;
             }
 
             .container {
                 width: calc(100% - 12px);
-
-                /*
-                   لا يوجد min-height على البطاقة.
-                */
                 min-height: auto;
-
                 padding: 15px;
                 border-radius: 18px;
-
                 margin: 10px auto;
             }
 
@@ -1281,7 +1255,7 @@
                         class="trend"
                         style="color:var(--primary-purple);"
                     >
-                        سجل الطلبات ⚡
+                        سجل طلبات اليوم ⚡
                     </div>
 
                 </div>
@@ -1662,7 +1636,7 @@
 
 
     /* =========================================================
-       عميل Realtime
+       Realtime
     ========================================================= */
 
     let realtimeClient = null;
@@ -2703,6 +2677,7 @@
             tab === 'dashboard'
         ) {
 
+            updateDashboardStats();
             updateChartsData();
         }
 
@@ -2980,6 +2955,64 @@
 
 
     /* =========================================================
+       تحديد طلبات اليوم
+    ========================================================= */
+
+    function getTodayRequests() {
+
+        const now =
+            new Date();
+
+
+        const todayYear =
+            now.getFullYear();
+
+        const todayMonth =
+            now.getMonth();
+
+        const todayDate =
+            now.getDate();
+
+
+        return allRequests.filter(
+            r => {
+
+                if (!r.created_at) {
+                    return false;
+                }
+
+
+                const requestDate =
+                    new Date(
+                        r.created_at
+                    );
+
+
+                if (
+                    Number.isNaN(
+                        requestDate.getTime()
+                    )
+                ) {
+                    return false;
+                }
+
+
+                return (
+                    requestDate.getFullYear() ===
+                    todayYear &&
+
+                    requestDate.getMonth() ===
+                    todayMonth &&
+
+                    requestDate.getDate() ===
+                    todayDate
+                );
+            }
+        );
+    }
+
+
+    /* =========================================================
        تحديث سريع
     ========================================================= */
 
@@ -3028,17 +3061,21 @@
 
 
     /* =========================================================
-       الإحصائيات
+       الإحصائيات - لليوم الحالي فقط
     ========================================================= */
 
     function updateDashboardStats() {
 
+        const todayRequests =
+            getTodayRequests();
+
+
         const total =
-            allRequests.length;
+            todayRequests.length;
 
 
         const pending =
-            allRequests.filter(
+            todayRequests.filter(
                 r =>
                     r.status ===
                     'pending'
@@ -3046,7 +3083,7 @@
 
 
         const approved =
-            allRequests.filter(
+            todayRequests.filter(
                 r =>
                     r.status ===
                     'approved'
@@ -3054,7 +3091,7 @@
 
 
         const rejected =
-            allRequests.filter(
+            todayRequests.filter(
                 r =>
                     r.status ===
                     'rejected'
@@ -3102,6 +3139,11 @@
                 'alertCountText'
             );
 
+
+        /*
+           التنبيه يحسب الطلبات المعلقة
+           لليوم الحالي فقط.
+        */
 
         if (
             pending > 0
@@ -3845,7 +3887,7 @@
 
 
     /* =========================================================
-       الرسم البياني
+       الرسم البياني - لليوم فقط
     ========================================================= */
 
     function updateChartsData() {
@@ -3861,8 +3903,12 @@
         }
 
 
+        const todayRequests =
+            getTodayRequests();
+
+
         const approved =
-            allRequests.filter(
+            todayRequests.filter(
                 r =>
                     r.status ===
                     'approved'
@@ -3870,7 +3916,7 @@
 
 
         const rejected =
-            allRequests.filter(
+            todayRequests.filter(
                 r =>
                     r.status ===
                     'rejected'
@@ -3878,7 +3924,7 @@
 
 
         const pending =
-            allRequests.filter(
+            todayRequests.filter(
                 r =>
                     r.status ===
                     'pending'
@@ -5192,10 +5238,6 @@
                     navigator.onLine
                 );
 
-                /*
-                   نضمن أن صفحة تسجيل الدخول
-                   تبدأ في وسط الشاشة.
-                */
                 requestAnimationFrame(
                     () => {
                         window.scrollTo(
