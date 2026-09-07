@@ -17,7 +17,13 @@
             --primary-purple: #4a2e6f;
             --light-purple: #6a439c;
             --accent-gold: #f3b137;
-            --bg-gradient: linear-gradient(135deg, #2b1f3d 0%, #4a2e6f 35%, #3d2e0f 70%, #1f1707 100%);
+            --bg-gradient: linear-gradient(
+                135deg,
+                #2b1f3d 0%,
+                #4a2e6f 35%,
+                #3d2e0f 70%,
+                #1f1707 100%
+            );
             --text-color: #2c3e50;
             --danger-red: #d9534f;
             --success-green: #28a745;
@@ -33,6 +39,7 @@
         html {
             width: 100%;
             min-height: 100%;
+            background: var(--bg-gradient);
         }
 
         body {
@@ -65,6 +72,7 @@
             border-radius: 50%;
             opacity: 0.9;
             animation: fall linear infinite;
+            will-change: transform, opacity;
         }
 
         .star.gold {
@@ -101,6 +109,7 @@
             margin: auto;
             background: var(--card-bg);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 28px;
             border-radius: 24px;
             box-shadow:
@@ -416,6 +425,7 @@
             color: var(--primary-purple);
             font-size: 14px;
             font-weight: bold;
+            line-height: 1.5;
         }
 
         .request-time {
@@ -559,7 +569,7 @@
             border-top: 1px solid #eee;
             padding-top: 10px;
             text-align: center;
-            line-height: 1.6;
+            line-height: 1.7;
         }
 
         .refresh-status {
@@ -768,29 +778,74 @@
             color: #ffffff !important;
         }
 
+        /* =====================================================
+           الجوال
+        ===================================================== */
+
         @media (max-width: 700px) {
+
             body {
-                padding: 10px;
+                padding: 14px 10px;
                 align-items: flex-start;
-            }
 
-            .container {
-                max-width: 100%;
-                min-height: calc(100vh - 20px);
-                padding: 18px;
-                border-radius: 20px;
-            }
-        }
-
-        @media (max-width: 560px) {
-            body {
-                padding: 8px;
+                /*
+                   مهم:
+                   عدم جعل البطاقة البيضاء بطول الشاشة
+                   حتى تظهر النجوم حولها.
+                */
             }
 
             .container {
                 width: 100%;
+                max-width: 650px;
+
+                /*
+                   أزلنا min-height الذي كان يجعل
+                   البطاقة تغطي الشاشة بالكامل.
+                */
+                min-height: auto;
+
+                padding: 18px;
+                border-radius: 20px;
+
+                /*
+                   نترك مسافة واضحة حول البطاقة
+                   لإظهار الخلفية والنجوم.
+                */
+                margin: 10px auto 18px auto;
+            }
+        }
+
+        @media (max-width: 560px) {
+
+            body {
+                padding: 12px 8px 20px 8px;
+
+                /*
+                   الخلفية والنجوم تبقى ظاهرة
+                   حول البطاقة البيضاء.
+                */
+                min-height: 100vh;
+            }
+
+            .container {
+
+                /*
+                   بدل 100% حتى لا تلتصق البطاقة
+                   بحواف الشاشة.
+                */
+                width: calc(100% - 4px);
+
+                /*
+                   مهم جدًا:
+                   لا نستخدم min-height: calc(100vh - 20px)
+                */
+                min-height: auto;
+
                 padding: 15px;
                 border-radius: 18px;
+
+                margin: 8px auto 18px auto;
             }
 
             .header-flex {
@@ -986,8 +1041,16 @@
         }
 
         @media (max-width: 380px) {
+
+            body {
+                padding: 10px 6px 18px 6px;
+            }
+
             .container {
+                width: calc(100% - 4px);
                 padding: 12px;
+                border-radius: 17px;
+                margin-top: 6px;
             }
 
             .logo-img {
@@ -1025,17 +1088,37 @@
 <div class="container" id="adminContainerBox">
 
     <div class="header-flex">
+
         <div class="logo-title-group">
-            <img src="https://i.ibb.co/ddsMPQH/logo.png" alt="شعار بسمات الوعد" class="logo-img">
+
+            <img
+                src="https://i.ibb.co/ddsMPQH/logo.png"
+                alt="شعار بسمات الوعد"
+                class="logo-img"
+            >
 
             <div>
-                <h1>روضة وابتدائية بسمات الوعد</h1>
-                <h2>لوحة الإدارة المتقدمة</h2>
+
+                <h1>
+                    روضة وابتدائية بسمات الوعد
+                </h1>
+
+                <h2>
+                    لوحة الإدارة المتقدمة
+                </h2>
+
             </div>
+
         </div>
 
         <div class="header-actions">
-            <span id="connectionBadge" class="connection-status online">🟢 متصل</span>
+
+            <span
+                id="connectionBadge"
+                class="connection-status online"
+            >
+                🟢 متصل
+            </span>
 
             <button
                 id="themeToggleBtn"
@@ -1046,23 +1129,37 @@
             >
                 🌙
             </button>
+
         </div>
+
     </div>
 
-    <div id="sessionTimer" class="session-timer hidden">
+
+    <div
+        id="sessionTimer"
+        class="session-timer hidden"
+    >
         ⏰ الجلسة النشطة:
         من <span id="sessionStart">--:--</span>
         إلى <span id="sessionEnd">--:--</span>
         |
         التحديث التلقائي:
+
         <span class="refresh-status">
             <span class="spinner"></span>
             مباشر + احتياطي سريع
         </span>
     </div>
 
-    <div id="loginSection" style="margin:30px auto;">
-        <div style="margin-bottom:15px; text-align:right;">
+
+    <div
+        id="loginSection"
+        style="margin:30px auto;"
+    >
+
+        <div
+            style="margin-bottom:15px; text-align:right;"
+        >
 
             <label
                 style="display:block; margin-bottom:8px; font-weight:bold; font-size:14px; color:var(--primary-purple);"
@@ -1081,6 +1178,7 @@
                 style="width:100%; padding:14px; border:2px solid #e2d9eb; border-radius:12px; font-size:15px; outline:none;"
                 onkeydown="if(event.key === 'Enter') checkAdminLogin();"
             >
+
         </div>
 
         <button
@@ -1089,9 +1187,14 @@
         >
             دخول لوحة التحكم
         </button>
+
     </div>
 
-    <div id="adminPanelSection" class="hidden">
+
+    <div
+        id="adminPanelSection"
+        class="hidden"
+    >
 
         <div
             id="dynamicAlertBanner"
@@ -1099,10 +1202,12 @@
             onclick="switchAdminTab('requests')"
         >
             🚨 تنبيه:
-            يوجد <span id="alertCountText">0</span>
+            يوجد
+            <span id="alertCountText">0</span>
             طلب جديد بانتظار قبولك أو رفضك!
             (اضغط هنا للانتقال)
         </div>
+
 
         <div class="admin-tabs">
 
@@ -1120,6 +1225,7 @@
                 onclick="switchAdminTab('requests')"
             >
                 📥 الطلبات الحية
+
                 <span
                     id="tabNotificationBadge"
                     class="notification-badge hidden"
@@ -1154,12 +1260,16 @@
 
         </div>
 
+
         <div id="viewDashboard">
 
             <div class="stats-grid">
 
                 <div class="stat-card">
-                    <h3>إجمالي اليوم</h3>
+
+                    <h3>
+                        إجمالي اليوم
+                    </h3>
 
                     <div
                         class="number"
@@ -1174,10 +1284,15 @@
                     >
                         سجل الطلبات ⚡
                     </div>
+
                 </div>
 
+
                 <div class="stat-card">
-                    <h3>الطلبات المعلقة</h3>
+
+                    <h3>
+                        الطلبات المعلقة
+                    </h3>
 
                     <div
                         class="number"
@@ -1192,10 +1307,15 @@
                     >
                         تحتاج إجراء عاجل
                     </div>
+
                 </div>
 
+
                 <div class="stat-card">
-                    <h3>الطلبات المقبولة</h3>
+
+                    <h3>
+                        الطلبات المقبولة
+                    </h3>
 
                     <div
                         class="number"
@@ -1210,10 +1330,15 @@
                     >
                         تم التجهيز بنجاح ✅
                     </div>
+
                 </div>
 
+
                 <div class="stat-card">
-                    <h3>الطلبات المرفوضة</h3>
+
+                    <h3>
+                        الطلبات المرفوضة
+                    </h3>
 
                     <div
                         class="number"
@@ -1228,9 +1353,11 @@
                     >
                         مرفوضة ❌
                     </div>
+
                 </div>
 
             </div>
+
 
             <div class="charts-grid">
 
@@ -1239,9 +1366,14 @@
                 </div>
 
             </div>
+
         </div>
 
-        <div id="viewRequests" class="hidden">
+
+        <div
+            id="viewRequests"
+            class="hidden"
+        >
 
             <div class="filter-bar">
 
@@ -1256,13 +1388,25 @@
                     id="filterStatus"
                     onchange="filterRequests()"
                 >
-                    <option value="all">الكل</option>
-                    <option value="pending">المعلقة</option>
-                    <option value="approved">الموافق عليها</option>
-                    <option value="rejected">المرفوضة</option>
+                    <option value="all">
+                        الكل
+                    </option>
+
+                    <option value="pending">
+                        المعلقة
+                    </option>
+
+                    <option value="approved">
+                        الموافق عليها
+                    </option>
+
+                    <option value="rejected">
+                        المرفوضة
+                    </option>
                 </select>
 
             </div>
+
 
             <div
                 id="requestsList"
@@ -1274,6 +1418,7 @@
             </div>
 
         </div>
+
 
         <div
             id="viewStudents"
@@ -1291,6 +1436,7 @@
                 >
                     ➕ إضافة طالب جديد
                 </h3>
+
 
                 <div
                     style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"
@@ -1319,6 +1465,7 @@
 
                 </div>
 
+
                 <button
                     class="btn-submit"
                     style="padding:11px; font-size:13px;"
@@ -1328,6 +1475,7 @@
                 </button>
 
             </div>
+
 
             <div
                 id="studentsListContainer"
@@ -1339,6 +1487,7 @@
             </div>
 
         </div>
+
 
         <div
             id="viewReports"
@@ -1353,11 +1502,13 @@
                 📋 تصدير التقارير المدرسية
             </h3>
 
+
             <p
                 style="font-size:12px; color:#666; margin-bottom:12px;"
             >
                 اختر صيغة الملف المناسبة لتحميل سجل الطلبات:
             </p>
+
 
             <div
                 style="display:flex; gap:10px; flex-wrap:wrap;"
@@ -1371,6 +1522,7 @@
                     📥 Excel (CSV)
                 </button>
 
+
                 <button
                     class="btn-submit"
                     style="flex:1; padding:12px; font-size:13px; background:#4a2e6f; color:white;"
@@ -1378,6 +1530,7 @@
                 >
                     📄 Word (DOC)
                 </button>
+
 
                 <button
                     class="btn-submit"
@@ -1390,6 +1543,7 @@
             </div>
 
         </div>
+
 
         <div
             id="viewSettings"
@@ -1404,11 +1558,13 @@
                 ⚙️ الإعدادات المتقدمة
             </h3>
 
+
             <p
                 style="font-size:12px; color:#666; line-height:1.5;"
             >
                 ملاحظة: تفريغ الكاش يقوم بتنظيف الذاكرة المؤقتة للمتصفح فقط لتحديث النظام، ولا يؤدي إلى حذف الطلبات الأصلية المحفوظة في قاعدة بيانات السيرفر.
             </p>
+
 
             <button
                 class="btn-submit"
@@ -1420,6 +1576,7 @@
 
         </div>
 
+
         <button
             class="btn-submit"
             style="background:#e2d9eb; color:#333; margin-top:20px; font-size:13px;"
@@ -1430,11 +1587,13 @@
 
     </div>
 
+
     <footer>
         تم إنشاء وتطوير النظام من قبل إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
     </footer>
 
 </div>
+
 
 <script>
 
@@ -1620,7 +1779,7 @@
 
 
     /* =========================================================
-       منع انتهاء الشاشة عند دعم الجهاز
+       Wake Lock
     ========================================================= */
 
     async function requestWakeLock() {
@@ -1670,6 +1829,7 @@
             'visible' &&
             isAdminPanelOpen()
         ) {
+
             await requestWakeLock();
         }
     }
@@ -2025,6 +2185,7 @@
                         if (
                             isAdminPanelOpen()
                         ) {
+
                             playCloseTone();
                         }
 
@@ -2440,7 +2601,10 @@
                         !realtimeChannel ||
                         !realtimeIsSubscribed
                     ) {
-                        reconnectRealtime(true);
+
+                        reconnectRealtime(
+                            true
+                        );
                     }
 
                     await reacquireWakeLock();
@@ -2817,7 +2981,7 @@
 
 
     /* =========================================================
-       تحديث فوري للطلبات
+       تحديث سريع
     ========================================================= */
 
     function queueFastRequestsRefresh() {
@@ -2981,7 +3145,7 @@
 
 
     /* =========================================================
-       فلترة الطلبات
+       الفلترة
     ========================================================= */
 
     function getFilteredRequests() {
@@ -3245,9 +3409,12 @@
                 listDiv.innerHTML += `
                     <div class="${itemClass}">
 
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; gap:8px;"
+                        >
 
                             <strong class="request-name">
+
                                 ${escapeHTML(
                                     req.student_name ||
                                     'طالب غير محدد'
@@ -3257,7 +3424,9 @@
                                     req.student_class ||
                                     'غير محدد'
                                 )})
+
                             </strong>
+
 
                             <span class="request-time">
                                 ${timeStr}
@@ -3265,25 +3434,34 @@
 
                         </div>
 
+
                         ${detailsSection}
 
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; gap:8px; flex-wrap:wrap;">
+
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; font-size:12px; gap:8px; flex-wrap:wrap;"
+                        >
 
                             <span class="request-code">
+
                                 الكود:
+
                                 <strong>
                                     ${escapeHTML(
                                         req.parent_code ||
                                         '-'
                                     )}
                                 </strong>
+
                             </span>
+
 
                             <div>
                                 ${statusBadge}
                             </div>
 
                         </div>
+
 
                         ${actionButtons}
 
@@ -3294,7 +3472,7 @@
 
 
     /* =========================================================
-       تحديث حالة الطلب
+       تحديث الحالة
     ========================================================= */
 
     async function updateStatus(
@@ -3487,6 +3665,7 @@
                                 </small>
 
                             </span>
+
 
                             <button
                                 style="background:var(--danger-red); color:white; border:none; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:12px; flex-shrink:0;"
@@ -3791,11 +3970,6 @@
         }
 
 
-        /*
-           Realtime هو الأساسي.
-           الاحتياطي يعمل كل 3 ثوانٍ بدل 5 ثوانٍ.
-        */
-
         autoRefreshInterval =
             setInterval(
                 () => {
@@ -3876,13 +4050,6 @@
 
                             lastRealtimeEventAt =
                                 Date.now();
-
-
-                            /*
-                               الحدث يستخدم كإشارة
-                               لإعادة جلب البيانات
-                               الآمنة من Edge Function.
-                            */
 
                             queueFastRequestsRefresh();
                         }
@@ -4032,13 +4199,6 @@
             );
 
 
-        console.log(
-            'إعادة اتصال Realtime خلال:',
-            delay,
-            'ms'
-        );
-
-
         realtimeReconnectTimer =
             setTimeout(
                 () => {
@@ -4109,7 +4269,7 @@
 
 
     /* =========================================================
-       استعادة الصفحة والخمول
+       استعادة الصفحة
     ========================================================= */
 
     document.addEventListener(
@@ -4188,27 +4348,8 @@
     );
 
 
-    window.addEventListener(
-        'beforeunload',
-        () => {
-
-            try {
-
-                if (
-                    wakeLock &&
-                    !wakeLock.released
-                ) {
-
-                    wakeLock.release();
-                }
-
-            } catch (e) {}
-        }
-    );
-
-
     /* =========================================================
-       فحص صحة Realtime
+       فحص Realtime
     ========================================================= */
 
     setInterval(
@@ -4230,12 +4371,6 @@
                 now -
                 lastRealtimeEventAt;
 
-
-            /*
-               إذا لم تصل أحداث لفترة طويلة
-               وكان الاشتراك غير مستقر،
-               نعيد الاتصال.
-            */
 
             if (
                 !realtimeChannel ||
@@ -4874,6 +5009,7 @@
                     </thead>
 
                     <tbody>
+
         `);
 
 
@@ -4998,6 +5134,7 @@
                         </td>
 
                     </tr>
+
                 `);
             }
         );
@@ -5009,6 +5146,7 @@
 
                 </table>
 
+
                 <div class="footer-print">
                     تم إنشاء وتطوير النظام بواسطة إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
                 </div>
@@ -5016,6 +5154,7 @@
             </body>
 
             </html>
+
         `);
 
 
