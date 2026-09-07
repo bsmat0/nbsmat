@@ -51,6 +51,7 @@
             position: relative;
             overflow-x: hidden;
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -106,7 +107,7 @@
             z-index: 1;
             width: 100%;
             max-width: 650px;
-            margin: auto;
+            margin: 20px auto;
             background: var(--card-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -786,22 +787,24 @@
 
             body {
                 padding: 14px 10px;
-                align-items: flex-start;
+                min-height: 100vh;
+                min-height: 100dvh;
 
                 /*
-                   مهم:
-                   عدم جعل البطاقة البيضاء بطول الشاشة
-                   حتى تظهر النجوم حولها.
+                   يبقى المحتوى في الوسط عندما
+                   تكون الشاشة أكبر من المحتوى.
                 */
+                justify-content: center;
+                align-items: center;
             }
 
             .container {
-                width: 100%;
+                width: calc(100% - 8px);
                 max-width: 650px;
 
                 /*
-                   أزلنا min-height الذي كان يجعل
-                   البطاقة تغطي الشاشة بالكامل.
+                   مهم جدًا:
+                   لا نجعل البطاقة بطول الشاشة.
                 */
                 min-height: auto;
 
@@ -809,10 +812,10 @@
                 border-radius: 20px;
 
                 /*
-                   نترك مسافة واضحة حول البطاقة
-                   لإظهار الخلفية والنجوم.
+                   مسافة واضحة حول البطاقة
+                   لإظهار النجوم والخلفية.
                 */
-                margin: 10px auto 18px auto;
+                margin: 10px auto;
             }
         }
 
@@ -822,30 +825,25 @@
                 padding: 12px 8px 20px 8px;
 
                 /*
-                   الخلفية والنجوم تبقى ظاهرة
-                   حول البطاقة البيضاء.
+                   الصفحة تبدأ في المنتصف،
+                   والخلفية تبقى ظاهرة.
                 */
-                min-height: 100vh;
+                align-items: center;
+                justify-content: center;
             }
 
             .container {
+                width: calc(100% - 12px);
 
                 /*
-                   بدل 100% حتى لا تلتصق البطاقة
-                   بحواف الشاشة.
-                */
-                width: calc(100% - 4px);
-
-                /*
-                   مهم جدًا:
-                   لا نستخدم min-height: calc(100vh - 20px)
+                   لا يوجد min-height على البطاقة.
                 */
                 min-height: auto;
 
                 padding: 15px;
                 border-radius: 18px;
 
-                margin: 8px auto 18px auto;
+                margin: 10px auto;
             }
 
             .header-flex {
@@ -1010,6 +1008,7 @@
 
             #loginSection {
                 margin: 22px auto !important;
+                width: 100%;
             }
 
             #viewStudents {
@@ -1047,10 +1046,10 @@
             }
 
             .container {
-                width: calc(100% - 4px);
+                width: calc(100% - 8px);
                 padding: 12px;
                 border-radius: 17px;
-                margin-top: 6px;
+                margin: 8px auto;
             }
 
             .logo-img {
@@ -5193,6 +5192,19 @@
                     navigator.onLine
                 );
 
+                /*
+                   نضمن أن صفحة تسجيل الدخول
+                   تبدأ في وسط الشاشة.
+                */
+                requestAnimationFrame(
+                    () => {
+                        window.scrollTo(
+                            0,
+                            0
+                        );
+                    }
+                );
+
                 return;
             }
 
@@ -5271,6 +5283,8 @@
                         navigator.onLine
                     );
 
+
+                    await requestWakeLock();
 
                     await initAdminDashboard();
                 }
