@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <title>لوحة الإدارة - بسمات الوعد الأهلية</title>
-<link rel="icon" type="image/png" href="https://i.ibb.co/ddsMPQH/logo.png">
-<link rel="apple-touch-icon" href="https://i.ibb.co/ddsMPQH/logo.png">
-    
+
+    <link rel="icon" type="image/png" href="https://i.ibb.co/ddsMPQH/logo.png">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/ddsMPQH/logo.png">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -27,6 +28,11 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            width: 100%;
+            min-height: 100%;
         }
 
         body {
@@ -120,6 +126,7 @@
             align-items: center;
             gap: 15px;
             min-width: 0;
+            flex: 1;
         }
 
         .logo-img {
@@ -134,12 +141,14 @@
             font-size: 19px;
             margin: 0;
             font-weight: 800;
+            line-height: 1.4;
         }
 
         h2 {
             color: var(--light-purple);
             font-size: 14px;
             margin: 5px 0 0 0;
+            line-height: 1.4;
         }
 
         .header-actions {
@@ -157,6 +166,7 @@
             font-weight: bold;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
             white-space: nowrap;
         }
@@ -185,6 +195,7 @@
             align-items: center;
             justify-content: center;
             transition: 0.2s;
+            flex-shrink: 0;
         }
 
         .theme-toggle:hover {
@@ -211,6 +222,7 @@
             font-size: 12px;
             font-weight: bold;
             color: #856404;
+            line-height: 1.6;
         }
 
         .admin-tabs {
@@ -219,6 +231,12 @@
             margin-bottom: 20px;
             overflow-x: auto;
             padding-bottom: 8px;
+            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .admin-tabs::-webkit-scrollbar {
+            height: 5px;
         }
 
         .tab-btn {
@@ -233,6 +251,7 @@
             color: var(--primary-purple);
             transition: 0.2s;
             position: relative;
+            flex-shrink: 0;
         }
 
         .tab-btn.active {
@@ -284,6 +303,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            line-height: 1.6;
         }
 
         @keyframes alertGlowBox {
@@ -356,6 +376,7 @@
         .filter-bar input,
         .filter-bar select {
             flex: 1;
+            min-width: 0;
             padding: 12px;
             border: 1px solid #dcd6e8;
             border-radius: 10px;
@@ -378,6 +399,7 @@
             margin-bottom: 12px;
             border-radius: 14px;
             text-align: right;
+            overflow-wrap: anywhere;
         }
 
         .request-item.done {
@@ -399,6 +421,7 @@
         .request-time {
             font-size: 12px;
             color: #666;
+            flex-shrink: 0;
         }
 
         .request-code {
@@ -413,6 +436,7 @@
             background: #f2edf8;
             padding: 8px 10px;
             border-radius: 8px;
+            line-height: 1.6;
         }
 
         .request-type-box strong {
@@ -458,6 +482,7 @@
             font-size: 15px;
             cursor: pointer;
             font-weight: bold;
+            min-height: 46px;
         }
 
         .btn-submit:hover {
@@ -477,6 +502,7 @@
             border-radius: 8px;
             font-size: 12px;
             font-weight: bold;
+            white-space: nowrap;
         }
 
         .badge-done {
@@ -533,6 +559,7 @@
             border-top: 1px solid #eee;
             padding-top: 10px;
             text-align: center;
+            line-height: 1.6;
         }
 
         .refresh-status {
@@ -741,22 +768,42 @@
             color: #ffffff !important;
         }
 
-        @media (max-width: 560px) {
+        @media (max-width: 700px) {
             body {
                 padding: 10px;
-            }
-
-            .container {
-                padding: 18px;
-                border-radius: 20px;
-            }
-
-            .header-flex {
                 align-items: flex-start;
             }
 
+            .container {
+                max-width: 100%;
+                min-height: calc(100vh - 20px);
+                padding: 18px;
+                border-radius: 20px;
+            }
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 8px;
+            }
+
+            .container {
+                width: 100%;
+                padding: 15px;
+                border-radius: 18px;
+            }
+
+            .header-flex {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                padding-bottom: 13px;
+                margin-bottom: 16px;
+            }
+
             .logo-title-group {
-                gap: 9px;
+                width: 100%;
+                gap: 10px;
             }
 
             .logo-img {
@@ -765,30 +812,203 @@
 
             h1 {
                 font-size: 15px;
+                line-height: 1.5;
             }
 
             h2 {
                 font-size: 12px;
+                line-height: 1.5;
             }
 
             .header-actions {
-                flex-direction: column;
-                gap: 5px;
+                width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+                gap: 8px;
             }
 
             .connection-status {
+                flex: 1;
+                min-height: 34px;
                 font-size: 10px;
-                padding: 5px 8px;
+                padding: 6px 8px;
             }
 
             .theme-toggle {
-                width: 34px;
-                height: 30px;
+                width: 38px;
+                height: 34px;
                 font-size: 15px;
+            }
+
+            .session-timer {
+                font-size: 11px;
+                padding: 9px;
+                margin-bottom: 13px;
+            }
+
+            .refresh-status {
+                display: inline-flex;
+                margin-left: 3px;
+            }
+
+            .admin-tabs {
+                gap: 6px;
+                margin-bottom: 16px;
+                padding-bottom: 7px;
+            }
+
+            .tab-btn {
+                font-size: 12px;
+                padding: 9px 13px;
+            }
+
+            .alert-banner {
+                padding: 12px 10px;
+                font-size: 12px;
+            }
+
+            .stats-grid {
+                gap: 9px;
+                margin-bottom: 16px;
+            }
+
+            .stat-card {
+                padding: 12px 8px;
+                border-radius: 12px;
+            }
+
+            .stat-card h3 {
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            .stat-card .number {
+                font-size: 19px;
+            }
+
+            .stat-card .trend {
+                font-size: 10px;
+                line-height: 1.4;
+            }
+
+            .chart-container {
+                height: 205px;
+                padding: 10px;
             }
 
             .filter-bar {
                 flex-direction: column;
+                gap: 8px;
+            }
+
+            .filter-bar input,
+            .filter-bar select {
+                width: 100%;
+                min-height: 44px;
+            }
+
+            #requestsList {
+                max-height: none !important;
+                overflow-y: visible !important;
+                padding-left: 0 !important;
+            }
+
+            .request-item {
+                padding: 13px;
+                margin-bottom: 10px;
+                border-radius: 12px;
+            }
+
+            .request-name {
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+            .request-time {
+                font-size: 11px;
+            }
+
+            .request-type-box,
+            .excuse-reason-box,
+            .reject-reason-box {
+                font-size: 12px;
+                line-height: 1.6;
+            }
+
+            .btn-action-group {
+                flex-direction: row;
+                gap: 8px;
+            }
+
+            .btn-approve,
+            .btn-reject {
+                min-height: 46px;
+                font-size: 12px;
+                padding: 9px;
+            }
+
+            #adminPasswordInput {
+                width: 100% !important;
+                min-height: 48px;
+                font-size: 16px !important;
+            }
+
+            #loginSection {
+                margin: 22px auto !important;
+            }
+
+            #viewStudents {
+                width: 100%;
+            }
+
+            #viewStudents > div {
+                padding: 13px !important;
+            }
+
+            #studentsListContainer {
+                max-height: none !important;
+                overflow-y: visible !important;
+            }
+
+            #viewReports > div {
+                flex-direction: column;
+            }
+
+            #viewReports > div .btn-submit {
+                flex: none !important;
+                width: 100%;
+            }
+
+            footer {
+                font-size: 11px;
+                line-height: 1.7;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .container {
+                padding: 12px;
+            }
+
+            .logo-img {
+                max-width: 46px;
+            }
+
+            h1 {
+                font-size: 14px;
+            }
+
+            h2 {
+                font-size: 11px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 7px;
+            }
+
+            .stat-card {
+                padding: 10px 6px;
             }
 
             .btn-action-group {
@@ -807,6 +1027,7 @@
     <div class="header-flex">
         <div class="logo-title-group">
             <img src="https://i.ibb.co/ddsMPQH/logo.png" alt="شعار بسمات الوعد" class="logo-img">
+
             <div>
                 <h1>روضة وابتدائية بسمات الوعد</h1>
                 <h2>لوحة الإدارة المتقدمة</h2>
@@ -815,152 +1036,404 @@
 
         <div class="header-actions">
             <span id="connectionBadge" class="connection-status online">🟢 متصل</span>
-            <button id="themeToggleBtn" class="theme-toggle" type="button" onclick="toggleAdminTheme()" title="تغيير الوضع">🌙</button>
+
+            <button
+                id="themeToggleBtn"
+                class="theme-toggle"
+                type="button"
+                onclick="toggleAdminTheme()"
+                title="تغيير الوضع"
+            >
+                🌙
+            </button>
         </div>
     </div>
 
     <div id="sessionTimer" class="session-timer hidden">
-        ⏰ الجلسة النشطة: من <span id="sessionStart">--:--</span> إلى <span id="sessionEnd">--:--</span> | التحديث التلقائي:
-        <span class="refresh-status"><span class="spinner"></span> مباشر + احتياطي</span>
+        ⏰ الجلسة النشطة:
+        من <span id="sessionStart">--:--</span>
+        إلى <span id="sessionEnd">--:--</span>
+        |
+        التحديث التلقائي:
+        <span class="refresh-status">
+            <span class="spinner"></span>
+            مباشر + احتياطي سريع
+        </span>
     </div>
 
-    <div id="loginSection" style="margin: 30px auto;">
-        <div style="margin-bottom: 15px; text-align: right;">
-            <label style="display:block; margin-bottom:8px; font-weight:bold; font-size:14px; color:var(--primary-purple);">
+    <div id="loginSection" style="margin:30px auto;">
+        <div style="margin-bottom:15px; text-align:right;">
+
+            <label
+                style="display:block; margin-bottom:8px; font-weight:bold; font-size:14px; color:var(--primary-purple);"
+            >
                 رمز المرور السري للإدارة:
             </label>
-            <input type="password" id="adminPasswordInput" placeholder="أدخل كلمة المرور" inputmode="numeric" autocomplete="current-password" style="width:100%; padding:14px; border:2px solid #e2d9eb; border-radius:12px; font-size:15px; outline:none;" onkeydown="if(event.key === 'Enter') checkAdminLogin();">
+
+            <input
+                type="password"
+                id="adminPasswordInput"
+                placeholder="أدخل كلمة المرور"
+                inputmode="text"
+                autocomplete="current-password"
+                autocapitalize="none"
+                spellcheck="false"
+                style="width:100%; padding:14px; border:2px solid #e2d9eb; border-radius:12px; font-size:15px; outline:none;"
+                onkeydown="if(event.key === 'Enter') checkAdminLogin();"
+            >
         </div>
-        <button class="btn-submit" onclick="checkAdminLogin()">دخول لوحة التحكم</button>
+
+        <button
+            class="btn-submit"
+            onclick="checkAdminLogin()"
+        >
+            دخول لوحة التحكم
+        </button>
     </div>
 
     <div id="adminPanelSection" class="hidden">
 
-        <div id="dynamicAlertBanner" class="alert-banner hidden" onclick="switchAdminTab('requests')">
-            🚨 تنبيه: يوجد <span id="alertCountText">0</span> طلب جديد بانتظار قبولك أو رفضك! (اضغط هنا للانتقال)
+        <div
+            id="dynamicAlertBanner"
+            class="alert-banner hidden"
+            onclick="switchAdminTab('requests')"
+        >
+            🚨 تنبيه:
+            يوجد <span id="alertCountText">0</span>
+            طلب جديد بانتظار قبولك أو رفضك!
+            (اضغط هنا للانتقال)
         </div>
 
         <div class="admin-tabs">
-            <button class="tab-btn active" id="tabDashboard" onclick="switchAdminTab('dashboard')">📊 الإحصائيات</button>
-            <button class="tab-btn" id="tabRequests" onclick="switchAdminTab('requests')">📥 الطلبات الحية <span id="tabNotificationBadge" class="notification-badge hidden">0</span></button>
-            <button class="tab-btn" id="tabStudents" onclick="switchAdminTab('students')">👥 الطلاب</button>
-            <button class="tab-btn" id="tabReports" onclick="switchAdminTab('reports')">📋 التقارير</button>
-            <button class="tab-btn" id="tabSettings" onclick="switchAdminTab('settings')">⚙️ الإعدادات</button>
+
+            <button
+                class="tab-btn active"
+                id="tabDashboard"
+                onclick="switchAdminTab('dashboard')"
+            >
+                📊 الإحصائيات
+            </button>
+
+            <button
+                class="tab-btn"
+                id="tabRequests"
+                onclick="switchAdminTab('requests')"
+            >
+                📥 الطلبات الحية
+                <span
+                    id="tabNotificationBadge"
+                    class="notification-badge hidden"
+                >
+                    0
+                </span>
+            </button>
+
+            <button
+                class="tab-btn"
+                id="tabStudents"
+                onclick="switchAdminTab('students')"
+            >
+                👥 الطلاب
+            </button>
+
+            <button
+                class="tab-btn"
+                id="tabReports"
+                onclick="switchAdminTab('reports')"
+            >
+                📋 التقارير
+            </button>
+
+            <button
+                class="tab-btn"
+                id="tabSettings"
+                onclick="switchAdminTab('settings')"
+            >
+                ⚙️ الإعدادات
+            </button>
+
         </div>
 
         <div id="viewDashboard">
+
             <div class="stats-grid">
+
                 <div class="stat-card">
                     <h3>إجمالي اليوم</h3>
-                    <div class="number" id="statTotalToday">0</div>
-                    <div class="trend" style="color:var(--primary-purple);">سجل الطلبات ⚡</div>
+
+                    <div
+                        class="number"
+                        id="statTotalToday"
+                    >
+                        0
+                    </div>
+
+                    <div
+                        class="trend"
+                        style="color:var(--primary-purple);"
+                    >
+                        سجل الطلبات ⚡
+                    </div>
                 </div>
 
                 <div class="stat-card">
                     <h3>الطلبات المعلقة</h3>
-                    <div class="number" id="statPending">0</div>
-                    <div class="trend" style="color:var(--danger-red);">تحتاج إجراء عاجل</div>
+
+                    <div
+                        class="number"
+                        id="statPending"
+                    >
+                        0
+                    </div>
+
+                    <div
+                        class="trend"
+                        style="color:var(--danger-red);"
+                    >
+                        تحتاج إجراء عاجل
+                    </div>
                 </div>
 
                 <div class="stat-card">
                     <h3>الطلبات المقبولة</h3>
-                    <div class="number" id="statApproved">0</div>
-                    <div class="trend" style="color:var(--success-green);">تم التجهيز بنجاح ✅</div>
+
+                    <div
+                        class="number"
+                        id="statApproved"
+                    >
+                        0
+                    </div>
+
+                    <div
+                        class="trend"
+                        style="color:var(--success-green);"
+                    >
+                        تم التجهيز بنجاح ✅
+                    </div>
                 </div>
 
                 <div class="stat-card">
                     <h3>الطلبات المرفوضة</h3>
-                    <div class="number" id="statRejected">0</div>
-                    <div class="trend" style="color:#d9534f;">مرفوضة ❌</div>
+
+                    <div
+                        class="number"
+                        id="statRejected"
+                    >
+                        0
+                    </div>
+
+                    <div
+                        class="trend"
+                        style="color:#d9534f;"
+                    >
+                        مرفوضة ❌
+                    </div>
                 </div>
+
             </div>
 
             <div class="charts-grid">
+
                 <div class="chart-container">
                     <canvas id="statusPieChart"></canvas>
                 </div>
+
             </div>
         </div>
 
         <div id="viewRequests" class="hidden">
-            <div class="filter-bar">
-                <input type="text" id="searchInput" placeholder="ابحث باسم الطالب أو الكود..." oninput="filterRequests()">
 
-                <select id="filterStatus" onchange="filterRequests()">
+            <div class="filter-bar">
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="ابحث باسم الطالب أو الكود..."
+                    oninput="filterRequests()"
+                >
+
+                <select
+                    id="filterStatus"
+                    onchange="filterRequests()"
+                >
                     <option value="all">الكل</option>
                     <option value="pending">المعلقة</option>
                     <option value="approved">الموافق عليها</option>
                     <option value="rejected">المرفوضة</option>
                 </select>
+
             </div>
 
-            <div id="requestsList" style="max-height:400px; overflow-y:auto; padding-left:6px;">
-                <p style="font-size:13px;">جاري التحميل...</p>
+            <div
+                id="requestsList"
+                style="max-height:400px; overflow-y:auto; padding-left:6px;"
+            >
+                <p style="font-size:13px;">
+                    جاري التحميل...
+                </p>
             </div>
+
         </div>
 
-        <div id="viewStudents" class="hidden" style="text-align:right;">
-            <div style="background:#f8f5fc; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #e2d9eb;">
-                <h3 class="section-heading" style="margin-top:0; font-size:14px;">➕ إضافة طالب جديد</h3>
+        <div
+            id="viewStudents"
+            class="hidden"
+            style="text-align:right;"
+        >
 
-                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
-                    <input type="text" id="newStudentName" placeholder="اسم الطالب الثلاثي" style="padding:11px; border-radius:10px; border:1px solid #ccc; font-size:13px;">
+            <div
+                style="background:#f8f5fc; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #e2d9eb;"
+            >
 
-                    <input type="text" id="newStudentClass" placeholder="الصف (مثال: أول ابتدائي)" style="padding:11px; border-radius:10px; border:1px solid #ccc; font-size:13px;">
+                <h3
+                    class="section-heading"
+                    style="margin-top:0; font-size:14px;"
+                >
+                    ➕ إضافة طالب جديد
+                </h3>
 
-                    <input type="text" id="newStudentCode" placeholder="كود الأمان العائلي" style="padding:11px; border-radius:10px; border:1px solid #ccc; font-size:13px;">
+                <div
+                    style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"
+                >
+
+                    <input
+                        type="text"
+                        id="newStudentName"
+                        placeholder="اسم الطالب الثلاثي"
+                        style="padding:11px; border-radius:10px; border:1px solid #ccc; font-size:13px;"
+                    >
+
+                    <input
+                        type="text"
+                        id="newStudentClass"
+                        placeholder="الصف (مثال: أول ابتدائي)"
+                        style="padding:11px; border-radius:10px; border:1px solid #ccc; font-size:13px;"
+                    >
+
+                    <input
+                        type="text"
+                        id="newStudentCode"
+                        placeholder="كود الأمان العائلي"
+                        style="padding:11px; border-radius:10px; border:1px solid #ccc; font-size:13px;"
+                    >
+
                 </div>
 
-                <button class="btn-submit" style="padding:11px; font-size:13px;" onclick="addNewStudent()">حفظ الطالب</button>
+                <button
+                    class="btn-submit"
+                    style="padding:11px; font-size:13px;"
+                    onclick="addNewStudent()"
+                >
+                    حفظ الطالب
+                </button>
+
             </div>
 
-            <div id="studentsListContainer" style="max-height:250px; overflow-y:auto;">
-                <p style="font-size:13px;">جاري التحميل...</p>
+            <div
+                id="studentsListContainer"
+                style="max-height:250px; overflow-y:auto;"
+            >
+                <p style="font-size:13px;">
+                    جاري التحميل...
+                </p>
             </div>
+
         </div>
 
-        <div id="viewReports" class="hidden" style="text-align:right;">
-            <h3 class="section-heading" style="font-size:14px;">📋 تصدير التقارير المدرسية</h3>
+        <div
+            id="viewReports"
+            class="hidden"
+            style="text-align:right;"
+        >
 
-            <p style="font-size:12px; color:#666; margin-bottom:12px;">
+            <h3
+                class="section-heading"
+                style="font-size:14px;"
+            >
+                📋 تصدير التقارير المدرسية
+            </h3>
+
+            <p
+                style="font-size:12px; color:#666; margin-bottom:12px;"
+            >
                 اختر صيغة الملف المناسبة لتحميل سجل الطلبات:
             </p>
 
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn-submit" style="flex:1; padding:12px; font-size:13px;" onclick="exportTableToCSV('requests.csv')">
+            <div
+                style="display:flex; gap:10px; flex-wrap:wrap;"
+            >
+
+                <button
+                    class="btn-submit"
+                    style="flex:1; padding:12px; font-size:13px;"
+                    onclick="exportTableToCSV('requests.csv')"
+                >
                     📥 Excel (CSV)
                 </button>
 
-                <button class="btn-submit" style="flex:1; padding:12px; font-size:13px; background:#4a2e6f; color:white;" onclick="exportTableToWord()">
+                <button
+                    class="btn-submit"
+                    style="flex:1; padding:12px; font-size:13px; background:#4a2e6f; color:white;"
+                    onclick="exportTableToWord()"
+                >
                     📄 Word (DOC)
                 </button>
 
-                <button class="btn-submit" style="flex:1; padding:12px; font-size:13px; background:#d9534f; color:white;" onclick="exportTableToPDF()">
+                <button
+                    class="btn-submit"
+                    style="flex:1; padding:12px; font-size:13px; background:#d9534f; color:white;"
+                    onclick="exportTableToPDF()"
+                >
                     📑 PDF تقرير رسمي
                 </button>
+
             </div>
+
         </div>
 
-        <div id="viewSettings" class="hidden" style="text-align:right;">
-            <h3 class="section-heading" style="font-size:14px;">⚙️ الإعدادات المتقدمة</h3>
+        <div
+            id="viewSettings"
+            class="hidden"
+            style="text-align:right;"
+        >
 
-            <p style="font-size:12px; color:#666; line-height:1.5;">
+            <h3
+                class="section-heading"
+                style="font-size:14px;"
+            >
+                ⚙️ الإعدادات المتقدمة
+            </h3>
+
+            <p
+                style="font-size:12px; color:#666; line-height:1.5;"
+            >
                 ملاحظة: تفريغ الكاش يقوم بتنظيف الذاكرة المؤقتة للمتصفح فقط لتحديث النظام، ولا يؤدي إلى حذف الطلبات الأصلية المحفوظة في قاعدة بيانات السيرفر.
             </p>
 
-            <button class="btn-submit" style="background:#d9534f; color:white; padding:11px; font-size:13px; margin-top:10px;" onclick="clearLocalStorageCache()">
+            <button
+                class="btn-submit"
+                style="background:#d9534f; color:white; padding:11px; font-size:13px; margin-top:10px;"
+                onclick="clearLocalStorageCache()"
+            >
                 تفريغ الذاكرة المؤقتة (الكاش)
             </button>
+
         </div>
 
-        <button class="btn-submit" style="background:#e2d9eb; color:#333; margin-top:20px; font-size:13px;" onclick="adminLogout()">
+        <button
+            class="btn-submit"
+            style="background:#e2d9eb; color:#333; margin-top:20px; font-size:13px;"
+            onclick="adminLogout()"
+        >
             تسجيل خروج 🔒
         </button>
+
     </div>
 
     <footer>
         تم إنشاء وتطوير النظام من قبل إخلاص الحضيري | وكيلة مدرسة بسمات الوعد
     </footer>
+
 </div>
 
 <script>
@@ -970,23 +1443,43 @@
     ========================================================= */
 
     function createStars() {
-        const container = document.getElementById('stars');
+
+        const container =
+            document.getElementById('stars');
+
+        if (!container) {
+            return;
+        }
 
         for (let i = 0; i < 50; i++) {
-            const star = document.createElement('div');
+
+            const star =
+                document.createElement('div');
 
             star.classList.add(
                 'star',
-                Math.random() > 0.4 ? 'gold' : 'bright'
+                Math.random() > 0.4
+                    ? 'gold'
+                    : 'bright'
             );
 
-            const size = Math.random() * 3 + 1.5;
+            const size =
+                Math.random() * 3 + 1.5;
 
-            star.style.width = `${size}px`;
-            star.style.height = `${size}px`;
-            star.style.left = `${Math.random() * 100}%`;
-            star.style.animationDuration = `${Math.random() * 3 + 2}s`;
-            star.style.animationDelay = `${Math.random() * 5}s`;
+            star.style.width =
+                `${size}px`;
+
+            star.style.height =
+                `${size}px`;
+
+            star.style.left =
+                `${Math.random() * 100}%`;
+
+            star.style.animationDuration =
+                `${Math.random() * 3 + 2}s`;
+
+            star.style.animationDelay =
+                `${Math.random() * 5}s`;
 
             container.appendChild(star);
         }
@@ -1024,11 +1517,15 @@
     let refreshInFlight = false;
     let refreshQueued = false;
 
-    let lastRealtimeEventAt = 0;
+    let lastRealtimeEventAt =
+        Date.now();
+
+    let realtimeIsSubscribed =
+        false;
 
 
     /* =========================================================
-       متغيرات النظام
+       المتغيرات العامة
     ========================================================= */
 
     let allRequests = [];
@@ -1051,6 +1548,8 @@
 
     let masterGain = null;
 
+    let wakeLock = null;
+
 
     /* =========================================================
        أدوات عامة
@@ -1058,7 +1557,10 @@
 
     function escapeHTML(value) {
 
-        if (value === null || value === undefined) {
+        if (
+            value === null ||
+            value === undefined
+        ) {
             return '';
         }
 
@@ -1073,13 +1575,18 @@
 
     function getAdminToken() {
 
-        return sessionStorage.getItem('admin_session_token') || '';
+        return (
+            sessionStorage.getItem(
+                'admin_session_token'
+            ) || ''
+        );
     }
 
 
     function saveAdminToken(token) {
 
         if (token) {
+
             sessionStorage.setItem(
                 'admin_session_token',
                 token
@@ -1103,8 +1610,68 @@
                 'adminPanelSection'
             );
 
-        return panel &&
-            !panel.classList.contains('hidden');
+        return (
+            panel &&
+            !panel.classList.contains(
+                'hidden'
+            )
+        );
+    }
+
+
+    /* =========================================================
+       منع انتهاء الشاشة عند دعم الجهاز
+    ========================================================= */
+
+    async function requestWakeLock() {
+
+        try {
+
+            if (
+                !isAdminPanelOpen() ||
+                !('wakeLock' in navigator)
+            ) {
+                return;
+            }
+
+            if (
+                wakeLock &&
+                !wakeLock.released
+            ) {
+                return;
+            }
+
+            wakeLock =
+                await navigator.wakeLock.request(
+                    'screen'
+                );
+
+            wakeLock.addEventListener(
+                'release',
+                () => {
+                    wakeLock = null;
+                }
+            );
+
+        } catch (err) {
+
+            console.warn(
+                'Wake Lock غير متاح:',
+                err
+            );
+        }
+    }
+
+
+    async function reacquireWakeLock() {
+
+        if (
+            document.visibilityState ===
+            'visible' &&
+            isAdminPanelOpen()
+        ) {
+            await requestWakeLock();
+        }
     }
 
 
@@ -1112,26 +1679,38 @@
        الاتصال
     ========================================================= */
 
-    window.addEventListener('online', async () => {
+    window.addEventListener(
+        'online',
+        async () => {
 
-        updateConnectionStatus(true);
+            updateConnectionStatus(true);
 
-        if (isAdminPanelOpen()) {
+            if (
+                isAdminPanelOpen()
+            ) {
 
-            await refreshRequestsImmediately();
+                await refreshRequestsImmediately();
 
-            reconnectRealtime(true);
+                reconnectRealtime(true);
+
+                await reacquireWakeLock();
+            }
         }
-    });
+    );
 
 
-    window.addEventListener('offline', () => {
+    window.addEventListener(
+        'offline',
+        () => {
 
-        updateConnectionStatus(false);
-    });
+            updateConnectionStatus(false);
+        }
+    );
 
 
-    function updateConnectionStatus(isOnline) {
+    function updateConnectionStatus(
+        isOnline
+    ) {
 
         const badge =
             document.getElementById(
@@ -1189,6 +1768,7 @@
                 getAdminToken();
 
             if (!token) {
+
                 throw new Error(
                     'NO_ADMIN_SESSION'
                 );
@@ -1205,7 +1785,7 @@
         const timeout =
             setTimeout(
                 () => controller.abort(),
-                15000
+                12000
             );
 
 
@@ -1271,7 +1851,9 @@
             }
 
 
-            if (result.success === false) {
+            if (
+                result.success === false
+            ) {
 
                 throw new Error(
                     result.message ||
@@ -1438,7 +2020,15 @@
 
             soundInterval =
                 setInterval(
-                    playCloseTone,
+                    () => {
+
+                        if (
+                            isAdminPanelOpen()
+                        ) {
+                            playCloseTone();
+                        }
+
+                    },
                     3000
                 );
         }
@@ -1473,6 +2063,11 @@
             document.getElementById(
                 'themeToggleBtn'
             );
+
+        if (!container || !button) {
+            return;
+        }
+
 
         const dark =
             localStorage.getItem(
@@ -1514,6 +2109,11 @@
                 'adminContainerBox'
             );
 
+        if (!container) {
+            return;
+        }
+
+
         const isDark =
             container.classList.toggle(
                 'dark-mode'
@@ -1545,6 +2145,11 @@
             document.getElementById(
                 'adminPasswordInput'
             );
+
+        if (!input) {
+            return;
+        }
+
 
         const pass =
             input.value.trim();
@@ -1662,6 +2267,11 @@
 
             startSessionRefresh();
 
+            updateConnectionStatus(
+                navigator.onLine
+            );
+
+            await requestWakeLock();
 
             await initAdminDashboard();
 
@@ -1719,16 +2329,26 @@
             );
 
 
-        document.getElementById(
-            'sessionStart'
-        ).textContent =
-            startStr;
+        const startElement =
+            document.getElementById(
+                'sessionStart'
+            );
+
+        const endElement =
+            document.getElementById(
+                'sessionEnd'
+            );
 
 
-        document.getElementById(
-            'sessionEnd'
-        ).textContent =
-            endStr;
+        if (startElement) {
+            startElement.textContent =
+                startStr;
+        }
+
+        if (endElement) {
+            endElement.textContent =
+                endStr;
+        }
     }
 
 
@@ -1814,9 +2434,16 @@
                     navigator.onLine
                 ) {
 
-                    reconnectRealtime(true);
-
                     queueFastRequestsRefresh();
+
+                    if (
+                        !realtimeChannel ||
+                        !realtimeIsSubscribed
+                    ) {
+                        reconnectRealtime(true);
+                    }
+
+                    await reacquireWakeLock();
                 }
             }
 
@@ -1949,6 +2576,8 @@
         setupRealtimeSubscription();
 
         setupAutoRefresh();
+
+        await requestWakeLock();
     }
 
 
@@ -2216,7 +2845,7 @@
                     refreshRequestsImmediately();
 
                 },
-                80
+                50
             );
     }
 
@@ -2311,7 +2940,9 @@
             );
 
 
-        if (pending > 0) {
+        if (
+            pending > 0
+        ) {
 
             tabBadge.innerText =
                 pending;
@@ -2436,6 +3067,11 @@
             document.getElementById(
                 'requestsList'
             );
+
+
+        if (!listDiv) {
+            return;
+        }
 
 
         if (!requests.length) {
@@ -2587,13 +3223,21 @@
 
                     actionButtons = `
                         <div class="btn-action-group">
-                            <button class="btn-approve" onclick="updateStatus('${safeId}', 'approved')">
+
+                            <button
+                                class="btn-approve"
+                                onclick="updateStatus('${safeId}', 'approved')"
+                            >
                                 موافقة وتجهيز
                             </button>
 
-                            <button class="btn-reject" onclick="promptReject('${safeId}')">
+                            <button
+                                class="btn-reject"
+                                onclick="promptReject('${safeId}')"
+                            >
                                 رفض
                             </button>
+
                         </div>`;
                 }
 
@@ -2604,8 +3248,15 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
 
                             <strong class="request-name">
-                                ${escapeHTML(req.student_name || 'طالب غير محدد')}
-                                (${escapeHTML(req.student_class || 'غير محدد')})
+                                ${escapeHTML(
+                                    req.student_name ||
+                                    'طالب غير محدد'
+                                )}
+
+                                (${escapeHTML(
+                                    req.student_class ||
+                                    'غير محدد'
+                                )})
                             </strong>
 
                             <span class="request-time">
@@ -2616,12 +3267,15 @@
 
                         ${detailsSection}
 
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; gap:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; gap:8px; flex-wrap:wrap;">
 
                             <span class="request-code">
                                 الكود:
                                 <strong>
-                                    ${escapeHTML(req.parent_code || '-')}
+                                    ${escapeHTML(
+                                        req.parent_code ||
+                                        '-'
+                                    )}
                                 </strong>
                             </span>
 
@@ -2763,6 +3417,11 @@
             );
 
 
+        if (!container) {
+            return;
+        }
+
+
         try {
 
             const result =
@@ -2799,27 +3458,38 @@
                 s => {
 
                     container.innerHTML += `
-                        <div style="background:#fff; border:1px solid #e2d9eb; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px; gap:8px;">
+                        <div
+                            style="background:#fff; border:1px solid #e2d9eb; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px; gap:8px;"
+                        >
 
                             <span>
 
                                 <strong>
-                                    ${escapeHTML(s.student_name)}
+                                    ${escapeHTML(
+                                        s.student_name
+                                    )}
                                 </strong>
 
-                                (${escapeHTML(s.class_name || 'غير محدد')})
+                                (
+                                    ${escapeHTML(
+                                        s.class_name ||
+                                        'غير محدد'
+                                    )}
+                                )
 
                                 <br>
 
                                 <small>
                                     كود العائلة:
-                                    ${escapeHTML(s.parent_code)}
+                                    ${escapeHTML(
+                                        s.parent_code
+                                    )}
                                 </small>
 
                             </span>
 
                             <button
-                                style="background:var(--danger-red); color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:12px; flex-shrink:0;"
+                                style="background:var(--danger-red); color:white; border:none; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:12px; flex-shrink:0;"
                                 onclick="deleteStudent('${escapeHTML(s.id)}')"
                             >
                                 حذف
@@ -3108,7 +3778,7 @@
 
 
     /* =========================================================
-       التحديث الاحتياطي
+       التحديث الاحتياطي السريع
     ========================================================= */
 
     function setupAutoRefresh() {
@@ -3123,8 +3793,7 @@
 
         /*
            Realtime هو الأساسي.
-           هذا التحديث الاحتياطي يحافظ على
-           المزامنة إذا تعطل WebSocket.
+           الاحتياطي يعمل كل 3 ثوانٍ بدل 5 ثوانٍ.
         */
 
         autoRefreshInterval =
@@ -3140,7 +3809,7 @@
                     }
 
                 },
-                5000
+                3000
             );
     }
 
@@ -3150,6 +3819,19 @@
     ========================================================= */
 
     function setupRealtimeSubscription() {
+
+        if (!isAdminPanelOpen()) {
+            return;
+        }
+
+
+        if (
+            realtimeChannel &&
+            realtimeIsSubscribed
+        ) {
+            return;
+        }
+
 
         try {
 
@@ -3168,6 +3850,13 @@
                         }
                     }
                 );
+
+
+            lastRealtimeEventAt =
+                Date.now();
+
+            realtimeIsSubscribed =
+                false;
 
 
             realtimeChannel =
@@ -3190,12 +3879,9 @@
 
 
                             /*
-                               لا نعتمد على البيانات
-                               القادمة من Realtime مباشرة.
-
-                               نستخدم الحدث فقط كإشارة
-                               ثم نعيد جلب البيانات
-                               من Edge Function الآمنة.
+                               الحدث يستخدم كإشارة
+                               لإعادة جلب البيانات
+                               الآمنة من Edge Function.
                             */
 
                             queueFastRequestsRefresh();
@@ -3219,6 +3905,12 @@
                                 realtimeReconnectAttempts =
                                     0;
 
+                                realtimeIsSubscribed =
+                                    true;
+
+                                lastRealtimeEventAt =
+                                    Date.now();
+
                                 updateConnectionStatus(
                                     true
                                 );
@@ -3227,6 +3919,10 @@
 
                                 return;
                             }
+
+
+                            realtimeIsSubscribed =
+                                false;
 
 
                             if (
@@ -3245,6 +3941,9 @@
 
         } catch (err) {
 
+            realtimeIsSubscribed =
+                false;
+
             console.warn(
                 'Realtime غير متاح:',
                 err
@@ -3257,7 +3956,9 @@
 
     function stopRealtimeSubscription() {
 
-        if (realtimeReconnectTimer) {
+        if (
+            realtimeReconnectTimer
+        ) {
 
             clearTimeout(
                 realtimeReconnectTimer
@@ -3289,6 +3990,10 @@
 
         realtimeClient =
             null;
+
+
+        realtimeIsSubscribed =
+            false;
     }
 
 
@@ -3302,7 +4007,9 @@
         }
 
 
-        if (realtimeReconnectTimer) {
+        if (
+            realtimeReconnectTimer
+        ) {
             return;
         }
 
@@ -3359,7 +4066,9 @@
         }
 
 
-        if (realtimeReconnectTimer) {
+        if (
+            realtimeReconnectTimer
+        ) {
 
             clearTimeout(
                 realtimeReconnectTimer
@@ -3370,10 +4079,24 @@
         }
 
 
-        if (immediate) {
+        if (
+            immediate
+        ) {
 
             realtimeReconnectAttempts =
                 0;
+
+
+            if (
+                realtimeChannel &&
+                realtimeIsSubscribed
+            ) {
+
+                queueFastRequestsRefresh();
+
+                return;
+            }
+
 
             setupRealtimeSubscription();
 
@@ -3391,7 +4114,7 @@
 
     document.addEventListener(
         'visibilitychange',
-        () => {
+        async () => {
 
             if (
                 document.visibilityState ===
@@ -3404,9 +4127,13 @@
 
                     queueFastRequestsRefresh();
 
-                    reconnectRealtime(true);
+                    reconnectRealtime(
+                        true
+                    );
 
-                    unlockAudio();
+                    await unlockAudio();
+
+                    await reacquireWakeLock();
                 }
             }
         }
@@ -3424,10 +4151,13 @@
                 queueFastRequestsRefresh();
 
                 if (
-                    !realtimeChannel
+                    !realtimeChannel ||
+                    !realtimeIsSubscribed
                 ) {
 
-                    reconnectRealtime(true);
+                    reconnectRealtime(
+                        true
+                    );
                 }
             }
         }
@@ -3444,14 +4174,41 @@
 
                 queueFastRequestsRefresh();
 
-                reconnectRealtime(true);
+                if (
+                    !realtimeChannel ||
+                    !realtimeIsSubscribed
+                ) {
+
+                    reconnectRealtime(
+                        true
+                    );
+                }
             }
         }
     );
 
 
+    window.addEventListener(
+        'beforeunload',
+        () => {
+
+            try {
+
+                if (
+                    wakeLock &&
+                    !wakeLock.released
+                ) {
+
+                    wakeLock.release();
+                }
+
+            } catch (e) {}
+        }
+    );
+
+
     /* =========================================================
-       فحص دوري لصحة Realtime
+       فحص صحة Realtime
     ========================================================= */
 
     setInterval(
@@ -3465,11 +4222,6 @@
             }
 
 
-            /*
-               إذا لم يصل أي حدث Realtime لفترة طويلة،
-               نحاول التأكد من أن الاتصال لا يزال حيًا.
-            */
-
             const now =
                 Date.now();
 
@@ -3479,13 +4231,22 @@
                 lastRealtimeEventAt;
 
 
+            /*
+               إذا لم تصل أحداث لفترة طويلة
+               وكان الاشتراك غير مستقر،
+               نعيد الاتصال.
+            */
+
             if (
                 !realtimeChannel ||
+                !realtimeIsSubscribed ||
                 timeSinceRealtime >
                 15 * 60 * 1000
             ) {
 
-                reconnectRealtime(true);
+                reconnectRealtime(
+                    true
+                );
             }
 
         },
@@ -3529,6 +4290,17 @@
             '';
 
 
+        if (refreshDebounceTimer) {
+
+            clearTimeout(
+                refreshDebounceTimer
+            );
+
+            refreshDebounceTimer =
+                null;
+        }
+
+
         if (pieChartInstance) {
 
             pieChartInstance.destroy();
@@ -3536,6 +4308,22 @@
             pieChartInstance =
                 null;
         }
+
+
+        try {
+
+            if (
+                wakeLock &&
+                !wakeLock.released
+            ) {
+
+                wakeLock.release();
+            }
+
+        } catch (e) {}
+
+
+        wakeLock = null;
 
 
         document
@@ -4024,11 +4812,13 @@
                     </div>
 
                     <div>
+
                         <img
                             src="https://i.ibb.co/ddsMPQH/logo.png"
                             alt="شعار المدرسة"
                             class="report-logo"
                         >
+
                     </div>
 
                 </div>
@@ -4149,7 +4939,9 @@
 
                         <td>
                             <b>
-                                ${escapeHTML(r.student_name)}
+                                ${escapeHTML(
+                                    r.student_name
+                                )}
                             </b>
                         </td>
 
@@ -4161,7 +4953,9 @@
                         </td>
 
                         <td>
-                            ${escapeHTML(reqType)}
+                            ${escapeHTML(
+                                reqType
+                            )}
                         </td>
 
                         <td>
@@ -4186,7 +4980,9 @@
                         </td>
 
                         <td>
-                            ${escapeHTML(statusText)}
+                            ${escapeHTML(
+                                statusText
+                            )}
                         </td>
 
                         <td>
