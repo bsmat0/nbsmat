@@ -1,0 +1,28 @@
+/* Reusable school brand opening: only the home page loads this component. */
+.brand-intro{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 47%,#38264f 0%,#21182f 42%,#130f1d 100%);color:#fff;opacity:1;visibility:visible;transition:opacity .62s cubic-bezier(.22,.7,.25,1),visibility .62s;isolation:isolate}
+html.brand-intro-pending .brand-intro{display:flex}
+.brand-intro::before{position:absolute;inset:0;z-index:-1;background:linear-gradient(125deg,transparent 20%,rgba(243,177,55,.035) 50%,transparent 78%);content:""}
+.brand-intro-aura{position:absolute;width:min(70vw,650px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(151,105,198,.13),rgba(243,177,55,.035) 34%,transparent 69%);filter:blur(12px);animation:brandAuraBreath 3.5s ease-in-out both;pointer-events:none}
+.brand-intro-stage{position:relative;display:grid;place-items:center;width:min(86vw,560px);height:190px;perspective:1000px;animation:brandStageSettle 3.25s cubic-bezier(.22,.72,.2,1) both}
+.brand-intro-n{position:absolute;color:#f8f5fb;font:900 clamp(68px,15vw,132px)/1 Arial,Helvetica,sans-serif;text-shadow:0 2px 0 #d7c9e4,0 5px 0 #8c76a5,0 9px 16px rgba(0,0,0,.58),0 0 36px rgba(210,183,235,.16);transform-style:preserve-3d;animation:brandNLead .68s cubic-bezier(.2,.7,.2,1) .05s both}
+.brand-intro-word{display:flex;align-items:center;justify-content:center;gap:clamp(2px,.9vw,9px);white-space:nowrap;color:#f8f5fb;font-family:Arial,Helvetica,sans-serif;font-size:clamp(62px,13vw,116px);font-weight:900;letter-spacing:.035em;line-height:1;text-shadow:0 2px 0 #d7c9e4,0 5px 0 #8c76a5,0 9px 16px rgba(0,0,0,.58),0 0 36px rgba(210,183,235,.16);transform-style:preserve-3d;animation:brandWordFinish 3.38s ease-in-out both}
+.brand-letter{display:inline-block;opacity:0;transform:translate3d(34px,0,52px) rotateY(-35deg) scale(.76);transform-origin:center;animation:brandLetterGather .43s cubic-bezier(.16,.78,.25,1) both;animation-delay:var(--letter-delay,0s);backface-visibility:hidden}
+.brand-letter-b{--letter-delay:.46s}.brand-letter-s{--letter-delay:.80s}.brand-letter-m{--letter-delay:1.14s}.brand-letter-a{--letter-delay:1.48s}.brand-letter-t{--letter-delay:1.82s}
+.brand-intro-official{position:absolute;width:clamp(150px,20vw,210px);height:clamp(150px,20vw,210px);object-fit:contain;opacity:0;transform:translateY(8px) scale(.88);transform-origin:center;will-change:transform,opacity;filter:drop-shadow(0 12px 28px rgba(0,0,0,.36));animation:brandOfficialArrive .66s cubic-bezier(.18,.75,.24,1) 2.76s both;transition:transform .66s cubic-bezier(.2,.72,.22,1),opacity .3s ease}
+.brand-intro-skip{position:absolute;right:max(22px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));padding:8px 14px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(255,255,255,.055);color:rgba(255,255,255,.7);font-family:inherit;font-size:12px;font-weight:600;line-height:1.2;opacity:.78;cursor:pointer;transition:opacity .2s,background .2s,border-color .2s}
+.brand-intro-skip:hover,.brand-intro-skip:focus-visible{opacity:1;background:rgba(255,255,255,.11);border-color:rgba(243,177,55,.58);outline:none}
+.brand-intro-skip.is-hidden{opacity:0;pointer-events:none}
+.brand-intro.is-leaving{opacity:0;visibility:hidden;pointer-events:none}
+.brand-intro.is-traveling .brand-intro-word{opacity:0;transition:opacity .3s ease}
+@keyframes brandLetterGather{0%{opacity:0;transform:translate3d(34px,0,52px) rotateY(-35deg) scale(.76)}65%{opacity:1;transform:translate3d(-3px,-2px,8px) rotateY(7deg) scale(1.035)}100%{opacity:1;transform:translate3d(0,0,0) rotateY(0) scale(1)}}
+@keyframes brandNLead{0%{opacity:0;transform:translate3d(0,6px,0) scale(.88)}28%{opacity:1;transform:translate3d(0,0,0) scale(1)}68%{opacity:1;transform:translate3d(0,-3px,54px) scale(1.13)}100%{opacity:0;transform:translate3d(-18px,0,82px) scale(.76)}}
+@keyframes brandWordFinish{0%,68%{transform:translate3d(0,-12px,0) scale(.94)}77%,88%{transform:translate3d(0,0,0) scale(1.025)}100%{transform:translate3d(0,0,0) scale(.88);opacity:0}}
+@keyframes brandOfficialArrive{0%{opacity:0;transform:translateY(8px) scale(.88)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes brandStageSettle{0%,63%{transform:translateY(-12px) scale(.94)}76%,100%{transform:translateY(0) scale(1)}}
+@keyframes brandAuraBreath{0%{opacity:0;transform:scale(.84)}28%,78%{opacity:1;transform:scale(1)}100%{opacity:.65;transform:scale(1.08)}}
+.portal-hero .portal-center-logo{width:clamp(132px,14vw,156px);height:clamp(132px,14vw,156px)}
+.admin-login-mark{width:76px;height:76px}
+.admin-dashboard-brand>img{width:82px;height:82px;flex-basis:82px}
+@media(max-width:560px){.brand-intro-stage{height:150px}.brand-intro-word{font-size:clamp(58px,15vw,82px);gap:2px}.brand-intro-n{font-size:clamp(68px,17vw,100px)}.brand-intro-official{width:156px;height:156px}.brand-intro-skip{right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom))}.portal-hero .portal-center-logo{width:122px;height:122px}.admin-login-mark{width:68px;height:68px}.admin-dashboard-brand>img{width:60px;height:60px;flex-basis:60px}}
+@media(prefers-reduced-motion:reduce){.brand-intro,.brand-intro *{animation:none!important;transition:none!important}}
+
