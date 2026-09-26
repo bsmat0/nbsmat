@@ -47,7 +47,7 @@
       }else if(endpoint==='delegation-api'){
         headers['x-parent-session']=token;
         headers['x-parent-client-id']=getClientId();
-      }else if(endpoint==='parent-api') headers['x-parent-session']=token;
+      }else if(endpoint==='parent-api'){headers['x-parent-session']=token;headers['x-parent-client-id']=getClientId();}
     }
     if(endpoint==='parent-login') headers['x-parent-client-id']=getClientId();
     return headers;

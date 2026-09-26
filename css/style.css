@@ -27,3 +27,9 @@
 #requestStatus.request-status-feedback{font-size:17px;font-weight:900;line-height:1.8;padding:13px 15px}
 #requestStatus.request-status-feedback[data-state="approved"]{font-size:19px}
 body.site-dark #requestStatus.request-status-feedback[data-state="approved"]{color:#baf2d0}
+
+/* Parent identity/mobile verification indicators — same visual language, no layout shift. */
+.verified-field{display:flex;align-items:center;gap:8px}.verified-field input{flex:1;min-width:0}.field-verification{width:28px;height:28px;flex:0 0 28px;display:inline-grid;place-items:center;border-radius:50%;font-size:18px;font-weight:950;line-height:1;border:1px solid currentColor}.field-verification.ok{color:#1e8a50;background:rgba(46,213,115,.12)}.field-verification.warn{color:#c33a46;background:rgba(255,71,87,.11)}
+@media(max-width:620px){.field-verification{width:26px;height:26px;flex-basis:26px;font-size:16px}}
+
+.verification-summary{display:grid;gap:7px;margin:10px 0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#faf8fc}.verification-summary-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;color:var(--muted)}.verification-summary-row strong{font-size:11px;font-weight:900}.verified-summary-ok{color:#21884a}.verified-summary-warn{color:#c33a46}

@@ -16,7 +16,7 @@
   }
 
   async function loadParentDelegates(){
-    state.parentToken=sessionStorage.getItem(Bsmat.keys.parentSession);if(!state.parentToken){parentMessage('سجلي دخول ولي الأمر لإدارة المفوضين.');return}
+    state.parentToken=localStorage.getItem(Bsmat.keys.parentSession);if(!state.parentToken){parentMessage('سجلي دخول ولي الأمر لإدارة المفوضين.');return}
     const list=$('#parentDelegations');list.classList.remove('hidden');list.replaceChildren();parentMessage('جارٍ تحميل المفوضين…');
     try{
       const data=await Bsmat.request('delegation-api',{body:{action:'list_delegates',parent_session:state.parentToken},token:state.parentToken});const delegates=data.delegates||[];const active=data.active_sessions||[];
@@ -44,7 +44,7 @@
   $('#delegateClose').addEventListener('click',()=>dialog.close());
 
   $('#delegateManageForm').addEventListener('submit',async event=>{
-    event.preventDefault();state.parentToken=sessionStorage.getItem(Bsmat.keys.parentSession);if(!state.parentToken){parentMessage('انتهت جلسة ولي الأمر. سجلي الدخول مجددًا لإدارة المفوضين.');return}
+    event.preventDefault();state.parentToken=localStorage.getItem(Bsmat.keys.parentSession);if(!state.parentToken){parentMessage('انتهت جلسة ولي الأمر. سجلي الدخول مجددًا لإدارة المفوضين.');return}
     const name=$('#delegateName').value.trim(),mobile=$('#delegateMobile').value.replace(/\D/g,''),type=$('#delegationType').value;if(name.length<3){parentMessage('اسم المفوض مطلوب.');return}if(!/^05\d{8}$/.test(mobile)){parentMessage('أدخلي رقم جوال صحيحًا يبدأ بـ 05.');return}
     const submit=event.submitter;submit.disabled=true;try{
       const identity=$('#identity').value.replace(/\D/g,''),parentMobile=$('#mobile').value.replace(/\D/g,'');

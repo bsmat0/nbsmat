@@ -55,6 +55,20 @@
   function stopPoll(){if(state.poll)clearInterval(state.poll);state.poll=null}
   function showHome(){setHeaderAction(false);stopPoll();const utility=$('#parentUtilityCard');if(utility){clearInterval(utility._timer);utility._timer=null;utility.classList.add('hidden')}screen.classList.add('hidden');home.classList.remove('hidden');$('#parentDelegatePanel').classList.add('hidden');$('#parentDelegateManagement').classList.add('hidden');$('#toggleDelegateManagement')?.setAttribute('aria-expanded','false')}
   function validSession(){return Boolean(state.token&&state.parent)}
+  function setFieldVerification(id, state, text){
+    const el=$('#'+id);if(!el)return;
+    el.className='field-verification '+(state||'');
+    el.textContent=text||'';
+    el.classList.toggle('hidden',!state);
+  }
+  function clearFieldVerification(){setFieldVerification('identityCheck','','');setFieldVerification('mobileCheck','','');$('#verificationSummary')?.classList.add('hidden');$('#summaryIdentity').textContent='—';$('#summaryMobile').textContent='—'}
+  function renderVerificationSummary(identity,mobile,mobileMatch){
+    const wrap=$('#verificationSummary');if(!wrap)return;
+    $('#summaryIdentity').textContent='✓ تم التحقق';$('#summaryIdentity').className='verified-summary-ok';
+    $('#summaryMobile').textContent=mobileMatch?'✓ مطابق':'تم إدخال الرقم';
+    $('#summaryMobile').className=mobileMatch?'verified-summary-ok':'';
+    wrap.classList.remove('hidden');
+  }
   function readSchoolSchedule(){
     const fallback={dayStartTime:'06:00',dismissalTime:'15:00'};
     try{const raw=localStorage.getItem('bsmat.school.schedule.v1');if(raw){const v=JSON.parse(raw);return {...fallback,...v}}}catch{}
@@ -185,8 +199,8 @@
   });
 
   $('[data-home]').addEventListener('click',showHome);
-  $('#identity').addEventListener('input',e=>{e.target.value=digits(e.target.value).slice(0,10)});
-  $('#mobile').addEventListener('input',e=>{e.target.value=digits(e.target.value).slice(0,10)});
+  $('#identity').addEventListener('input',e=>{e.target.value=digits(e.target.value).slice(0,10);clearFieldVerification()});
+  $('#mobile').addEventListener('input',e=>{e.target.value=digits(e.target.value).slice(0,10);clearFieldVerification()});
   $('#delegateMobile').addEventListener('input',e=>{e.target.value=digits(e.target.value).slice(0,10)});
   $('#reason').addEventListener('input',e=>{$('#count').textContent=`${e.target.value.length} / 100`});
   $('#delegateCode').addEventListener('input',e=>{e.target.value=digits(e.target.value).slice(0,4)});
@@ -202,8 +216,13 @@
     try{
       const data=await Bsmat.request('parent-login',{body:{action:'parent_login',national_id:identity,mobile,parent_client_id:Bsmat.getClientId()}});
       state.parent=data.parent||{};state.token=data.parent_session||data.session_token||data.token;if(!state.token)throw new Error('لم يُرجع الخادم جلسة ولي أمر.');
-      sessionStorage.setItem(Bsmat.keys.parentSession,state.token);sessionStorage.setItem(Bsmat.keys.parentData,JSON.stringify(state.parent));sessionStorage.setItem('bsmat.parent.mobile',mobile);
-      state.children=mergeChildrenStable(data.students||data.children||[]);state.selected.clear();$('#parentGreeting').textContent=state.parent.display_name||'ولي الأمر';$('#parentForm').classList.add('hidden');$('#parentSessionBar').classList.remove('hidden');drawChildren();loadRequestHistory();say('تم التحقق. اختاري طالبًا أو أكثر.',true);
+      const mobileMatch=data.mobile_match===true;
+      setFieldVerification('identityCheck','ok','✓');
+      setFieldVerification('mobileCheck',mobileMatch?'ok':'','✓');
+      renderVerificationSummary(identity,mobile,mobileMatch);
+      localStorage.setItem(Bsmat.keys.parentSession,state.token);localStorage.setItem(Bsmat.keys.parentData,JSON.stringify({...state.parent,mobile_match:mobileMatch,national_id:identity}));localStorage.setItem('bsmat.parent.mobile',mobile);sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData);sessionStorage.removeItem('bsmat.parent.mobile');
+      state.children=mergeChildrenStable(data.students||data.children||[]);state.selected.clear();$('#parentGreeting').textContent=state.parent.display_name||'ولي الأمر';$('#parentForm').classList.add('hidden');$('#parentSessionBar').classList.remove('hidden');drawChildren();loadRequestHistory();
+      if(mobileMatch)say('تم التحقق من الهوية ورقم الجوال. اختاري طالبًا أو أكثر.',true);else say('تم التحقق من الهوية. يمكنك المتابعة واختيار الطلاب.',true);
     }catch(error){if(error?.data?.device_pending)say('هذا الحساب مرتبط بجهاز آخر. تمت إحالة الجهاز الجديد إلى إدارة المدرسة للمراجعة.');else say(error.message)}finally{button.disabled=false;button.textContent='عرض الأبناء المسجلين'}
   });
 
@@ -222,11 +241,11 @@
 
   async function logoutParent(){
     try{if(state.token)await Bsmat.request('parent-session',{body:{action:'logout',parent_session:state.token,parent_client_id:Bsmat.getClientId()},token:state.token})}catch{}
-    stopPoll();state.parent=state.token=null;state.children=[];state.selected.clear();sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData);sessionStorage.removeItem('bsmat.parent.mobile');$('#identity').value='';$('#mobile').value='';$('#students').replaceChildren();$('#studentsWrap').classList.add('hidden');$('#parentForm').classList.remove('hidden');$('#parentSessionBar').classList.add('hidden');$('#parentDelegatePanel').classList.add('hidden');$('#parentDelegateManagement').classList.add('hidden');$('#toggleDelegateManagement').setAttribute('aria-expanded','false');showHome();
+    stopPoll();clearFieldVerification();state.parent=state.token=null;state.children=[];state.selected.clear();localStorage.removeItem(Bsmat.keys.parentSession);localStorage.removeItem(Bsmat.keys.parentData);localStorage.removeItem('bsmat.parent.mobile');sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData);sessionStorage.removeItem('bsmat.parent.mobile');$('#identity').value='';$('#mobile').value='';$('#students').replaceChildren();$('#studentsWrap').classList.add('hidden');$('#parentForm').classList.remove('hidden');$('#parentSessionBar').classList.add('hidden');$('#parentDelegatePanel').classList.add('hidden');$('#parentDelegateManagement').classList.add('hidden');$('#toggleDelegateManagement').setAttribute('aria-expanded','false');showHome();
   }
   $('#headerPortalAction').addEventListener('click',event=>{if($('#headerPortalAction').dataset.action!=='logout')return;event.preventDefault();logoutParent()});
 
-  try{state.token=sessionStorage.getItem(Bsmat.keys.parentSession);const stored=sessionStorage.getItem(Bsmat.keys.parentData);state.parent=stored?JSON.parse(stored):null;if(validSession())$('#parentGreeting').textContent=`مرحبًا ${state.parent.display_name||'بعودتك'}`}catch{sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData)}
+  try{let storedToken=localStorage.getItem(Bsmat.keys.parentSession),storedData=localStorage.getItem(Bsmat.keys.parentData),storedMobile=localStorage.getItem('bsmat.parent.mobile');if(!storedToken){storedToken=sessionStorage.getItem(Bsmat.keys.parentSession);storedData=sessionStorage.getItem(Bsmat.keys.parentData);storedMobile=sessionStorage.getItem('bsmat.parent.mobile');if(storedToken){localStorage.setItem(Bsmat.keys.parentSession,storedToken);if(storedData)localStorage.setItem(Bsmat.keys.parentData,storedData);if(storedMobile)localStorage.setItem('bsmat.parent.mobile',storedMobile);sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData);sessionStorage.removeItem('bsmat.parent.mobile')}}state.token=storedToken||null;state.parent=storedData?JSON.parse(storedData):null;if(validSession())$('#parentGreeting').textContent=`مرحبًا ${state.parent.display_name||'بعودتك'}`}catch{localStorage.removeItem(Bsmat.keys.parentSession);localStorage.removeItem(Bsmat.keys.parentData);localStorage.removeItem('bsmat.parent.mobile');sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData);sessionStorage.removeItem('bsmat.parent.mobile')}
   updateCooldownButton();
   setHeaderAction(Boolean(screen && !screen.classList.contains('hidden')));
   renderParentUtility();

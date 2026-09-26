@@ -3,7 +3,7 @@
 
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const esc=Bsmat.escape;
-  const login=$('#loginPanel'),dashboard=$('#dashboard'),content=$('#adminContent'),loginForm=$('#loginForm'),password=$('#password'),loginMessage=$('#loginMessage'),dialog=$('#adminDialog'),dialogForm=$('#adminDialogForm'),toast=$('#adminToast'),printRoot=$('#printOnlyReport');
+  const login=$('#loginPanel'),dashboard=$('#dashboard'),content=$('#adminContent'),loginForm=$('#loginForm'),nationalId=$('#nationalId'),password=$('#password'),loginMessage=$('#loginMessage'),dialog=$('#adminDialog'),dialogForm=$('#adminDialogForm'),toast=$('#adminToast'),printRoot=$('#printOnlyReport');
   const localSettingsKey='bsmat.admin.preferences.v5';
   let token=sessionStorage.getItem(Bsmat.keys.adminSession), activeTab='stats', dialogSave=null, requestAuditMap=new Map();
 
@@ -243,7 +243,7 @@
       <div class="nested-stack">
         <details class="admin-nested-panel nested-item" open><summary><span>حسابات أولياء الأمور</span><em>${rows.length}</em></summary><div class="nested-body">
           <div class="admin-toolbar"><input id="parentSearch" placeholder="بحث بالاسم أو رقم الهوية"><button id="addParent" class="button primary" type="button">إضافة ولي أمر</button><button id="parentRefresh" class="button quiet" type="button">تحديث</button></div>
-          <div class="table-wrap admin-table-card"><table class="admin-table"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الأبناء</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="parentRows">${rows.map(r=>`<tr data-search="${esc([r.display_name,r.national_id].join(' ').toLowerCase())}"><td><strong>${esc(r.display_name||'—')}</strong><small>${esc(r.relationship||'')}</small></td><td dir="ltr">${esc(r.national_id||'—')}</td><td>${(r.students||[]).length} أبناء</td><td><span class="status-chip ${esc(r.status||'')}">${esc(r.status==='active'?'فعال':r.status==='blocked'?'موقوف':'مراجعة')}</span></td><td><div class="actions"><button class="button quiet compact-action" data-edit-parent="${esc(r.id)}" type="button">تعديل</button><button class="button reject compact-action" data-delete-parent="${esc(r.id)}" type="button">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="5"><div class="empty-state">لا توجد حسابات.</div></td></tr>'}</tbody></table></div>
+          <div class="table-wrap admin-table-card"><table class="admin-table"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الأبناء</th><th>الحالة</th><th>الجهاز</th><th>إجراء</th></tr></thead><tbody id="parentRows">${rows.map(r=>{const pd=devices.filter(dv=>String(dv.parent_id)===String(r.id));const active=pd.filter(dv=>dv.status==='approved').length;const pending=pd.filter(dv=>dv.status==='pending').length;const deviceText=active?'جهاز مرتبط':pending?'جهاز بانتظار الاعتماد':'لا يوجد جهاز';const deviceClass=active?'active':pending?'pending attention-red':'muted';return `<tr data-search="${esc([r.display_name,r.national_id].join(' ').toLowerCase())}"><td><strong>${esc(r.display_name||'—')}</strong><small>${esc(r.relationship||'')}</small></td><td dir="ltr">${esc(r.national_id||'—')}</td><td>${(r.students||[]).length} أبناء</td><td><span class="status-chip ${esc(r.status||'')}">${esc(r.status==='active'?'فعال':r.status==='blocked'?'موقوف':'مراجعة')}</span></td><td><span class="status-chip ${deviceClass}">${deviceText}</span>${pending?`<small class="device-pending-note">يوجد جهاز جديد ينتظر الاعتماد</small>`:''}</td><td><div class="actions"><button class="button quiet compact-action" data-edit-parent="${esc(r.id)}" type="button">تعديل</button><button class="button reject compact-action" data-delete-parent="${esc(r.id)}" type="button">حذف</button></div></td></tr>`}).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد حسابات.</div></td></tr>'}</tbody></table></div>
         </div></details>
         <details class="admin-nested-panel nested-item" ${pendingDevices.length?'open':''}><summary><span>طلبات ربط الأجهزة</span><em>${pendingDevices.length}</em></summary><div class="nested-body">${renderDeviceRequests(pendingDevices)}</div></details>
         <details class="admin-nested-panel nested-item"><summary><span>سجل تسجيلات أولياء الأمور</span><em>${registrations.length}</em></summary><div class="nested-body">${renderRegistrations(registrations.slice(0,100))}</div></details>
@@ -254,14 +254,27 @@
     $$('[data-edit-parent]').forEach(b=>b.onclick=()=>openParentEdit(rowsMap.get(String(b.dataset.editParent))));
     $$('[data-delete-parent]').forEach(b=>b.onclick=async()=>{if(!confirm('قد يؤدي حذف ولي الأمر إلى رفض العملية إذا كانت له سجلات مرتبطة. هل تريدين المتابعة؟'))return;const before=rowsMap.get(String(b.dataset.deleteParent));try{await call('admin_delete_parent',{parent_id:b.dataset.deleteParent});await logDetailedChange('admin_delete_parent','parent','ولي الأمر '+(before?.display_name||b.dataset.deleteParent),before||null,null,{method:'تم حذف حساب ولي الأمر من لوحة الإدارة بعد التحقق من السجلات المرتبطة.'});notify('تم حذف ولي الأمر.');await load('parents')}catch(e){alert(e.message)}});
     $$('[data-device-action]').forEach(b=>b.onclick=async()=>{b.disabled=true;const before=devices.find(x=>String(x.id)===String(b.dataset.deviceAction));try{await call('admin_update_parent_device',{device_id:b.dataset.deviceAction,status:b.dataset.deviceStatus});await logDetailedChange('admin_edit_parent_device','device','جهاز ولي الأمر '+b.dataset.deviceAction,{status:before?.status||'pending',device_id:before?.id||b.dataset.deviceAction},{status:b.dataset.deviceStatus,device_id:b.dataset.deviceAction},{method:b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز من لوحة الإدارة.':'تم رفض جهاز ولي الأمر من لوحة الإدارة.'});notify(b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز.':'تم رفض الجهاز.');await load('parents')}catch(e){alert(e.message);b.disabled=false}});
+    $$('[data-verify-mobile]').forEach(b=>b.onclick=async()=>{
+      if(!confirm('هل أنتِ متأكدة أن هذا رقم ولي الأمر؟'))return;
+      b.disabled=true;
+      try{
+        const result=await call('admin_verify_parent_registration',{registration_id:b.dataset.verifyMobile});
+        notify(result.message||'تم توثيق رقم الجوال وربطه بولي الأمر.');
+        await load('parents');
+      }catch(e){alert(e.message);b.disabled=false}
+    });
   }
   function renderDeviceRequests(devices){
     if(!devices.length)return '<div class="empty-state">لا توجد طلبات أجهزة معلقة.</div>';
-    return `<div class="device-request-grid">${devices.map(d=>`<article class="device-request"><div><strong>${esc(d.display_name||'ولي أمر')}</strong><small dir="ltr">${esc(d.national_id||'')}</small></div><span class="muted">${dateLabel(d.created_at)}</span><div class="actions"><button class="button primary" data-device-action="${esc(d.id)}" data-device-status="approved" type="button">اعتماد</button><button class="button reject" data-device-action="${esc(d.id)}" data-device-status="rejected" type="button">رفض</button></div></article>`).join('')}</div>`;
+    return `<div class="device-request-grid">${devices.map(d=>`<article class="device-request data-device-pending"><div><strong>${esc(d.display_name||'ولي أمر')}</strong><small dir="ltr">${esc(d.national_id||'')}</small></div><strong class="device-alert-title">✕ جهاز جديد ينتظر التحقق</strong><span class="muted">${dateLabel(d.created_at)}</span><p class="device-pending-help">لن يُسمح بربطه إذا كان هناك جهاز آخر مرتبط حاليًا. يجب تسجيل خروج ولي الأمر أولًا.</p><div class="actions"><button class="button primary" data-device-action="${esc(d.id)}" data-device-status="approved" type="button">اعتماد وربط الجهاز</button><button class="button reject" data-device-action="${esc(d.id)}" data-device-status="rejected" type="button">رفض</button></div></article>`).join('')}</div>`;
   }
   function renderRegistrations(rows){
     if(!rows.length)return '<div class="empty-state">لا توجد تسجيلات.</div>';
-    return `<div class="table-wrap admin-table-card"><table class="admin-table"><thead><tr><th>ولي الأمر</th><th>الجوال المدخل</th><th>وقت التسجيل</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.parent_name||'ولي أمر')}</td><td dir="ltr">${esc(r.entered_mobile||'—')}</td><td>${dateLabel(r.created_at)}</td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="table-wrap admin-table-card"><table class="admin-table registration-table"><thead><tr><th>ولي الأمر</th><th>الجوال المدخل</th><th>الحالة</th><th>وقت التسجيل</th></tr></thead><tbody>${rows.map(r=>{
+      const match=r.mobile_match===true||r.status==='auto_approved'||r.status==='approved';
+      const status=match?'<span class="registration-status verified">✓ مطابق</span>':`<button class="registration-status needs-review" type="button" data-verify-mobile="${esc(r.id)}">✕ يرجى التحقق</button>`;
+      return `<tr><td><strong>${esc(r.parent_name||'ولي أمر')}</strong><small dir="ltr">${esc(r.parent_national_id||'—')}</small></td><td dir="ltr">${esc(r.entered_mobile||'—')}</td><td>${status}</td><td>${dateLabel(r.created_at)}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
   }
   function openParentDialog(){openDialog('إضافة ولي أمر','<div class="dialog-form-grid"><label>الاسم<input name="display_name" required maxlength="200"></label><label>رقم الهوية<input name="national_id" inputmode="numeric" maxlength="10" required></label><label>رقم الجوال<input name="mobile" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" required></label><label>صلة القرابة<input name="relationship" maxlength="80" value="ولي أمر"></label></div>',async form=>{try{const data=Object.fromEntries(form.entries());await call('admin_create_parent',data);await logDetailedChange('admin_add_parent','parent','ولي الأمر '+(data.display_name||''),null,{display_name:data.display_name,national_id:data.national_id,mobile:data.mobile,relationship:data.relationship},{method:'تمت إضافة حساب ولي الأمر من لوحة الإدارة.'});closeDialog();notify('تمت إضافة ولي الأمر.');await load('parents')}catch(e){alert(e.message)}},'إضافة ولي الأمر')}
   function openParentEdit(row){const body=`<div class="dialog-form-grid"><label>الاسم<input name="display_name" required maxlength="200" value="${esc(row?.display_name||'')}"></label><label>رقم الهوية<input name="national_id" inputmode="numeric" maxlength="10" required value="${esc(row?.national_id||'')}"></label><label>رقم الجوال<input name="mobile" inputmode="numeric" maxlength="10" required placeholder="05xxxxxxxx" value="${esc(row?.mobile||'')}"></label><label>صلة القرابة<input name="relationship" maxlength="80" value="${esc(row?.relationship||'ولي أمر')}"></label><label>الحالة<select name="status"><option value="active" ${row?.status==='active'?'selected':''}>فعال</option><option value="blocked" ${row?.status==='blocked'?'selected':''}>موقوف</option><option value="pending_review" ${row?.status==='pending_review'?'selected':''}>مراجعة</option></select></label></div><p class="muted">يجب إدخال رقم الجوال الأساسي عند التعديل.</p>`;openDialog('تعديل ولي الأمر',body,async form=>{try{const after=Object.fromEntries(form.entries());await call('admin_update_parent',{parent_id:row.id,...after});await logDetailedChange('admin_edit_parent','parent','ولي الأمر '+(row.display_name||row.id),{display_name:row.display_name,national_id:row.national_id,mobile:row.mobile,relationship:row.relationship,status:row.status},{display_name:after.display_name,national_id:after.national_id,mobile:after.mobile,relationship:after.relationship,status:after.status},{method:'تم تعديل بيانات ولي الأمر من نموذج إدارة أولياء الأمور.'});closeDialog();notify('تم تحديث بيانات ولي الأمر.');await load('parents')}catch(e){alert(e.message)}},'حفظ التعديل')}
@@ -549,19 +562,24 @@
     livePoll=setInterval(()=>syncLiveRequests(false),4000);
   }
 
+  nationalId?.addEventListener('input',()=>{nationalId.value=String(nationalId.value||'').replace(/\D/g,'').slice(0,10)});
+  password?.addEventListener('input',()=>{password.value=String(password.value||'').replace(/\D/g,'')});
   loginForm.addEventListener('submit',async event=>{
     event.preventDefault();
     primeSoundContext();
+    const nid=String(nationalId?.value||'').trim();
     const pass=String(password.value||'').trim();
-    if(!pass){loginMessage.textContent='أدخلي الرقم السري.';return}
+    if(!/^\d{10}$/.test(nid)){loginMessage.textContent='أدخلي رقم الهوية المكون من 10 أرقام.';nationalId?.focus();return}
+    if(!pass){loginMessage.textContent='أدخلي الرقم السري.';password.focus();return}
     const button=$('#loginButton');button.disabled=true;loginMessage.textContent='جارٍ التحقق…';
     try{
-      const data=await Bsmat.request('admin-api',{body:{action:'admin_login',password:pass}});
+      const data=await Bsmat.request('admin-api',{body:{action:'admin_login',national_id:nid,password:pass}});
       token=data.session_token||data.token||'';
       if(!token)throw new Error('لم يُرجع الخادم جلسة إدارة.');
       sessionStorage.setItem(Bsmat.keys.adminSession,token);
       setLoggedIn(true);
       loginMessage.textContent='تم تسجيل الدخول بنجاح.';
+      nationalId.value='';
       password.value='';
       activateTab('stats');
       startLiveRequestMonitor();
@@ -570,7 +588,7 @@
       setLoggedIn(false);
     }finally{button.disabled=false}
   });
-  $('#logout').onclick=()=>{stopLiveRequestMonitor();sessionStorage.removeItem(Bsmat.keys.adminSession);token=null;setLoggedIn(false);password.value='';loginMessage.textContent='تم تسجيل الخروج.';notify('تم تسجيل الخروج')};
+  $('#logout').onclick=()=>{stopLiveRequestMonitor();sessionStorage.removeItem(Bsmat.keys.adminSession);token=null;setLoggedIn(false);nationalId.value='';password.value='';loginMessage.textContent='تم تسجيل الخروج.';notify('تم تسجيل الخروج')};
   $$('[data-tab]').forEach(button=>button.addEventListener('click',()=>{if(token)activateTab(button.dataset.tab)}));
   $$('[data-go-tab]').forEach(button=>button.addEventListener('click',()=>{if(token)activateTab(button.dataset.goTab)}));
   $('#staff').onclick=()=>{const card=$('#staffCard'),opened=card.classList.toggle('hidden')===false;$('#staff').setAttribute('aria-expanded',String(opened))};
