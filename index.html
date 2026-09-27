@@ -8,15 +8,15 @@
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="apple-touch-icon" href="assets/logo.png">
   <link rel="stylesheet" href="css/style.css?v=delegate-feedback-session-cleanup-v1-20260926">
-  <link rel="stylesheet" href="css/reference-design.css?v=parent-login-person-icon-size-match-20260927">
+  <link rel="stylesheet" href="css/reference-design.css?v=stable-root-admin-frame-v1-20260927">
   <link rel="stylesheet" href="css/info-pages.css">
   <link rel="stylesheet" href="css/brand-intro.css?v=nonblocking-sound-20260924">
   <script src="js/brand-intro.js?v=nonblocking-sound-20260924"></script>
   <script defer src="js/config.js?v=parent-login-bound-session-v1-20260926"></script>
   <script defer src="js/api.js?v=parent-device-session-v2-20260926"></script>
-  <script defer src="js/parent.js?v=parent-login-person-icon-v2-20260927"></script>
+  <script defer src="js/parent.js?v=stable-root-admin-frame-v1-20260927"></script>
   <script defer src="js/delegation.js?v=delegate-feedback-session-cleanup-v1-20260926"></script>
-  <script defer src="js/ui.js"></script>
+  <script defer src="js/ui.js?v=stable-root-links-v1-20260927"></script>
 </head>
 <body>
   <div class="brand-intro" id="brandIntro" data-intro-target="#home .portal-center-logo" role="dialog" aria-label="افتتاحية شعار بسمات الوعد" aria-modal="true">
@@ -39,7 +39,7 @@
       </div>
     </div>
     <div class="header-actions">
-      <a id="headerPortalAction" class="header-admin-btn" href="admin.html" aria-label="تسجيل الدخول إلى بوابة الإدارة" title="تسجيل الدخول إلى بوابة الإدارة"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="4.5" fill="currentColor" stroke="none"/><path d="M3 22c.5-5.2 3.7-8 9-8s8.5 2.8 9 8H3Z" fill="currentColor" stroke="none"/></svg></a>
+      <a id="headerPortalAction" class="header-admin-btn" href="./" aria-label="تسجيل الدخول إلى بوابة الإدارة" title="تسجيل الدخول إلى بوابة الإدارة"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="4.5" fill="currentColor" stroke="none"/><path d="M3 22c.5-5.2 3.7-8 9-8s8.5 2.8 9 8H3Z" fill="currentColor" stroke="none"/></svg></a>
       <button class="header-theme-btn" data-theme type="button" title="تبديل المظهر" aria-label="تبديل المظهر"><svg class="theme-sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2m-17.1-7.1 1.4 1.4m11.4 11.4 1.4 1.4m0-14.2-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg></button>
     </div>
   </header>
@@ -84,4 +84,5 @@
   </main>
   <dialog id="parentLogoutDialog" aria-labelledby="parentLogoutTitle"><div class="dialog-card"><p class="eyebrow">حساب ولي الأمر</p><h2 id="parentLogoutTitle">تسجيل الخروج</h2><p>هل تريدين تسجيل الخروج من حساب ولي الأمر على هذا الجهاز؟</p><div class="actions"><button id="cancelParentLogout" class="button quiet" type="button">البقاء</button><button id="confirmParentLogout" class="button reject" type="button">تسجيل الخروج</button></div></div></dialog>
   <dialog id="delegateDialog"><div class="dialog-card"><button class="close" id="delegateClose" aria-label="إغلاق">×</button><p class="eyebrow">دخول المفوض</p><form id="delegateLoginForm"><h2>استلام الطلاب</h2><label>كود التفويض<input id="delegateCode" inputmode="numeric" maxlength="4" autocomplete="one-time-code"></label><button class="button primary" id="redeem">دخول</button></form><div class="message" id="delegateMessage" role="status"></div><section id="delegateSession" class="hidden"><p id="delegateIdentity"></p><p id="delegateExpiry" class="muted"></p><h3>اختيار الطالب / الطلاب</h3><div id="delegateStudents" class="student-list"></div><div id="delegateStatus" class="status hidden" role="status"></div><button id="delegateSend" class="button primary">إرسال طلب الاستلام</button><button id="delegateLogout" class="button quiet">تسجيل خروج</button></section></div></dialog>
+  <div id="adminPortalShell" hidden><iframe id="adminPortalFrame" title="بوابة الإدارة" src="about:blank"></iframe></div>
 </body></html>

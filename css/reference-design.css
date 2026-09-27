@@ -570,3 +570,6 @@ body:has(#mainCardContainer.admin-wrap)>.site-header .staff-mini-text strong{fon
 #headerPortalAction svg{width:24px!important;height:24px!important;stroke-width:2!important}
 @media(max-width:900px){#headerPortalAction{width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;max-height:36px!important}#headerPortalAction svg{width:22px!important;height:22px!important}}
 @media(max-width:560px){#headerPortalAction{width:32px!important;min-width:32px!important;max-width:32px!important;height:32px!important;min-height:32px!important;max-height:32px!important}#headerPortalAction svg{width:20px!important;height:20px!important}}
+#adminPortalShell{position:fixed;inset:0;z-index:2147483000;background:#fff}
+#adminPortalShell[hidden]{display:none!important}
+#adminPortalFrame{display:block;width:100%;height:100vh;height:100dvh;border:0;background:#fff}

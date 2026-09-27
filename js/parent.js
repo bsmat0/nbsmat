@@ -109,7 +109,7 @@
     if(inRequest){
       action.dataset.action='logout';action.removeAttribute('href');action.setAttribute('aria-label','تسجيل الخروج');action.setAttribute('title','تسجيل الخروج');action.querySelector('svg').innerHTML=icon;
     }else{
-      action.dataset.action='admin';action.setAttribute('href','admin.html');action.setAttribute('aria-label','تسجيل الدخول إلى بوابة الإدارة');action.setAttribute('title','تسجيل الدخول إلى بوابة الإدارة');action.querySelector('svg').innerHTML=icon;
+      action.dataset.action='admin';action.setAttribute('href','./');action.setAttribute('aria-label','تسجيل الدخول إلى بوابة الإدارة');action.setAttribute('title','تسجيل الدخول إلى بوابة الإدارة');action.querySelector('svg').innerHTML=icon;
     }
   }
 
@@ -253,7 +253,14 @@
     clearParentSessionUi();clearFieldVerification();$('#identity').value='';$('#mobile').value='';showHome();
   }
   const logoutDialog=$('#parentLogoutDialog');
-  $('#headerPortalAction').addEventListener('click',event=>{if($('#headerPortalAction').dataset.action!=='logout')return;event.preventDefault();if(!logoutDialog.open)logoutDialog.showModal()});
+  $('#headerPortalAction').addEventListener('click',event=>{
+    const action=$('#headerPortalAction');
+    if(action.dataset.action==='logout'){event.preventDefault();if(!logoutDialog.open)logoutDialog.showModal();return}
+    event.preventDefault();const shell=$('#adminPortalShell'),frame=$('#adminPortalFrame');if(!shell||!frame)return;
+    sessionStorage.setItem('bsmat.adminFrameOpen','1');shell.hidden=false;frame.src='admin.html';
+  });
+  window.addEventListener('message',event=>{if(event.source!==$('#adminPortalFrame')?.contentWindow||event.data?.type!=='bsmat-close-admin')return;sessionStorage.removeItem('bsmat.adminFrameOpen');$('#adminPortalShell').hidden=true;$('#adminPortalFrame').src='about:blank'});
+  if(sessionStorage.getItem('bsmat.adminFrameOpen')==='1'){$('#adminPortalShell').hidden=false;$('#adminPortalFrame').src='admin.html'}
   $('#cancelParentLogout').addEventListener('click',()=>logoutDialog.close());
   $('#confirmParentLogout').addEventListener('click',async()=>{logoutDialog.close();await logoutParent()});
 
