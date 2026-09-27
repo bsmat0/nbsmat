@@ -1,9 +1,10 @@
 (()=>{
   'use strict';
   const $=selector=>document.querySelector(selector),dialog=$('#delegateDialog');
-  const state={token:sessionStorage.getItem(Bsmat.keys.delegateSession),data:null,selected:new Set(),parentToken:null,poll:null};
+  const state={token:sessionStorage.getItem(Bsmat.keys.delegateSession),data:null,selected:new Set(),parentToken:null,poll:null,completed:false};
   const delegateMessage=(text,ok=false)=>{const m=$('#delegateMessage');m.textContent=text||'';m.classList.toggle('ok',ok)};
   const parentMessage=(text,ok=false)=>{const m=$('#parentDelegateMessage');m.textContent=text||'';m.classList.toggle('ok',ok)};
+  const setRequestStatus=(stateKey,text)=>{const status=$('#delegateStatus');status.textContent=text||'';status.dataset.state=stateKey;status.classList.add('delegate-request-status');status.classList.remove('hidden')};
   const studentId=s=>String(s.id??s.student_id??s.school_student_id??'');
 
   function stopPoll(){if(state.poll)clearInterval(state.poll);state.poll=null}
@@ -12,7 +13,7 @@
     $('#delegateIdentity').textContent=`${delegation.delegate_name||'المفوض'} — ${payload.parent_name||'الأسرة'}`;
     $('#delegateExpiry').textContent=delegation.expires_at?`ينتهي التفويض: ${new Date(delegation.expires_at).toLocaleString('ar-SA')}`:delegation.delegation_type==='permanent'?'تفويض دائم':'';
     const box=$('#delegateStudents');box.replaceChildren();students.forEach(student=>{const id=studentId(student);if(!id)return;const label=document.createElement('label');label.className='student delegate-student';const input=document.createElement('input');input.type='checkbox';input.value=id;input.addEventListener('change',()=>input.checked?state.selected.add(id):state.selected.delete(id));const text=document.createElement('span');text.innerHTML=`<strong>${Bsmat.escape(student.student_name||student.name||'طالب')}</strong><small>${Bsmat.escape(student.class_name||student.grade||'')}</small>`;label.append(input,text);box.append(label)});
-    $('#delegateSession').classList.remove('hidden');$('#delegateLoginForm').classList.add('hidden');$('#delegateStatus').classList.add('hidden');
+    state.completed=false;$('#delegateLogout').textContent='تسجيل خروج';$('#delegateSession').classList.remove('hidden');$('#delegateLoginForm').classList.add('hidden');$('#delegateStatus').classList.add('hidden');$('#delegateStatus').classList.remove('delegate-request-status');$('#delegateStatus').removeAttribute('data-state');
   }
 
   async function loadParentDelegates(){
@@ -37,7 +38,7 @@
     loadParentDelegates,
     async restore(){try{const data=await Bsmat.request('delegate-api',{body:{action:'get_students'},token:state.token});renderSession(data);delegateMessage('',true)}catch(e){state.token=null;state.data=null;sessionStorage.removeItem(Bsmat.keys.delegateSession);$('#delegateSession').classList.add('hidden');$('#delegateLoginForm').classList.remove('hidden');delegateMessage(e.message)}},
     async redeem(){const code=$('#delegateCode').value.replace(/\D/g,'');if(!/^\d{4}$/.test(code)){delegateMessage('أدخلي كودًا من أربعة أرقام.');return}const button=$('#redeem');button.disabled=true;try{const data=await Bsmat.request('delegate-api',{body:{action:'redeem_code',access_code:code}});state.token=data.delegate_session||data.session_token||data.token;if(!state.token)throw new Error(data.message||'لم يُرجع الخادم جلسة مفوض.');sessionStorage.setItem(Bsmat.keys.delegateSession,state.token);renderSession(data);delegateMessage('تم التحقق من التفويض.',true)}catch(e){delegateMessage(e.message)}finally{button.disabled=false}},
-    async logout(){stopPoll();state.token=null;state.data=null;state.selected.clear();sessionStorage.removeItem(Bsmat.keys.delegateSession);$('#delegateSession').classList.add('hidden');$('#delegateLoginForm').classList.remove('hidden');$('#delegateCode').value='';delegateMessage('تم تسجيل الخروج.')}
+    async logout({preserveStatus=false}={}){stopPoll();state.token=null;state.data=null;state.selected.clear();sessionStorage.removeItem(Bsmat.keys.delegateSession);if(preserveStatus){state.completed=true;$('#delegateStudents').querySelectorAll('input').forEach(input=>input.disabled=true);$('#delegateSend').disabled=true;$('#delegateLogout').textContent='إغلاق';return}state.completed=false;$('#delegateStudents').replaceChildren();$('#delegateSession').classList.add('hidden');$('#delegateLoginForm').classList.remove('hidden');$('#delegateCode').value='';$('#delegateStatus').classList.add('hidden');$('#delegateStatus').classList.remove('delegate-request-status');$('#delegateStatus').removeAttribute('data-state');delegateMessage('تم تسجيل الخروج.')}
   };
 
   $('#delegateLoginForm').addEventListener('submit',e=>{e.preventDefault();BsmatDelegation.redeem()});
@@ -56,8 +57,8 @@
 
   $('#delegateSend').addEventListener('click',async event=>{
     if(!state.selected.size){delegateMessage('اختاري طالبًا واحدًا على الأقل.');return}
-    const button=event.currentTarget;button.disabled=true;const status=$('#delegateStatus');status.classList.remove('hidden');status.textContent='جاري إرسال الطلب للإدارة…';
-    try{const data=await Bsmat.request('delegate-api',{body:{action:'create_request_multi',student_ids:[...state.selected].map(Number)},token:state.token});const req=data.request||{};status.textContent=data.message||'أُرسل طلب الاستلام.';delegateMessage('تم إرسال طلب الاستلام.',true);if(req.request_token){stopPoll();const check=async()=>{try{const x=await Bsmat.request('delegate-api',{body:{action:'get_request_status',request_token:req.request_token},token:state.token});const r=x.request||{};if(r.status==='approved'){status.textContent='تمت الموافقة على طلب الاستلام.';stopPoll();if(x.auto_logged_out)BsmatDelegation.logout()}else if(r.status==='rejected'){status.textContent=`تم رفض الطلب${r.reject_reason?` — ${r.reject_reason}`:''}`;stopPoll()}}catch{}};check();state.poll=setInterval(check,5000)}}catch(e){status.textContent=e.message}finally{button.disabled=false}
+    const button=event.currentTarget;button.disabled=true;setRequestStatus('pending','جارٍ إرسال طلب الاستلام للإدارة…');
+    try{const data=await Bsmat.request('delegate-api',{body:{action:'create_request_multi',student_ids:[...state.selected].map(Number)},token:state.token});const req=data.request||{};setRequestStatus('pending','تم إرسال الطلب، بانتظار موافقة الإدارة.');delegateMessage('',true);if(req.request_token){stopPoll();let checking=false;const check=async()=>{if(checking||!state.token)return;checking=true;try{const x=await Bsmat.request('delegate-api',{body:{action:'get_request_status',request_token:req.request_token},token:state.token});const r=x.request||{};if(r.status==='approved'){setRequestStatus('approved','تمت الموافقة على طلب الاستلام.');window.BsmatParentFeedback?.approved?.();stopPoll();if(x.auto_logged_out)BsmatDelegation.logout({preserveStatus:true})}else if(r.status==='rejected'){setRequestStatus('rejected',`تم رفض الطلب${r.reject_reason?` — ${r.reject_reason}`:''}`);window.BsmatParentFeedback?.rejected?.();stopPoll()}}catch(e){if(e?.status===401||e?.status===403){setRequestStatus('rejected','انتهت جلسة التفويض قبل تحديث حالة الطلب.');stopPoll()}}finally{checking=false}};check();state.poll=setInterval(check,2000)}}catch(e){setRequestStatus('rejected',e.message||'تعذر إرسال طلب الاستلام.');delegateMessage(e.message)}finally{button.disabled=state.completed?true:false}
   });
-  $('#delegateLogout').addEventListener('click',()=>BsmatDelegation.logout());
+  $('#delegateLogout').addEventListener('click',()=>state.completed?dialog.close():BsmatDelegation.logout());
 })();

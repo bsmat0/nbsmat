@@ -548,7 +548,7 @@ body:has(#mainCardContainer.admin-wrap)>.site-header .staff-mini-text strong{fon
 
 
 /* Requested parent-flow refinements: keep children vertically ordered and the action directly underneath them. */
-#request.service-screen .children-grid{grid-template-columns:1fr!important}
+#request.service-screen .children-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 #request.service-screen #sendRequest{order:0!important}
 #request.service-screen .parent-bottom-grid{margin-top:12px}
 #parentSessionBar{padding:15px 17px!important;min-height:64px}
@@ -556,7 +556,9 @@ body:has(#mainCardContainer.admin-wrap)>.site-header .staff-mini-text strong{fon
 #parentSessionBar .parent-session-identity small{font-size:13px!important}
 #parentSessionBar .parent-session-identity strong{font-size:20px!important}
 #parentSessionBar .parent-session-identity{gap:12px}
-#request.service-screen .children-grid .child-card{grid-template-columns:60px minmax(0,1fr) 28px}
+#request.service-screen .children-grid .child-card{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto 1fr auto;justify-items:center;align-content:center;gap:6px;min-width:0;min-height:0;aspect-ratio:1/1;padding:10px;text-align:center}
+#request.service-screen .children-grid .child-card-copy{min-width:0;text-align:center}
+#request.service-screen .children-grid .child-card-copy small{justify-content:center}
 @media(max-width:620px){#parentSessionBar .parent-session-identity strong{font-size:18px!important}}
 
 /* Icon-only header portal links match the adjacent theme control. */
@@ -564,3 +566,7 @@ body:has(#mainCardContainer.admin-wrap)>.site-header .staff-mini-text strong{fon
 .site-header .header-admin-btn svg{width:30px!important;height:30px!important}
 @media(max-width:900px){.site-header .header-admin-btn{width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;max-height:36px!important}.site-header .header-admin-btn svg{width:27px!important;height:27px!important}}
 @media(max-width:560px){.site-header .header-admin-btn{width:32px!important;min-width:32px!important;max-width:32px!important;height:32px!important;min-height:32px!important;max-height:32px!important}.site-header .header-admin-btn svg{width:24px!important;height:24px!important}}
+#headerPortalAction{width:40px!important;min-width:40px!important;max-width:40px!important;height:40px!important;min-height:40px!important;max-height:40px!important}
+#headerPortalAction svg{width:24px!important;height:24px!important;stroke-width:2!important}
+@media(max-width:900px){#headerPortalAction{width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;max-height:36px!important}#headerPortalAction svg{width:22px!important;height:22px!important}}
+@media(max-width:560px){#headerPortalAction{width:32px!important;min-width:32px!important;max-width:32px!important;height:32px!important;min-height:32px!important;max-height:32px!important}#headerPortalAction svg{width:20px!important;height:20px!important}}

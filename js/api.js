@@ -32,7 +32,7 @@
     return `${cfg.api.baseUrl.replace(/\/$/,'')}/${String(path).replace(/^\//,'')}`;
   }
 
-  function headersFor(endpoint,token){
+  function headersFor(endpoint,token,clientId){
     const headers={
       'Content-Type':'application/json',
       apikey:cfg.api.publicKey,
@@ -43,17 +43,17 @@
       else if(endpoint==='delegate-api') headers['x-delegate-session']=token;
       else if(endpoint==='parent-multi-request'||endpoint==='parent-session'){
         headers['x-parent-session']=token;
-        headers['x-parent-client-id']=getClientId();
+        headers['x-parent-client-id']=clientId||getClientId();
       }else if(endpoint==='delegation-api'){
         headers['x-parent-session']=token;
-        headers['x-parent-client-id']=getClientId();
-      }else if(endpoint==='parent-api'){headers['x-parent-session']=token;headers['x-parent-client-id']=getClientId();}
+        headers['x-parent-client-id']=clientId||getClientId();
+      }else if(endpoint==='parent-api'){headers['x-parent-session']=token;headers['x-parent-client-id']=clientId||getClientId();}
     }
     if(endpoint==='parent-login') headers['x-parent-client-id']=getClientId();
     return headers;
   }
 
-  async function request(endpoint,{method='POST',body,token,signal}={}){
+  async function request(endpoint,{method='POST',body,token,signal,clientId}={}){
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),cfg.api.timeoutMs);
     if(signal) signal.addEventListener('abort',()=>controller.abort(),{once:true});
@@ -61,7 +61,7 @@
       const response=await fetch(endpointPath(endpoint),{
         method,
         signal:controller.signal,
-        headers:headersFor(endpoint,token),
+        headers:headersFor(endpoint,token,clientId),
         ...(body!==undefined?{body:JSON.stringify(body)}:{})
       });
       const raw=await response.text();

@@ -14,6 +14,7 @@
     role:'وكيلة المدرسة',
     logo:'assets/logo.png'
   };
+  const sessionAdminName=()=>{try{const payload=token?.split('.')?.[1];if(!payload)return school.staff;const value=JSON.parse(decodeURIComponent(escape(atob(payload.replace(/-/g,'+').replace(/_/g,'/')))));return value.display_name||value.name||value.username||school.staff}catch{return school.staff}};
 
   const defaultSettings={sound:true,soundPreset:'signal-1',confirmDelete:true,dayStartTime:'06:00',dismissalTime:'15:00'};
   const defaultSiteContent={
@@ -196,7 +197,7 @@
         const before=requestAuditMap.get(String(card.dataset.id))||null;
         const result=await call('admin_update_request',{request_id:card.dataset.id,status:button.dataset.statusAction,reject_reason:reason.trim()});
         const after=result.request||null;
-        await logDetailedChange(button.dataset.statusAction==='approved'?'admin_approve_request':'admin_reject_request','request','الطلب #'+card.dataset.id,before,after,{method:button.dataset.statusAction==='approved'?'تمت الموافقة على الطلب من تبويب الطلبات الحية.':'تم رفض الطلب من تبويب الطلبات الحية.',reason:reason.trim()});
+        await logDetailedChange(button.dataset.statusAction==='approved'?'admin_approve_request':'admin_reject_request','request','الطلب #'+card.dataset.id,before,after,{request_id:Number(card.dataset.id),student_id:Number(before?.student_id)||null,student_name:studentNames(before||{}),recipient_name:before?.recipient_name||before?.delegate_name||before?.parent_name||'',method:button.dataset.statusAction==='approved'?'تمت الموافقة على الطلب من تبويب الطلبات الحية.':'تم رفض الطلب من تبويب الطلبات الحية.',reason:reason.trim(),actor_name:school.staff});
         requestAuditMap.set(String(card.dataset.id),after||before);
         stopRequestAlert(card.dataset.id);
         notify(button.dataset.statusAction==='approved'?'تمت الموافقة على الطلب.':'تم رفض الطلب.');
@@ -243,7 +244,7 @@
       <div class="nested-stack">
         <details class="admin-nested-panel nested-item" open><summary><span>حسابات أولياء الأمور</span><em>${rows.length}</em></summary><div class="nested-body">
           <div class="admin-toolbar"><input id="parentSearch" placeholder="بحث بالاسم أو رقم الهوية"><button id="addParent" class="button primary" type="button">إضافة ولي أمر</button><button id="parentRefresh" class="button quiet" type="button">تحديث</button></div>
-          <div class="table-wrap admin-table-card"><table class="admin-table"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الأبناء</th><th>الحالة</th><th>الجهاز</th><th>إجراء</th></tr></thead><tbody id="parentRows">${rows.map(r=>{const pd=devices.filter(dv=>String(dv.parent_id)===String(r.id));const active=pd.filter(dv=>dv.status==='approved').length;const pending=pd.filter(dv=>dv.status==='pending').length;const deviceText=active?'جهاز مرتبط':pending?'جهاز بانتظار الاعتماد':'لا يوجد جهاز';const deviceClass=active?'active':pending?'pending attention-red':'muted';return `<tr data-search="${esc([r.display_name,r.national_id].join(' ').toLowerCase())}"><td><strong>${esc(r.display_name||'—')}</strong><small>${esc(r.relationship||'')}</small></td><td dir="ltr">${esc(r.national_id||'—')}</td><td>${(r.students||[]).length} أبناء</td><td><span class="status-chip ${esc(r.status||'')}">${esc(r.status==='active'?'فعال':r.status==='blocked'?'موقوف':'مراجعة')}</span></td><td><span class="status-chip ${deviceClass}">${deviceText}</span>${pending?`<small class="device-pending-note">يوجد جهاز جديد ينتظر الاعتماد</small>`:''}</td><td><div class="actions"><button class="button quiet compact-action" data-edit-parent="${esc(r.id)}" type="button">تعديل</button><button class="button reject compact-action" data-delete-parent="${esc(r.id)}" type="button">حذف</button></div></td></tr>`}).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد حسابات.</div></td></tr>'}</tbody></table></div>
+          <div class="table-wrap admin-table-card"><table class="admin-table"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الأبناء</th><th>الحالة</th><th>الجهاز</th><th>إجراء</th></tr></thead><tbody id="parentRows">${rows.map(r=>{const pd=devices.filter(dv=>String(dv.parent_id)===String(r.id));const activeDevice=pd.find(dv=>dv.status==='approved');const active=Boolean(activeDevice);const pending=pd.filter(dv=>dv.status==='pending').length;const deviceText=active?'جهاز مرتبط':pending?'جهاز بانتظار الاعتماد':'لا يوجد جهاز';const deviceClass=active?'active':pending?'pending attention-red':'muted';return `<tr data-search="${esc([r.display_name,r.national_id].join(' ').toLowerCase())}"><td><strong>${esc(r.display_name||'—')}</strong><small>${esc(r.relationship||'')}</small></td><td dir="ltr">${esc(r.national_id||'—')}</td><td>${(r.students||[]).length} أبناء</td><td><span class="status-chip ${esc(r.status||'')}">${esc(r.status==='active'?'فعال':r.status==='blocked'?'موقوف':'مراجعة')}</span></td><td><span class="status-chip ${deviceClass}">${deviceText}</span>${active?`<button class="button reject compact-action" data-device-action="${esc(activeDevice.id)}" data-device-status="rejected" data-unlink-device="${esc(activeDevice.id)}" type="button">فك الارتباط</button>`:''}${pending?`<small class="device-pending-note">يوجد جهاز جديد ينتظر الاعتماد</small>`:''}</td><td><div class="actions"><button class="button quiet compact-action" data-edit-parent="${esc(r.id)}" type="button">تعديل</button><button class="button reject compact-action" data-delete-parent="${esc(r.id)}" type="button">حذف</button></div></td></tr>`}).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد حسابات.</div></td></tr>'}</tbody></table></div>
         </div></details>
         <details class="admin-nested-panel nested-item" ${pendingDevices.length?'open':''}><summary><span>طلبات ربط الأجهزة</span><em>${pendingDevices.length}</em></summary><div class="nested-body">${renderDeviceRequests(pendingDevices)}</div></details>
         <details class="admin-nested-panel nested-item"><summary><span>سجل تسجيلات أولياء الأمور</span><em>${registrations.length}</em></summary><div class="nested-body">${renderRegistrations(registrations.slice(0,100))}</div></details>
@@ -253,7 +254,7 @@
     $('#parentRefresh').onclick=()=>load('parents');$('#addParent').onclick=()=>openParentDialog();
     $$('[data-edit-parent]').forEach(b=>b.onclick=()=>openParentEdit(rowsMap.get(String(b.dataset.editParent))));
     $$('[data-delete-parent]').forEach(b=>b.onclick=async()=>{if(!confirm('قد يؤدي حذف ولي الأمر إلى رفض العملية إذا كانت له سجلات مرتبطة. هل تريدين المتابعة؟'))return;const before=rowsMap.get(String(b.dataset.deleteParent));try{await call('admin_delete_parent',{parent_id:b.dataset.deleteParent});await logDetailedChange('admin_delete_parent','parent','ولي الأمر '+(before?.display_name||b.dataset.deleteParent),before||null,null,{method:'تم حذف حساب ولي الأمر من لوحة الإدارة بعد التحقق من السجلات المرتبطة.'});notify('تم حذف ولي الأمر.');await load('parents')}catch(e){alert(e.message)}});
-    $$('[data-device-action]').forEach(b=>b.onclick=async()=>{b.disabled=true;const before=devices.find(x=>String(x.id)===String(b.dataset.deviceAction));try{await call('admin_update_parent_device',{device_id:b.dataset.deviceAction,status:b.dataset.deviceStatus});await logDetailedChange('admin_edit_parent_device','device','جهاز ولي الأمر '+b.dataset.deviceAction,{status:before?.status||'pending',device_id:before?.id||b.dataset.deviceAction},{status:b.dataset.deviceStatus,device_id:b.dataset.deviceAction},{method:b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز من لوحة الإدارة.':'تم رفض جهاز ولي الأمر من لوحة الإدارة.'});notify(b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز.':'تم رفض الجهاز.');await load('parents')}catch(e){alert(e.message);b.disabled=false}});
+    $$('[data-device-action]').forEach(b=>b.onclick=async()=>{if(b.hasAttribute('data-unlink-device')&&!confirm('سيتم فك ارتباط هذا الجهاز، ويمكن بعد ذلك اعتماد جهاز آخر لولي الأمر. هل تريد المتابعة؟'))return;b.disabled=true;const before=devices.find(x=>String(x.id)===String(b.dataset.deviceAction));try{await call('admin_update_parent_device',{device_id:b.dataset.deviceAction,status:b.dataset.deviceStatus});await logDetailedChange('admin_edit_parent_device','device','جهاز ولي الأمر '+b.dataset.deviceAction,{status:before?.status||'pending',device_id:before?.id||b.dataset.deviceAction},{status:b.dataset.deviceStatus,device_id:b.dataset.deviceAction},{method:b.hasAttribute('data-unlink-device')?'تم فك ارتباط جهاز ولي الأمر من لوحة الإدارة.':b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز من لوحة الإدارة.':'تم رفض جهاز ولي الأمر من لوحة الإدارة.'});notify(b.hasAttribute('data-unlink-device')?'تم فك ارتباط الجهاز.':b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز.':'تم رفض الجهاز.');await load('parents')}catch(e){alert(e.message);b.disabled=false}});
     $$('[data-verify-mobile]').forEach(b=>b.onclick=async()=>{
       if(!confirm('هل أنتِ متأكدة أن هذا رقم ولي الأمر؟'))return;
       b.disabled=true;
@@ -314,17 +315,28 @@
     admin_edit_parent_device:'تعديل جهاز ولي الأمر',admin_approve_request:'الموافقة على طلب',admin_reject_request:'رفض طلب'
   };
   const prettyJson=value=>{try{return JSON.stringify(value,null,2)}catch{return String(value??'')}};
+  const auditFieldLabels={student_name:'اسم الطالب',student_national_id:'رقم هوية الطالب',parent_national_id:'رقم هوية ولي الأمر',parent_mobile:'جوال ولي الأمر',mobile:'رقم الجوال',display_name:'الاسم',relationship:'صلة القرابة',class_name:'الصف',stage:'المرحلة',section:'الفصل',status:'الحالة',request_type:'نوع الطلب',request_source:'مصدر الطلب',reject_reason:'سبب الرفض',excuse_reason:'سبب الاستئذان',delegation_id:'معرّف التفويض',delegate_name:'اسم المفوض',delegate_mobile:'جوال المفوض',national_id:'رقم الهوية',device_id:'معرّف الجهاز',permissions:'الصلاحيات',role:'الدور',phone:'رقم الجوال',email:'البريد الإلكتروني',social:'وسيلة التواصل'};
+  const auditDisplayValue=value=>value==null?'—':typeof value==='object'?prettyJson(value):String(value);
   function auditSummary(log){
     const d=log?.details&&typeof log.details==='object'?log.details:{};
     const action=auditActionLabels[log?.action]||String(log?.action||'عملية غير معروفة');
     const entity=d.entity_label||d.entity_type||'';
     const method=d.method||'تم تنفيذ العملية من لوحة الإدارة بعد التحقق من جلسة الإدارة.';
-    const changed=Array.isArray(d.changed_fields)?d.changed_fields:[];
-    return {action,entity,method,changed,before:d.before??null,after:d.after??null,reason:d.reason||d.note||''};
+    const before=d.before&&typeof d.before==='object'?d.before:null,after=d.after&&typeof d.after==='object'?d.after:null;
+    const changes=d.changes&&typeof d.changes==='object'?d.changes:{};
+    const keys=[...new Set([...Object.keys(before||{}),...Object.keys(after||{})])];
+    for(const key of keys){const a=before?.[key]??null,b=after?.[key]??null;if(JSON.stringify(a)!==JSON.stringify(b)&&!changes[key])changes[key]={before:a,after:b}}
+    const changed=Array.isArray(d.changed_fields)&&d.changed_fields.length?d.changed_fields:Object.keys(changes);
+    const student=d.student_name||(after||before||{}).student_name||((d.student_names||(after||before||{}).student_names||[]).join('، '));
+    const recipient=(after||before||{}).recipient_name||(after||before||{}).delegate_name||(after||before||{}).parent_name;
+    const processed=(after||before||{}).processed_at||log?.created_at;
+    const rejectAction=String(log?.action||'').includes('reject');
+    const methodDetail=rejectAction?`تم رفض طلب ${student||entity}${recipient?` الذي كان سيستلمه ${recipient}`:''} بواسطة ${d.actor_name||log?.actor||'الإدارة'} في ${dateLabel(processed)}.${d.reason?` السبب: ${d.reason}`:''}`:method;
+    return {action,entity,method:methodDetail,changed,changes,before,after,reason:d.reason||d.note||'',actor:d.actor_name||log?.actor||'الإدارة'};
   }
   function renderAuditLogs(rows){
     if(!Array.isArray(rows)||!rows.length)return '<div class="empty-state">لا توجد عمليات مسجلة حتى الآن.</div>';
-    return `<div class="audit-log-list">${rows.slice(0,300).map(log=>{const x=auditSummary(log);const changed=x.changed.length?x.changed.join('، '):'لم يتم تحديد حقول منفصلة';return `<details class="audit-log-row"><summary><div><strong>${esc(x.action)}</strong><p>${esc(x.entity||'سجل إداري')}</p></div><div class="audit-log-meta"><span>${esc(log.actor==='admin'?'الإدارة':(log.actor||'النظام'))}</span><time>${dateLabel(log.created_at)}</time></div></summary><div class="audit-log-detail"><div><strong>ماذا حدث؟</strong><p>${esc(x.action)}${x.entity?` — ${esc(x.entity)}`:''}.</p></div><div><strong>متى؟</strong><p>${esc(dateLabel(log.created_at))}</p></div><div><strong>كيف؟</strong><p>${esc(x.method)}</p></div><div><strong>ما الذي تغيّر؟</strong><p>${esc(changed)}</p></div>${x.reason?`<div><strong>الملاحظة / السبب</strong><p>${esc(x.reason)}</p></div>`:''}${x.before!==null?`<div><strong>قبل العملية</strong><pre>${esc(prettyJson(x.before))}</pre></div>`:''}${x.after!==null?`<div><strong>بعد العملية</strong><pre>${esc(prettyJson(x.after))}</pre></div>`:''}</div></details>`}).join('')}</div>`;
+    return `<div class="audit-log-list">${rows.slice(0,300).map(log=>{const x=auditSummary(log);const changed=x.changed.length?x.changed.map(key=>auditFieldLabels[key]||key).join('، '):'لم يتم تحديد حقول منفصلة';const details=Object.entries(x.changes).map(([key,value])=>`<li><strong>${esc(auditFieldLabels[key]||key)}</strong><span><code>${esc(auditDisplayValue(value?.before))}</code><b aria-hidden="true"> ← </b><code>${esc(auditDisplayValue(value?.after))}</code></span></li>`).join('');return `<details class="audit-log-row"><summary><div><strong>${esc(x.action)}</strong><p>${esc(x.entity||'سجل إداري')}</p></div><div class="audit-log-meta"><span>${esc(x.actor==='admin'?'الإدارة':x.actor)}</span><time>${dateLabel(log.created_at)}</time></div></summary><div class="audit-log-detail"><div><strong>ماذا حدث؟</strong><p>${esc(x.action)}${x.entity?` — ${esc(x.entity)}`:''}.</p></div><div><strong>من نفّذ العملية؟</strong><p>${esc(x.actor)}</p></div><div><strong>متى؟</strong><p>${esc(dateLabel(log.created_at))}</p></div><div><strong>كيف؟</strong><p>${esc(x.method)}</p></div><div><strong>البيانات التي تغيّرت</strong><p>${esc(changed)}</p>${details?`<ul class="audit-change-list">${details}</ul>`:''}</div>${x.reason?`<div><strong>الملاحظة / السبب</strong><p>${esc(x.reason)}</p></div>`:''}${x.before!==null?`<div><strong>قبل العملية</strong><pre>${esc(prettyJson(x.before))}</pre></div>`:''}${x.after!==null?`<div><strong>بعد العملية</strong><pre>${esc(prettyJson(x.after))}</pre></div>`:''}</div></details>`}).join('')}</div>`;
   }
 
   async function renderSettings(){
@@ -337,16 +349,16 @@
       auditLogs=audit.logs||[];
     }catch{}
     content.innerHTML=`${heading('⚙','الإعدادات','اختيار صوت التنبيه وأوقات النظام وإدارة محتوى صفحات الموقع دون المساس بالجلسات أو البيانات')}
-      <section class="settings-panel admin-nested-panel">
+      <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>أوقات اليوم</strong><span>بداية اليوم ووقت الانصراف</span></summary><div class="settings-accordion-body">
         <div class="admin-panel-head"><div><h3>أوقات اليوم</h3><p>وقت بداية اليوم الافتراضي ووقت انصراف الطلاب الظاهر في بوابة الأهالي.</p></div></div>
         <div class="school-schedule-settings"><label>بداية اليوم<input id="dayStartTime" type="time" value="${esc(pref.dayStartTime||'06:00')}"></label><label>انصراف الطلاب<input id="dismissalTime" type="time" value="${esc(pref.dismissalTime||'15:00')}"></label><button id="saveSchedule" class="button primary" type="button">حفظ أوقات اليوم</button></div>
-      </section>
-      <section class="settings-panel admin-nested-panel">
+      </div></details>
+      <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>أصوات التنبيه</strong><span>إدارة أصوات التنبيه ومعاينتها</span></summary><div class="settings-accordion-body">
         <div class="admin-panel-head"><div><h3>أصوات التنبيه</h3><p>اختاري واحدًا من 10 أصوات قوية. زر المعاينة يشغّل الصوت فورًا، والاختيار محفوظ على هذا الجهاز.</p></div></div>
         <div class="sound-settings-head"><label class="toggle-line"><input id="adminSoundEnabled" type="checkbox" ${pref.sound!==false?'checked':''}><span><strong>تفعيل أصوات التنبيه</strong><small>السماح بتشغيل الصوت من لوحة الإدارة.</small></span></label><span class="sound-current">الصوت الحالي: <strong>${esc((SOUND_PRESETS.find(x=>x.id===pref.soundPreset)||SOUND_PRESETS[0]).name)}</strong></span></div>
         <div class="sound-grid">${SOUND_PRESETS.map((sound,index)=>{const checked=(pref.soundPreset||'signal-1')===sound.id;return `<label class="sound-choice ${checked?'is-selected':''}"><input type="radio" name="adminSoundPreset" value="${esc(sound.id)}" ${checked?'checked':''}><span class="sound-index">${index+1}</span><span class="sound-choice-copy"><strong>${esc(sound.name)}</strong><small>${esc(sound.desc)}</small></span><button type="button" class="button quiet sound-preview" data-sound-preview="${esc(sound.id)}">معاينة</button></label>`}).join('')}</div>
-      </section>
-      <section class="settings-panel admin-nested-panel">
+      </div></details>
+      <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>سياسة الخصوصية وشروط الاستخدام</strong><span>تعديل النصوص المنشورة</span></summary><div class="settings-accordion-body">
         <div class="admin-panel-head"><div><h3>سياسة الخصوصية وشروط الاستخدام</h3><p>يمكن تعديل النصوص المنشورة في الصفحات العامة وحفظها مباشرة في قاعدة البيانات.</p></div></div>
         <div class="site-content-settings">
           <div class="site-content-grid">
@@ -362,8 +374,8 @@
           </div>
           <div class="settings-save-row"><button id="saveSiteContent" class="button primary" type="button">حفظ سياسة الخصوصية والشروط</button></div>
         </div>
-      </section>
-      <section class="settings-panel admin-nested-panel">
+      </div></details>
+      <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>تواصل معنا</strong><span>بيانات التواصل الرسمية</span></summary><div class="settings-accordion-body">
         <div class="admin-panel-head"><div><h3>تواصل معنا</h3><p>أدخلي بيانات التواصل الرسمية هنا لتظهر مباشرة في صفحة «تواصل معنا» في بوابة الأهالي.</p></div></div>
         <div class="site-content-grid">
           <label class="site-content-field">رقم الجوال<input id="contactPhone" maxlength="80" inputmode="tel" value="${esc(site.contact.phone||'')}" placeholder="مثال: 05xxxxxxxx"></label>
@@ -372,15 +384,16 @@
           <label class="site-content-field">رابط وسائل التواصل (اختياري)<input id="contactSocialUrl" maxlength="500" type="url" value="${esc(site.contact.social_url||'')}" placeholder="https://..."></label>
         </div>
         <div class="settings-save-row"><button id="saveContactContent" class="button primary" type="button">حفظ بيانات التواصل</button></div>
-      </section>
-      <section class="settings-panel admin-nested-panel">
-        <div class="admin-panel-head"><div><h3>سجل التعديلات والعمليات</h3><p>يعرض العمليات التي غيّرت بيانات الطلاب وأولياء الأمور والطلبات والأجهزة ومحتوى الموقع مع وقت تنفيذها.</p></div><button id="refreshAuditLog" class="button quiet" type="button">تحديث السجل</button></div>
+      </div></details>
+      <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>سجل التعديلات والعمليات</strong><span>تفاصيل تغييرات البيانات والطلبات</span></summary><div class="settings-accordion-body">
+        <div class="admin-panel-head"><div><h3>سجل التعديلات والعمليات</h3><p>يوضح الطالب أو الحساب المعني، القيم قبل التعديل وبعده، منفذ العملية ووقتها، وبيانات الطلب والمستلم عند الرفض.</p></div><div class="actions"><button id="printAuditLog" class="button quiet" type="button">طباعة السجل</button><button id="refreshAuditLog" class="button quiet" type="button">تحديث السجل</button></div></div>
         <div id="adminAuditLog">${renderAuditLogs(auditLogs)}</div>
-      </section>
-      <section class="settings-panel admin-nested-panel">
+      </div></details>
+      <section class="settings-panel admin-nested-panel cache-settings-always">
         <div class="admin-panel-head"><div><h3>مسح ذاكرة الكاش</h3><p>ينظف فقط CacheStorage المؤقت المرتبط بالموقع وذاكرة موارد الصفحة. لا يحذف جلسة الإدارة، ولا بيانات أولياء الأمور، ولا إعدادات المظهر، ولا بيانات الطلاب أو الطلبات.</p></div></div>
         <button id="clearCache" class="button primary cache-clear-btn" type="button">مسح ذاكرة الكاش</button>
       </section>`;
+    $$('.settings-accordion').forEach(item=>item.addEventListener('toggle',()=>{if(item.open)$$('.settings-accordion').forEach(other=>{if(other!==item)other.open=false})}));
     const commit=patch=>saveSettings({...settings(),...patch});
   const logAdminChange=async(action,details)=>{try{await Bsmat.request('admin-log-action',{body:{logged_action:action,details},token})}catch{}};
   const logDetailedChange=async(action,entityType,entityLabel,before,after,extra={})=>{
@@ -388,12 +401,14 @@
     const keys=[...new Set([...Object.keys(b||{}),...Object.keys(a||{})])];
     const changes={};const changed=[];
     keys.forEach(k=>{const bv=b?.[k]??null,av=a?.[k]??null;if(JSON.stringify(bv)!==JSON.stringify(av)){changed.push(k);changes[k]={before:bv,after:av}}});
-    return logAdminChange(action,{entity_type:entityType,entity_label:entityLabel,method:extra.method||'تم تنفيذ العملية من لوحة الإدارة بعد تسجيل الدخول.',changed_fields:changed,changes,before:b,after:a,reason:extra.reason||''});
+    const requestId=Number(extra.request_id)||Number((String(entityLabel).match(/#(\d+)/)||[])[1])||null;
+    return logAdminChange(action,{entity_type:entityType,entity_label:entityLabel,entity_id:extra.entity_id||b?.id||a?.id||null,request_id:requestId,student_id:Number(extra.student_id)||null,student_name:extra.student_name||b?.student_name||a?.student_name||'',student_names:extra.student_names||b?.student_names||a?.student_names||[],recipient_name:extra.recipient_name||b?.recipient_name||a?.recipient_name||b?.delegate_name||a?.delegate_name||'',actor_name:extra.actor_name||school.staff,method:extra.method||'تم تنفيذ العملية من لوحة الإدارة بعد تسجيل الدخول.',changed_fields:changed,changes,before:b,after:a,reason:extra.reason||''});
   };
     $('#adminSoundEnabled').onchange=e=>{commit({sound:e.target.checked});if(e.target.checked)playPreset();logAdminChange('update_admin_sound_setting',{setting:'sound',after:e.target.checked});};
     $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=()=>{const before=settings().soundPreset;commit({soundPreset:r.value});$$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));playPreset(r.value);logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:r.value});});
     $$('[data-sound-preview]').forEach(btn=>btn.onclick=()=>playPreset(btn.dataset.soundPreview));
     $('#refreshAuditLog').onclick=async()=>{const b=$('#refreshAuditLog');b.disabled=true;try{const d=await call('admin_get_audit_logs');$('#adminAuditLog').innerHTML=renderAuditLogs(d.logs||[]);notify('تم تحديث سجل التعديلات.')}catch(e){notify(e.message||'تعذر تحديث السجل.',true)}finally{b.disabled=false}};
+    $('#printAuditLog').onclick=()=>{const popup=window.open('','_blank');if(!popup){notify('يرجى السماح بفتح نافذة الطباعة.',true);return}const currentName=sessionAdminName(),auditMarkup=$('#adminAuditLog').innerHTML.replace(/<details class="audit-log-row"/g,'<details open class="audit-log-row"');popup.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>سجل التعديلات والعمليات</title><style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#241a30;position:relative}body:before{content:'${esc(currentName)}';position:fixed;inset:38% 0 auto;text-align:center;font-size:58px;font-weight:900;color:rgba(74,46,111,.08);transform:rotate(-28deg);z-index:-1;pointer-events:none}.print-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #c18a20;padding-bottom:12px;margin-bottom:16px}.print-head img{width:72px;height:72px;object-fit:contain}.print-head h1{font-size:19px;color:#4a2e6f;margin:0}.print-head p{font-size:12px;margin:4px 0}.print-meta{margin-inline-start:auto;text-align:left;font-size:11px}details{border:1px solid #ccc;border-radius:8px;margin:8px 0;padding:10px;break-inside:avoid}summary{font-weight:bold}.audit-log-meta{color:#555}.audit-log-detail{padding:8px}.audit-change-list{line-height:2}pre{white-space:pre-wrap;direction:ltr;text-align:left;border:1px solid #ddd;padding:8px}button{display:none}.print-foot{text-align:center;border-top:1px solid #ccc;padding-top:8px;margin-top:18px;font-size:10px}@media print{body{padding:0}}</style></head><body><header class="print-head"><img src="${new URL(school.logo,location.href).href}" alt="شعار المدرسة"><div><h1>${esc(school.name)}</h1><p>${esc(school.subtitle)}</p></div><div class="print-meta"><strong>سجل التعديلات والعمليات</strong><br>تاريخ الطباعة: ${esc(dateLabel(new Date().toISOString()))}<br>إعداد: ${esc(currentName)} — ${esc(school.role)}</div></header>${auditMarkup}<footer class="print-foot">منظومة النداء والاستئذان المدرسي المعتمدة</footer></body></html>`);popup.document.close();popup.focus();popup.print()};
     $('#clearCache').onclick=clearTemporaryCache;
     $('#saveSchedule').onclick=()=>{
       const dayStart=$('#dayStartTime').value||'06:00',dismissal=$('#dismissalTime').value||'15:00';
@@ -426,16 +441,17 @@
   }
 
   function reportRowsToMatrix(rows){return rows.map(r=>[studentNames(r),Array.isArray(r.student_classes)?r.student_classes.join('، '):(r.student_class||'—'),typeLabel(r.request_type),statusLabel(r.status),dateLabel(r.created_at),dateLabel(r.processed_at||r.archived_at),r.recipient_name||r.delegate_name||r.parent_name||'—',r.excuse_reason||r.reject_reason||'—'])}
+  function isCurrentRiyadhMonth(value){if(!value)return false;const fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit'});return fmt.format(new Date(value))===fmt.format(new Date())}
   function reportTitle(){return 'تقرير الطلبات المدرسية'}
   async function renderReports(){
     const [archive,live]=await Promise.all([call('admin_get_archive'),call('admin_get_all_requests')]);
     const archiveRows=archive.records||[];
-    const completedRows=[...new Map((live.requests||[]).filter(r=>['approved','rejected'].includes(r.status)).map(r=>[String(r.id),r])).values()];
+    const completedRows=[...new Map((live.requests||[]).filter(r=>['approved','rejected'].includes(r.status)&&isCurrentRiyadhMonth(r.created_at)).map(r=>[String(r.id),r])).values()];
     const unique=[...new Map([...archiveRows,...completedRows].map(r=>[String(r.id),r])).values()];
     const sources=[...new Set(unique.map(r=>r.request_source).filter(Boolean))];
     let activeReportTab='archive';
     let activeRows=archiveRows;
-    content.innerHTML=`${heading('▤','التقارير','أرشيف الطلبات وسجل الطلبات المكتملة فقط')}
+    content.innerHTML=`${heading('▤','التقارير','السجل المكتمل يعرض الشهر الحالي؛ وتنقل الأرشفة الشهرية السجلات الأقدم إلى قاعدة الأرشيف')}
       <div class="report-tab-bar"><button class="button primary" data-report-tab="archive" type="button">الأرشيف <span>${archiveRows.length}</span></button><button class="button quiet" data-report-tab="completed" type="button">سجل الطلبات المكتملة <span>${completedRows.length}</span></button></div>
       <div class="report-tools admin-nested-panel"><div class="report-tool-row"><label>من تاريخ<input id="reportFrom" type="date"></label><label>إلى تاريخ<input id="reportTo" type="date"></label><label>نوع الطلب<select id="reportType"><option value="all">كل الأنواع</option><option value="pickup">نداء انصراف</option><option value="excuse">استئذان مبكر</option></select></label><label>المصدر<select id="reportSource"><option value="all">كل المصادر</option>${sources.map(s=>`<option value="${esc(s)}">${esc(sourceLabel(s))}</option>`).join('')}</select></label><button id="clearReportFilters" class="button quiet" type="button">مسح الفلاتر</button></div><div class="report-export-actions"><button id="printReport" class="button primary" type="button">طباعة / PDF</button><button id="exportWord" class="button quiet" type="button">Word</button><button id="exportExcel" class="button quiet" type="button">Excel</button></div></div>
       <div id="reportPreview" class="report-preview"></div>`;
@@ -453,22 +469,26 @@
 
   function buildReportTable(rows){return `<div class="report-summary-bar"><span>السجلات المطابقة: <strong>${rows.length}</strong></span><span>الفترة حسب المرشح المحدد أعلاه</span></div><div class="table-wrap admin-table-card report-table"><table class="admin-table"><thead><tr><th>اسم الطالب</th><th>الصف</th><th>نوع الطلب</th><th>الحالة</th><th>وقت الطلب</th><th>وقت المعالجة</th><th>اسم المستلم</th><th>السبب / الملاحظة</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(studentNames(r))}</td><td>${esc(Array.isArray(r.student_classes)?r.student_classes.join('، '):(r.student_class||'—'))}</td><td>${esc(typeLabel(r.request_type))}</td><td><span class="status-chip ${esc(r.status||'')}">${esc(statusLabel(r.status))}</span></td><td>${dateLabel(r.created_at)}</td><td>${dateLabel(r.processed_at||r.archived_at)}</td><td>${esc(r.recipient_name||r.delegate_name||r.parent_name||'—')}</td><td>${esc(r.excuse_reason||r.reject_reason||'—')}</td></tr>`).join('')||'<tr><td colspan="8"><div class="empty-state">لا توجد سجلات مطابقة للفلاتر.</div></td></tr>'}</tbody></table></div>`}
 
-  function buildPrintDocument(rows){
+  function buildPrintDocument(rows,reportTab='archive'){
+    const currentName=sessionAdminName();
     return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${esc(reportTitle())}</title><style>
-      @page{size:A4;margin:14mm}body{font-family:Tahoma,Arial,sans-serif;color:#231a35;margin:0;direction:rtl}*{box-sizing:border-box}.head{border-bottom:2px solid #c18a20;padding-bottom:12px;margin-bottom:14px}.brand{display:flex;align-items:center;gap:14px}.brand img{width:62px;height:62px;object-fit:contain}.brand h1{margin:0;font-size:20px}.brand p{margin:5px 0 0;font-size:12px;color:#6f647d}.meta{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:11px}.meta div{display:grid;gap:4px}.summary{margin:12px 0;padding:10px;border:1px solid #d9caea;background:#f7f4fb;border-radius:8px;font-size:11px}table{width:100%;border-collapse:collapse;font-size:9.5px}th,td{border:1px solid #d8d0e1;padding:7px;text-align:right;vertical-align:top}th{background:#eee8f6;color:#4a2e6f;font-weight:800}.status{font-weight:700}.approved{color:#177a45}.rejected{color:#b3343f}.foot{margin-top:15px;border-top:1px solid #ddd5e6;padding-top:8px;font-size:9px;color:#72687d;text-align:center}</style></head><body>
-      <div class="head"><div class="brand"><img src="${school.logo}" alt=""><div><h1>${esc(school.name)}</h1><p>${esc(school.subtitle)}</p></div></div><div class="meta"><div><strong>${esc(reportTitle())}</strong><span>وقت الطباعة: ${dateLabel(new Date().toISOString())}</span></div><div><strong>إعداد التقرير</strong><span>${esc(school.staff)} — ${esc(school.role)}</span></div></div></div>
+      @page{size:A4 landscape;margin:9mm}body{font-family:Tahoma,Arial,sans-serif;color:#231a35;margin:0;direction:rtl;position:relative}*{box-sizing:border-box}.watermark{position:fixed;inset:40% 0 auto;z-index:0;text-align:center;transform:rotate(-28deg);font-size:58px;font-weight:900;color:rgba(74,46,111,.08);pointer-events:none}.head,.summary,table,.foot{position:relative;z-index:1}.head{border-bottom:3px solid #c18a20;padding-bottom:8px;margin-bottom:9px}.brand{display:flex;align-items:center;gap:12px}.brand img{display:block;width:64px;height:64px;object-fit:contain}.brand h1{margin:0;font-size:18px;color:#4a2e6f}.brand p{margin:4px 0 0;font-size:11px;color:#6f647d}.meta{display:flex;justify-content:space-between;gap:12px;margin-top:8px;font-size:10px}.meta div{display:grid;gap:3px}.summary{margin:8px 0;padding:6px 8px;border:1px solid #d9caea;background:#f7f4fb;border-radius:6px;font-size:10px}table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:8px;line-height:1.25}th,td{border:1px solid #d8d0e1;padding:4px 5px;text-align:right;vertical-align:top;white-space:normal!important;overflow-wrap:anywhere;word-break:normal}th{background:#eee8f6;color:#4a2e6f;font-weight:800}.status{font-weight:700}.approved{color:#177a45}.rejected{color:#b3343f}.foot{margin-top:9px;border-top:1px solid #ddd5e6;padding-top:5px;font-size:8px;color:#72687d;text-align:center}</style></head><body>
+      <div class="watermark">${esc(currentName)}</div><div class="head"><div class="brand"><img src="${new URL(school.logo,location.href).href}" alt=""><div><h1>${esc(school.name)}</h1><p>${esc(school.subtitle)}</p></div></div><div class="meta"><div><strong>${esc(reportTab==='archive'?'تقرير أرشيف الطلبات':'سجل الطلبات المكتملة')}</strong><span>وقت الطباعة: ${dateLabel(new Date().toISOString())}</span></div><div><strong>إعداد التقرير</strong><span>${esc(currentName)} — ${esc(school.role)}</span></div></div></div>
       <div class="summary">عدد السجلات: <strong>${rows.length}</strong></div>
       <table><thead><tr><th>اسم الطالب</th><th>الصف</th><th>النوع</th><th>الحالة</th><th>وقت الطلب</th><th>وقت المعالجة</th><th>اسم المستلم</th><th>السبب/الملاحظة</th></tr></thead><tbody>${rows.map(r=>{const m=reportRowsToMatrix([r])[0];return `<tr>${m.map((v,i)=>`<td class="${i===3?'status '+(r.status==='approved'?'approved':'rejected'):''}">${esc(v)}</td>`).join('')}</tr>`}).join('')||'<tr><td colspan="8">لا توجد سجلات مطابقة.</td></tr>'}</tbody></table>
       <div class="foot">منظومة النداء والاستئذان المدرسي المعتمدة · ${esc(school.role)}</div>
     </body></html>`;
   }
-  function openPrintReport(rows){
+  function openPrintReport(rows,reportTab='archive'){
     if(!printRoot){notify('تعذر تجهيز قالب الطباعة.',true);return}
-    const source=buildPrintDocument(rows),body=source.match(/<body>([\s\S]*)<\/body>/i)?.[1]||'';
-    printRoot.innerHTML=body;
+    const source=buildPrintDocument(rows,reportTab),body=source.match(/<body>([\s\S]*)<\/body>/i)?.[1]||'';
+    const styles=source.match(/<style>([\s\S]*?)<\/style>/i)?.[1]||'';
+    printRoot.innerHTML=`<style>${styles}</style>${body}`;
     printRoot.setAttribute('aria-hidden','false');
     const cleanup=()=>{printRoot.innerHTML='';printRoot.setAttribute('aria-hidden','true')};
-    setTimeout(()=>{window.print();setTimeout(cleanup,600)},80);
+    const logo=printRoot.querySelector('.brand img');
+    const ready=logo?.decode?logo.decode().catch(()=>{}):Promise.resolve();
+    ready.then(()=>setTimeout(()=>{window.print();setTimeout(cleanup,600)},100));
   }
 
   const zip={
@@ -502,7 +522,7 @@
     const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
     downloadBlob(zip.build([['[Content_Types].xml',ct],['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],['xl/workbook.xml',workbook],['xl/_rels/workbook.xml.rels',wbRels],['xl/worksheets/sheet1.xml',sheet]]),'bsmat-'+reportTab+'-report.xlsx');notify('تم إنشاء ملف Excel.');
   }
-  let livePoll=null,liveInitialized=false,seenPendingRequestIds=new Set();
+  let livePoll=null,liveInitialized=false,liveSyncInFlight=false,seenPendingRequestIds=new Set();
   let activeRequestAlerts=new Set(),requestAlertTimer=null;
   async function playNewRequestAlert(){
     const pref=settings(); if(pref.sound===false)return;
@@ -537,7 +557,7 @@
     stopAllRequestAlerts();
   }
   async function syncLiveRequests(silent=false){
-    if(!token)return;
+    if(!token||liveSyncInFlight)return;liveSyncInFlight=true;
     try{
       const d=await call('admin_get_all_requests');
       const pending=(d.requests||[]).filter(r=>r.status==='pending');
@@ -554,16 +574,15 @@
         notify(newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`);
         if(activeTab==='requests')await load('requests');
       }
-    }catch{}
+    }catch{}finally{liveSyncInFlight=false}
   }
   function startLiveRequestMonitor(){
     stopLiveRequestMonitor();
     syncLiveRequests(true);
-    livePoll=setInterval(()=>syncLiveRequests(false),4000);
+    livePoll=setInterval(()=>syncLiveRequests(false),2000);
   }
 
   nationalId?.addEventListener('input',()=>{nationalId.value=String(nationalId.value||'').replace(/\D/g,'').slice(0,10)});
-  password?.addEventListener('input',()=>{password.value=String(password.value||'').replace(/\D/g,'')});
   loginForm.addEventListener('submit',async event=>{
     event.preventDefault();
     primeSoundContext();

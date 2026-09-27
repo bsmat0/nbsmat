@@ -10,7 +10,7 @@ window.APP_CONFIG=Object.freeze({
     publicKey:'sb_publishable_goqkOuoBt-PJ9gLJB7ttYw_cpfgV4qB',
     timeoutMs:15000,
     endpoints:Object.freeze({
-      'parent-login':'parent-api',
+      'parent-login':'parent-login',
       'parent-api':'parent-api',
       'parent-multi-request':'parent-multi-request',
       'parent-session':'parent-session',
