@@ -10,7 +10,6 @@
     storageKey: "bsmat-brand-intro-seen-v2"
   });
   const root = document.documentElement;
-  const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   let finishTimer;
   let travelTimer;
   let skipTimer;
@@ -18,13 +17,15 @@
   let audioUnlockHandler;
   const soundTimers = [];
   let dismissed = false;
+  let soundStarted = false;
+  let soundAvailable = true;
 
   const alreadySeen = () => {
     try { return sessionStorage.getItem(INTRO.storageKey) === "1"; }
     catch { return false; }
   };
 
-  if (!INTRO.enabled || reducedMotion || (!SHOW_INTRO_ALWAYS && alreadySeen())) return;
+  if (!INTRO.enabled || (!SHOW_INTRO_ALWAYS && alreadySeen())) return;
   root.classList.add("brand-intro-pending");
 
   const start = () => {
@@ -51,18 +52,22 @@
       }, INTRO.exitFadeMs);
     };
 
-    skip.addEventListener("click", dismiss, { once: true });
+    skip.textContent = "المس الشاشة لتشغيل صوت الافتتاحية";
+    skip.setAttribute("aria-label", "تشغيل صوت الافتتاحية");
+    skip.addEventListener("click", (event) => { event.preventDefault(); attemptSound(); });
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && !dismissed) dismiss();
+      if (event.key === "Escape" && soundStarted && !dismissed) dismiss();
     }, { once: true });
 
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (AudioContextClass) {
       const frequencies = [220, 293.66, 349.23, 392, 440, 523.25];
-      let soundStarted = false;
+
       const playSequence = () => {
         if (dismissed || soundStarted || !audioContext || audioContext.state !== "running") return;
         soundStarted = true;
+        skip.classList.add("is-hidden");
+        scheduleIntroFinish();
         frequencies.forEach((frequency, index) => {
           const timer = window.setTimeout(() => {
             if (dismissed || !audioContext || audioContext.state !== "running") return;
@@ -89,13 +94,12 @@
           audioContext.resume().then(playSequence).catch(() => {});
         } catch { /* Keep the visual intro independent from audio availability. */ }
       };
-      audioUnlockHandler = (event) => {
-        if (event.target?.closest?.("#brandIntroSkip")) return;
-        attemptSound();
-      };
+      audioUnlockHandler = () => { attemptSound(); };
       document.addEventListener("pointerdown", audioUnlockHandler);
       document.addEventListener("keydown", audioUnlockHandler);
       attemptSound();
+    } else {
+      soundAvailable = false;
     }
 
     const scheduleIntroFinish = () => {
@@ -122,8 +126,8 @@
       travelTimer = window.setTimeout(dismiss, INTRO.logoTravelMs);
     };
 
-    // Keep the intro moving without requesting audio permission.
-    scheduleIntroFinish();
+    // Mobile browsers unlock audio on the first touch; keep the intro until then.
+    if (!soundAvailable) scheduleIntroFinish();
 
     window.BSMATBrandIntro = Object.freeze({ settings: INTRO, dismiss });
   };

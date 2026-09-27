@@ -8,15 +8,15 @@
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="apple-touch-icon" href="assets/logo.png">
   <link rel="stylesheet" href="css/style.css?v=delegate-feedback-session-cleanup-v1-20260926">
-  <link rel="stylesheet" href="css/reference-design.css?v=stable-root-admin-frame-v1-20260927">
+  <link rel="stylesheet" href="css/reference-design.css?v=school-logo-visible-v1-20260927">
   <link rel="stylesheet" href="css/info-pages.css">
-  <link rel="stylesheet" href="css/brand-intro.css?v=nonblocking-sound-20260924">
-  <script src="js/brand-intro.js?v=nonblocking-sound-20260924"></script>
+  <link rel="stylesheet" href="css/brand-intro.css?v=mobile-required-intro-audio-v1-20260927">
+  <script src="js/brand-intro.js?v=mobile-required-intro-audio-v1-20260927"></script>
   <script defer src="js/config.js?v=parent-login-bound-session-v1-20260926"></script>
   <script defer src="js/api.js?v=parent-device-session-v2-20260926"></script>
-  <script defer src="js/parent.js?v=stable-root-admin-frame-v1-20260927"></script>
+  <script defer src="js/parent.js?v=header-logout-auth-guard-v1-20260927"></script>
   <script defer src="js/delegation.js?v=delegate-feedback-session-cleanup-v1-20260926"></script>
-  <script defer src="js/ui.js?v=stable-root-links-v1-20260927"></script>
+  <script defer src="js/ui.js?v=github-logo-path-v1-20260927"></script>
 </head>
 <body>
   <div class="brand-intro" id="brandIntro" data-intro-target="#home .portal-center-logo" role="dialog" aria-label="افتتاحية شعار بسمات الوعد" aria-modal="true">
@@ -65,7 +65,7 @@
       </form>
       <div id="parentSessionBar" class="parent-session-bar hidden"><div class="parent-session-identity"><span class="parent-session-avatar" aria-hidden="true">♙</span><div><small>مرحبًا بعودتك</small><strong id="parentGreeting">ولي الأمر</strong></div></div></div>
       <p id="formMessage" class="message hidden" role="status" aria-live="polite"></p>
-      <div id="studentsWrap" class="children-picker hidden"><div class="children-picker-heading"><span class="children-heading-icon" aria-hidden="true">✦</span><div><h3>أبناؤك المسجلون</h3><p>اختاري طالبًا أو أكثر لإرسال الطلب</p></div></div><div id="students" class="children-grid"></div></div>
+      <div id="studentsWrap" class="children-picker hidden"><div class="children-picker-heading"><span class="children-heading-icon" aria-hidden="true">✦</span><div><h3>أبناؤك المسجلون</h3><p>اختر طالبًا أو أكثر لإرسال الطلب</p></div></div><div id="students" class="children-grid"></div></div>
       <div id="reasonWrap" class="form-group hidden"><label for="reason">سبب الاستئذان:<small id="count">0/100</small></label><textarea id="reason" rows="2" maxlength="100" placeholder="مثال: موعد مستشفى، ظرف عائلي..."></textarea></div>
       <button class="btn-submit hidden" id="sendRequest" type="button">تأكيد وإرسال الطلب</button>
       <div id="requestStatus" class="status-card hidden" role="status" aria-live="polite"></div>
@@ -82,7 +82,7 @@
     <nav class="portal-legal-links" aria-label="روابط الموقع"><a href="privacy.html">سياسة الخصوصية</a><span aria-hidden="true">|</span><a href="terms.html">شروط الاستخدام</a><span aria-hidden="true">|</span><a href="contact.html">تواصل معنا</a></nav>
     <footer class="portal-footer"><div class="portal-footer-title"><svg class="portal-footer-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m8.3 12.2 2.3 2.3 5.1-5.1"/></svg><span>منظومة النداء والاستئذان المدرسي المعتمدة</span></div><div class="portal-footer-credit">تم إنشاء وتطوير النظام من قبل <strong>أ. إخلاص الحضيري</strong> | وكيلة مدرسة بسمات الوعد</div></footer>
   </main>
-  <dialog id="parentLogoutDialog" aria-labelledby="parentLogoutTitle"><div class="dialog-card"><p class="eyebrow">حساب ولي الأمر</p><h2 id="parentLogoutTitle">تسجيل الخروج</h2><p>هل تريدين تسجيل الخروج من حساب ولي الأمر على هذا الجهاز؟</p><div class="actions"><button id="cancelParentLogout" class="button quiet" type="button">البقاء</button><button id="confirmParentLogout" class="button reject" type="button">تسجيل الخروج</button></div></div></dialog>
+  <dialog id="parentLogoutDialog" aria-labelledby="parentLogoutTitle"><div class="dialog-card"><p class="eyebrow">حساب ولي الأمر</p><h2 id="parentLogoutTitle">تسجيل الخروج</h2><p>هل تريد تسجيل الخروج من حساب ولي الأمر على هذا الجهاز؟</p><div class="actions"><button id="cancelParentLogout" class="button quiet" type="button">البقاء</button><button id="confirmParentLogout" class="button reject" type="button">تسجيل الخروج</button></div></div></dialog>
   <dialog id="delegateDialog"><div class="dialog-card"><button class="close" id="delegateClose" aria-label="إغلاق">×</button><p class="eyebrow">دخول المفوض</p><form id="delegateLoginForm"><h2>استلام الطلاب</h2><label>كود التفويض<input id="delegateCode" inputmode="numeric" maxlength="4" autocomplete="one-time-code"></label><button class="button primary" id="redeem">دخول</button></form><div class="message" id="delegateMessage" role="status"></div><section id="delegateSession" class="hidden"><p id="delegateIdentity"></p><p id="delegateExpiry" class="muted"></p><h3>اختيار الطالب / الطلاب</h3><div id="delegateStudents" class="student-list"></div><div id="delegateStatus" class="status hidden" role="status"></div><button id="delegateSend" class="button primary">إرسال طلب الاستلام</button><button id="delegateLogout" class="button quiet">تسجيل خروج</button></section></div></dialog>
   <div id="adminPortalShell" hidden><iframe id="adminPortalFrame" title="بوابة الإدارة" src="about:blank"></iframe></div>
 </body></html>

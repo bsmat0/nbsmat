@@ -108,7 +108,7 @@
     $('.admin-tabs')?.classList.toggle('hidden',!logged); $('#staff')?.classList.toggle('hidden',!logged);
     if(!logged){$('#staffCard')?.classList.add('hidden');$('#staff')?.setAttribute('aria-expanded','false')}
   };
-  function expire(){stopLiveRequestMonitor();token=null;sessionStorage.removeItem(Bsmat.keys.adminSession);setLoggedIn(false);loginMessage.textContent='انتهت جلسة الإدارة. سجلي الدخول من جديد.'}
+  function expire(){stopLiveRequestMonitor();token=null;sessionStorage.removeItem(Bsmat.keys.adminSession);setLoggedIn(false);loginMessage.textContent='انتهت جلسة الإدارة. سجل الدخول من جديد.'}
   async function call(action,extra={}){
     if(!token)throw new Error('انتهت جلسة الإدارة.');
     try{return await Bsmat.request('admin-api',{body:{action,...extra},token})}
@@ -191,7 +191,7 @@
   function bindRequestActions(){
     $$('[data-status-action]').forEach(button=>button.onclick=async()=>{
       const card=button.closest('[data-id]');if(!card)return;let reason='';
-      if(button.dataset.statusAction==='rejected'){reason=prompt('اكتبي سبب الرفض:');if(reason===null)return;if(!reason.trim()){alert('سبب الرفض مطلوب.');return}}
+      if(button.dataset.statusAction==='rejected'){reason=prompt('اكتب سبب الرفض:');if(reason===null)return;if(!reason.trim()){alert('سبب الرفض مطلوب.');return}}
       button.disabled=true;
       try{
         const before=requestAuditMap.get(String(card.dataset.id))||null;
@@ -223,7 +223,7 @@
     $('#studentSearch').oninput=filter;$('#studentRefresh').onclick=()=>load('students');$('#addStudent').onclick=()=>openStudentDialog();
     const rowsMap=new Map(rows.map(r=>[String(r.id),r]));
     $$('[data-edit-student]').forEach(b=>b.onclick=()=>openStudentEdit(rowsMap.get(String(b.dataset.editStudent))));
-    $$('[data-delete-student]').forEach(b=>b.onclick=async()=>{if(!confirm('هل أنت متأكدة من حذف الطالب؟'))return;const before=rowsMap.get(String(b.dataset.deleteStudent));try{await call('admin_delete_student',{student_id:b.dataset.deleteStudent});await logDetailedChange('admin_delete_student','student','الطالب '+(before?.student_name||b.dataset.deleteStudent),before||null,null,{method:'تم حذف الطالب من قائمة الطلاب في لوحة الإدارة.'});notify('تم حذف الطالب.');await load('students')}catch(e){alert(e.message)}});
+    $$('[data-delete-student]').forEach(b=>b.onclick=async()=>{if(!confirm('هل أنت متأكد من حذف الطالب؟'))return;const before=rowsMap.get(String(b.dataset.deleteStudent));try{await call('admin_delete_student',{student_id:b.dataset.deleteStudent});await logDetailedChange('admin_delete_student','student','الطالب '+(before?.student_name||b.dataset.deleteStudent),before||null,null,{method:'تم حذف الطالب من قائمة الطلاب في لوحة الإدارة.'});notify('تم حذف الطالب.');await load('students')}catch(e){alert(e.message)}});
   }
 
 
@@ -253,10 +253,10 @@
     $('#parentSearch').oninput=e=>$$('#parentRows tr').forEach(r=>r.classList.toggle('hidden',!r.dataset.search.includes(e.target.value.trim().toLowerCase())));
     $('#parentRefresh').onclick=()=>load('parents');$('#addParent').onclick=()=>openParentDialog();
     $$('[data-edit-parent]').forEach(b=>b.onclick=()=>openParentEdit(rowsMap.get(String(b.dataset.editParent))));
-    $$('[data-delete-parent]').forEach(b=>b.onclick=async()=>{if(!confirm('قد يؤدي حذف ولي الأمر إلى رفض العملية إذا كانت له سجلات مرتبطة. هل تريدين المتابعة؟'))return;const before=rowsMap.get(String(b.dataset.deleteParent));try{await call('admin_delete_parent',{parent_id:b.dataset.deleteParent});await logDetailedChange('admin_delete_parent','parent','ولي الأمر '+(before?.display_name||b.dataset.deleteParent),before||null,null,{method:'تم حذف حساب ولي الأمر من لوحة الإدارة بعد التحقق من السجلات المرتبطة.'});notify('تم حذف ولي الأمر.');await load('parents')}catch(e){alert(e.message)}});
+    $$('[data-delete-parent]').forEach(b=>b.onclick=async()=>{if(!confirm('قد يؤدي حذف ولي الأمر إلى رفض العملية إذا كانت له سجلات مرتبطة. هل تريد المتابعة؟'))return;const before=rowsMap.get(String(b.dataset.deleteParent));try{await call('admin_delete_parent',{parent_id:b.dataset.deleteParent});await logDetailedChange('admin_delete_parent','parent','ولي الأمر '+(before?.display_name||b.dataset.deleteParent),before||null,null,{method:'تم حذف حساب ولي الأمر من لوحة الإدارة بعد التحقق من السجلات المرتبطة.'});notify('تم حذف ولي الأمر.');await load('parents')}catch(e){alert(e.message)}});
     $$('[data-device-action]').forEach(b=>b.onclick=async()=>{if(b.hasAttribute('data-unlink-device')&&!confirm('سيتم فك ارتباط هذا الجهاز، ويمكن بعد ذلك اعتماد جهاز آخر لولي الأمر. هل تريد المتابعة؟'))return;b.disabled=true;const before=devices.find(x=>String(x.id)===String(b.dataset.deviceAction));try{await call('admin_update_parent_device',{device_id:b.dataset.deviceAction,status:b.dataset.deviceStatus});await logDetailedChange('admin_edit_parent_device','device','جهاز ولي الأمر '+b.dataset.deviceAction,{status:before?.status||'pending',device_id:before?.id||b.dataset.deviceAction},{status:b.dataset.deviceStatus,device_id:b.dataset.deviceAction},{method:b.hasAttribute('data-unlink-device')?'تم فك ارتباط جهاز ولي الأمر من لوحة الإدارة.':b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز من لوحة الإدارة.':'تم رفض جهاز ولي الأمر من لوحة الإدارة.'});notify(b.hasAttribute('data-unlink-device')?'تم فك ارتباط الجهاز.':b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز.':'تم رفض الجهاز.');await load('parents')}catch(e){alert(e.message);b.disabled=false}});
     $$('[data-verify-mobile]').forEach(b=>b.onclick=async()=>{
-      if(!confirm('هل أنتِ متأكدة أن هذا رقم ولي الأمر؟'))return;
+      if(!confirm('هل أنت متأكد أن هذا رقم ولي الأمر؟'))return;
       b.disabled=true;
       try{
         const result=await call('admin_verify_parent_registration',{registration_id:b.dataset.verifyMobile});
@@ -354,7 +354,7 @@
         <div class="school-schedule-settings"><label>بداية اليوم<input id="dayStartTime" type="time" value="${esc(pref.dayStartTime||'06:00')}"></label><label>انصراف الطلاب<input id="dismissalTime" type="time" value="${esc(pref.dismissalTime||'15:00')}"></label><button id="saveSchedule" class="button primary" type="button">حفظ أوقات اليوم</button></div>
       </div></details>
       <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>أصوات التنبيه</strong><span>إدارة أصوات التنبيه ومعاينتها</span></summary><div class="settings-accordion-body">
-        <div class="admin-panel-head"><div><h3>أصوات التنبيه</h3><p>اختاري واحدًا من 10 أصوات قوية. زر المعاينة يشغّل الصوت فورًا، والاختيار محفوظ على هذا الجهاز.</p></div></div>
+        <div class="admin-panel-head"><div><h3>أصوات التنبيه</h3><p>اختر واحدًا من 10 أصوات قوية. زر المعاينة يشغّل الصوت فورًا، والاختيار محفوظ على هذا الجهاز.</p></div></div>
         <div class="sound-settings-head"><label class="toggle-line"><input id="adminSoundEnabled" type="checkbox" ${pref.sound!==false?'checked':''}><span><strong>تفعيل أصوات التنبيه</strong><small>السماح بتشغيل الصوت من لوحة الإدارة.</small></span></label><span class="sound-current">الصوت الحالي: <strong>${esc((SOUND_PRESETS.find(x=>x.id===pref.soundPreset)||SOUND_PRESETS[0]).name)}</strong></span></div>
         <div class="sound-grid">${SOUND_PRESETS.map((sound,index)=>{const checked=(pref.soundPreset||'signal-1')===sound.id;return `<label class="sound-choice ${checked?'is-selected':''}"><input type="radio" name="adminSoundPreset" value="${esc(sound.id)}" ${checked?'checked':''}><span class="sound-index">${index+1}</span><span class="sound-choice-copy"><strong>${esc(sound.name)}</strong><small>${esc(sound.desc)}</small></span><button type="button" class="button quiet sound-preview" data-sound-preview="${esc(sound.id)}">معاينة</button></label>`}).join('')}</div>
       </div></details>
@@ -376,7 +376,7 @@
         </div>
       </div></details>
       <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>تواصل معنا</strong><span>بيانات التواصل الرسمية</span></summary><div class="settings-accordion-body">
-        <div class="admin-panel-head"><div><h3>تواصل معنا</h3><p>أدخلي بيانات التواصل الرسمية هنا لتظهر مباشرة في صفحة «تواصل معنا» في بوابة الأهالي.</p></div></div>
+        <div class="admin-panel-head"><div><h3>تواصل معنا</h3><p>أدخل بيانات التواصل الرسمية هنا لتظهر مباشرة في صفحة «تواصل معنا» في بوابة الأهالي.</p></div></div>
         <div class="site-content-grid">
           <label class="site-content-field">رقم الجوال<input id="contactPhone" maxlength="80" inputmode="tel" value="${esc(site.contact.phone||'')}" placeholder="مثال: 05xxxxxxxx"></label>
           <label class="site-content-field">البريد الإلكتروني<input id="contactEmail" maxlength="160" type="email" value="${esc(site.contact.email||'')}" placeholder="example@school.sa"></label>
@@ -588,8 +588,8 @@
     primeSoundContext();
     const nid=String(nationalId?.value||'').trim();
     const pass=String(password.value||'').trim();
-    if(!/^\d{10}$/.test(nid)){loginMessage.textContent='أدخلي رقم الهوية المكون من 10 أرقام.';nationalId?.focus();return}
-    if(!pass){loginMessage.textContent='أدخلي الرقم السري.';password.focus();return}
+    if(!/^\d{10}$/.test(nid)){loginMessage.textContent='أدخل رقم الهوية المكون من 10 أرقام.';nationalId?.focus();return}
+    if(!pass){loginMessage.textContent='أدخل الرقم السري.';password.focus();return}
     const button=$('#loginButton');button.disabled=true;loginMessage.textContent='جارٍ التحقق…';
     try{
       const data=await Bsmat.request('admin-api',{body:{action:'admin_login',national_id:nid,password:pass}});

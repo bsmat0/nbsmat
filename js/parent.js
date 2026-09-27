@@ -64,10 +64,10 @@
     const utility=$('#parentUtilityCard');if(utility){clearInterval(utility._timer);utility._timer=null;utility.classList.add('hidden');$('#parentUtilityBody').replaceChildren()}
     $('#reason').value='';$('#count').textContent='0 / 100';say(messageText);
   }
-  function expireParentSession(messageText='انتهت جلسة ولي الأمر. سجلي الدخول من جديد.'){clearParentSessionUi(messageText)}
+  function expireParentSession(messageText='انتهت جلسة ولي الأمر. سجل الدخول من جديد.'){clearParentSessionUi(messageText)}
   function startSessionMonitor(){
     stopSessionMonitor();if(!validSession())return;let checking=false;
-    state.sessionPoll=setInterval(async()=>{if(!validSession()||screen.classList.contains('hidden'))return;if(checking)return;checking=true;try{await Bsmat.request('parent-api',{body:{action:'get_children',parent_session:state.token},token:state.token})}catch(error){if(error?.status===401||error?.status===403)expireParentSession('تم إنهاء ارتباط هذا الجهاز. سجلي الدخول بعد اعتماد الجهاز مجددًا.')}finally{checking=false}},3000);
+    state.sessionPoll=setInterval(async()=>{if(!validSession()||screen.classList.contains('hidden'))return;if(checking)return;checking=true;try{await Bsmat.request('parent-api',{body:{action:'get_children',parent_session:state.token},token:state.token})}catch(error){if(error?.status===401||error?.status===403)expireParentSession('تم إنهاء ارتباط هذا الجهاز. سجل الدخول بعد اعتماد الجهاز مجددًا.')}finally{checking=false}},3000);
   }
   function showHome(){setHeaderAction(false);stopPoll();stopSessionMonitor();const utility=$('#parentUtilityCard');if(utility){clearInterval(utility._timer);utility._timer=null;utility.classList.add('hidden')}screen.classList.add('hidden');home.classList.remove('hidden');$('#parentDelegatePanel').classList.add('hidden');$('#parentDelegateManagement').classList.add('hidden');$('#toggleDelegateManagement')?.setAttribute('aria-expanded','false')}
   function validSession(){return Boolean(state.token&&state.parent)}
@@ -181,7 +181,7 @@
       const next=req.status||'pending',before=status.dataset.state;setRequestFeedback(next,labels[next]||`حالة الطلب: ${next}`);renderParentUtility();
       if((next==='approved'||next==='rejected')&&before!==next){if(next==='approved'){playApprovalSound();setTimeout(playApprovalSound,360)}else playAlertSound();try{await loadRequestHistory()}catch{}}
       if(['approved','rejected'].includes(next))stopPoll();
-    }catch(error){if(error?.status===401||error?.status===403)expireParentSession('انتهى ارتباط هذا الجهاز أو جلسة ولي الأمر. سجلي الدخول من جديد.')}finally{checking=false}};
+    }catch(error){if(error?.status===401||error?.status===403)expireParentSession('انتهى ارتباط هذا الجهاز أو جلسة ولي الأمر. سجل الدخول من جديد.')}finally{checking=false}};
     check();state.poll=setInterval(check,2000);
   }
 
@@ -190,7 +190,7 @@
     try{const data=await Bsmat.request('parent-api',{body:{action:'get_parent_request_history',parent_session:state.token,limit:15},token:state.token});const rows=data.history||[];list.replaceChildren();
       if(!rows.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='لا توجد عمليات طلب مسجلة للأبناء حتى الآن.';list.append(empty)}
       else rows.forEach(r=>{const item=document.createElement('article');item.className='parent-history-item';const main=document.createElement('div');const students=(r.students||[]).map(x=>x.student_name).filter(Boolean).join('، ')||'الطلاب';const classes=(r.students||[]).map(x=>x.class_name).filter(Boolean).join('، ');const type=r.request_type==='excuse'?'استئذان مبكر':'نداء انصراف';const reason=r.excuse_reason?`السبب: ${r.excuse_reason}`:'';main.innerHTML=`<div class="parent-history-students">${Bsmat.escape(students)}</div><div class="parent-history-meta"><span>${Bsmat.escape(classes||'')}</span><span>${Bsmat.escape(type)}</span><span>${Bsmat.escape(new Date(r.created_at).toLocaleString('ar-SA'))}</span>${reason?`<span>${Bsmat.escape(reason)}</span>`:''}</div>`;const badge=document.createElement('span');badge.className=`parent-history-status ${r.status||'pending'}`;badge.textContent=r.status==='approved'?'تمت الموافقة':r.status==='rejected'?'مرفوض':'قيد الإجراء';item.append(main,badge);list.append(item)});wrap.classList.remove('hidden');
-    }catch(e){wrap.classList.add('hidden');if(e?.status===401||e?.status===403)expireParentSession('انتهى ارتباط هذا الجهاز أو جلسة ولي الأمر. سجلي الدخول من جديد.')}
+    }catch(e){wrap.classList.add('hidden');if(e?.status===401||e?.status===403)expireParentSession('انتهى ارتباط هذا الجهاز أو جلسة ولي الأمر. سجل الدخول من جديد.')}
   }
 
   document.querySelectorAll('#home .service-btn[data-mode], #home .service-delegate-btn[data-mode]').forEach(button=>{
@@ -198,10 +198,10 @@
       state.mode=button.dataset.mode;
       if(state.mode==='delegate'){BsmatDelegation.open();return}
       $('#flowTitle').textContent=state.mode==='excuse'?'طلب استئذان مبكر':'طلب نداء انصراف';
-      setHeaderAction(true);
+      setHeaderAction(validSession());
       $('#reasonWrap').classList.toggle('hidden',state.mode!=='excuse');
       $('#requestStatus').classList.add('hidden');$('#studentsWrap').classList.add('hidden');$('#parentDelegatePanel').classList.add('hidden');home.classList.add('hidden');screen.classList.remove('hidden');say('');
-      if(validSession()){$('#parentForm').classList.add('hidden');$('#parentSessionBar').classList.remove('hidden');$('#identity').value=state.parent.national_id||$('#identity').value||'';$('#mobile').value=state.parent.mobile||sessionStorage.getItem('bsmat.parent.mobile')||$('#mobile').value||'';lookupChildren().then(()=>{loadRequestHistory();say('');startSessionMonitor()}).catch(e=>{if(e?.status===401||e?.status===403)expireParentSession('تعذر التحقق من ارتباط هذا الجهاز. سجلي الدخول مجددًا.');else say(e.message)})}
+      if(validSession()){$('#parentForm').classList.add('hidden');$('#parentSessionBar').classList.remove('hidden');$('#identity').value=state.parent.national_id||$('#identity').value||'';$('#mobile').value=state.parent.mobile||sessionStorage.getItem('bsmat.parent.mobile')||$('#mobile').value||'';lookupChildren().then(()=>{loadRequestHistory();say('');startSessionMonitor()}).catch(e=>{if(e?.status===401||e?.status===403)expireParentSession('تعذر التحقق من ارتباط هذا الجهاز. سجل الدخول مجددًا.');else say(e.message)})}
       else{$('#parentForm').classList.remove('hidden');$('#parentSessionBar').classList.add('hidden');$('#parentForm').classList.remove('compact')}
     };
     button.addEventListener('click',()=>{primeAlertAudio();openMode()});
@@ -236,13 +236,13 @@
 
   $('#sendRequest').addEventListener('click',async event=>{
     const button=event.currentTarget;if(!validSession()||!state.selected.size)return;
-    if(state.mode==='excuse'&&!$('#reason').value.trim()){say('اكتبي سبب الاستئذان.');$('#reason').focus();return}
+    if(state.mode==='excuse'&&!$('#reason').value.trim()){say('اكتب سبب الاستئذان.');$('#reason').focus();return}
     primeAlertAudio();button.disabled=true;button.classList.add('is-sending');button.textContent='جارٍ الإرسال…';const status=$('#requestStatus');status.classList.remove('hidden');status.textContent='جاري إرسال الطلب للإدارة، يرجى الانتظار…';
     try{
       const clientId=Bsmat.getClientId();const data=await Bsmat.request('parent-multi-request',{body:{action:'create_request_multi',parent_session:state.token,parent_client_id:clientId,student_ids:[...state.selected].map(Number),request_type:state.mode==='excuse'?'excuse':'pickup',excuse_reason:state.mode==='excuse'?$('#reason').value.trim():''},token:state.token,clientId});
       const request=data.request||{};const seconds=240;sessionStorage.setItem(Bsmat.keys.parentCooldown,JSON.stringify({until:Date.now()+seconds*1000,student_ids:[...state.selected],request_token:request.request_token||null}));setRequestFeedback('pending','تم إرسال الطلب، بانتظار موافقة الإدارة.');say('');updateCooldownButton();renderParentUtility();loadRequestHistory();if(request.request_token)startPoll(request.request_token);
     }catch(error){
-      if(error?.status===401||(error?.status===403&&/جهاز|جلسة/.test(error.message||''))){expireParentSession(error.message||'انتهى ارتباط هذا الجهاز. سجلي الدخول بعد اعتماد الجهاز مجددًا.');return}
+      if(error?.status===401||(error?.status===403&&/جهاز|جلسة/.test(error.message||''))){expireParentSession(error.message||'انتهى ارتباط هذا الجهاز. سجل الدخول بعد اعتماد الجهاز مجددًا.');return}
       if(error?.data?.duplicate){const seconds=Math.max(0,Number(error.data.retry_after_seconds)||0);if(seconds)sessionStorage.setItem(Bsmat.keys.parentCooldown,JSON.stringify({until:Date.now()+seconds*1000,student_ids:error.data.duplicate_student_ids||[...state.selected]}));updateCooldownButton()}
       if(error?.data?.rate_limited){const retry=Math.max(0,Number(error.data.retry_after_seconds)||0);button.classList.remove('is-sending');status.classList.remove('hidden');status.classList.add('request-status-feedback');status.dataset.state='rejected';status.textContent=error.message||'تم الوصول إلى الحد المسموح للطلبات خلال 4 ساعات.';if(retry){sessionStorage.setItem(Bsmat.keys.parentCooldown,JSON.stringify({until:Date.now()+retry*1000,student_ids:[...state.selected]}));updateCooldownButton()}else button.disabled=true;}else{status.textContent=error.message;button.disabled=false;button.textContent='تأكيد وإرسال الطلب';button.classList.remove('is-sending')}
     }
@@ -266,6 +266,6 @@
 
   try{let storedToken=localStorage.getItem(Bsmat.keys.parentSession),storedData=localStorage.getItem(Bsmat.keys.parentData),storedMobile=localStorage.getItem('bsmat.parent.mobile');if(!storedToken){storedToken=sessionStorage.getItem(Bsmat.keys.parentSession);storedData=sessionStorage.getItem(Bsmat.keys.parentData);storedMobile=sessionStorage.getItem('bsmat.parent.mobile');if(storedToken){localStorage.setItem(Bsmat.keys.parentSession,storedToken);if(storedData)localStorage.setItem(Bsmat.keys.parentData,storedData);if(storedMobile)localStorage.setItem('bsmat.parent.mobile',storedMobile);sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData);sessionStorage.removeItem('bsmat.parent.mobile')}}state.token=storedToken||null;state.parent=storedData?JSON.parse(storedData):null;if(validSession())$('#parentGreeting').textContent=`مرحبًا ${state.parent.display_name||'بعودتك'}`}catch{localStorage.removeItem(Bsmat.keys.parentSession);localStorage.removeItem(Bsmat.keys.parentData);localStorage.removeItem('bsmat.parent.mobile');sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData);sessionStorage.removeItem('bsmat.parent.mobile')}
   updateCooldownButton();
-  setHeaderAction(Boolean(screen && !screen.classList.contains('hidden')));
+  setHeaderAction(Boolean(screen && !screen.classList.contains('hidden') && validSession()));
   renderParentUtility();
 })();
