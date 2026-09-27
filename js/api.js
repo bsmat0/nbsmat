@@ -39,7 +39,7 @@
       Authorization:`Bearer ${cfg.api.publicKey}`
     };
     if(token){
-      if(endpoint==='admin-api'||endpoint==='admin-delegations'||endpoint==='admin-log-action') headers['x-admin-session']=token;
+      if(endpoint==='admin-api'||endpoint==='admin-account'||endpoint==='admin-delegations'||endpoint==='admin-log-action') headers['x-admin-session']=token;
       else if(endpoint==='delegate-api') headers['x-delegate-session']=token;
       else if(endpoint==='parent-multi-request'||endpoint==='parent-session'){
         headers['x-parent-session']=token;

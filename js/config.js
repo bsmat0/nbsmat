@@ -15,6 +15,7 @@ window.APP_CONFIG=Object.freeze({
       'parent-multi-request':'parent-multi-request',
       'parent-session':'parent-session',
       'admin-api':'parent-api',
+      'admin-account':'admin-account',
       'admin-log-action':'admin-log-action',
       'admin-delegations':'admin-delegations',
       'delegation-api':'parent-delegation',
