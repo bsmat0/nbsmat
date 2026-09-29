@@ -69,7 +69,7 @@
     stopSessionMonitor();if(!validSession())return;let checking=false;
     state.sessionPoll=setInterval(async()=>{if(!validSession()||screen.classList.contains('hidden'))return;if(checking)return;checking=true;try{await Bsmat.request('parent-api',{body:{action:'get_children',parent_session:state.token},token:state.token})}catch(error){if(error?.status===401||error?.status===403)expireParentSession('تم إنهاء ارتباط هذا الجهاز. سجل الدخول بعد اعتماد الجهاز مجددًا.')}finally{checking=false}},3000);
   }
-  function showHome(){setHeaderAction(false);stopPoll();stopSessionMonitor();const utility=$('#parentUtilityCard');if(utility){clearInterval(utility._timer);utility._timer=null;utility.classList.add('hidden')}screen.classList.add('hidden');home.classList.remove('hidden');$('#parentDelegatePanel').classList.add('hidden');$('#parentDelegateManagement').classList.add('hidden');$('#toggleDelegateManagement')?.setAttribute('aria-expanded','false')}
+  function showHome(){setHeaderAction(false);$('#headerPortalAction').dataset.action='admin';stopPoll();stopSessionMonitor();const utility=$('#parentUtilityCard');if(utility){clearInterval(utility._timer);utility._timer=null;utility.classList.add('hidden')}screen.classList.add('hidden');home.classList.remove('hidden');$('#parentDelegatePanel').classList.add('hidden');$('#parentDelegateManagement').classList.add('hidden');$('#toggleDelegateManagement')?.setAttribute('aria-expanded','false')}
   function validSession(){return Boolean(state.token&&state.parent)}
   function setFieldVerification(id, state, text){
     const el=$('#'+id);if(!el)return;
@@ -107,8 +107,9 @@
     const action=$('#headerPortalAction');if(!action)return;
     const icon='<circle cx="12" cy="7.5" r="4.5" fill="currentColor" stroke="none"/><path d="M3 22c.5-5.2 3.7-8 9-8s8.5 2.8 9 8H3Z" fill="currentColor" stroke="none"/>';
     if(inRequest){
-      action.dataset.action='logout';action.removeAttribute('href');action.setAttribute('aria-label','تسجيل الخروج');action.setAttribute('title','تسجيل الخروج');action.querySelector('svg').innerHTML=icon;
+      action.dataset.action=validSession()?'logout':'parent-login';action.removeAttribute('href');action.setAttribute('aria-label',validSession()?'تسجيل الخروج':'تسجيل دخول ولي الأمر');action.setAttribute('title',validSession()?'تسجيل الخروج':'تسجيل دخول ولي الأمر');action.querySelector('svg').innerHTML=icon;
     }else{
+      $('#portalLegalLinks')?.classList.remove('hidden');
       action.dataset.action='admin';action.setAttribute('href','./');action.setAttribute('aria-label','تسجيل الدخول إلى بوابة الإدارة');action.setAttribute('title','تسجيل الدخول إلى بوابة الإدارة');action.querySelector('svg').innerHTML=icon;
     }
   }
@@ -177,7 +178,7 @@
   function setRequestFeedback(statusKey,text){const el=$('#requestStatus');el.classList.remove('hidden');el.classList.add('request-status-feedback');el.dataset.state=statusKey;el.textContent=text;$('#sendRequest').classList.remove('is-sending')}
   function startPoll(requestToken){
     stopPoll();if(!requestToken)return;const status=$('#requestStatus');let checking=false;
-    const check=async()=>{if(checking)return;checking=true;try{const data=await Bsmat.request('parent-api',{body:{action:'get_request_status',request_token:requestToken,parent_session:state.token},token:state.token});const req=data.request||data;const labels={pending:'تم إرسال الطلب، بانتظار موافقة الإدارة.',approved:'تمت الموافقة على الطلب.',rejected:`تم رفض الطلب${req.reject_reason?` — ${req.reject_reason}`:''}`};
+    const check=async()=>{if(checking)return;checking=true;try{const data=await Bsmat.request('parent-api',{body:{action:'get_request_status',request_token:requestToken,parent_session:state.token},token:state.token});const req=data.request||data;const type=req.request_type||state.mode,approved=type==='excuse'?'تمت الموافقة على طلب الاستئذان، وسيتم تجهيز خروج الطالب وتوجيهه إلى البوابة وفق إجراءات المدرسة.':'تمت الموافقة على طلب النداء، وتتم الآن مناداة الطالب عبر مكبرات الصوت داخل المدرسة، وسيتم توجيهه إلى البوابة مباشرة.',reason=String(req.reject_reason||'').trim(),rejected=reason?`تم رفض طلب ${type==='excuse'?'الاستئذان':'النداء'} من قبل الإدارة بسبب: ${reason}`:`تم رفض طلب ${type==='excuse'?'الاستئذان':'النداء'} من قبل الإدارة.`,labels={pending:'تم إرسال الطلب، بانتظار موافقة الإدارة.',approved,rejected};
       const next=req.status||'pending',before=status.dataset.state;setRequestFeedback(next,labels[next]||`حالة الطلب: ${next}`);renderParentUtility();
       if((next==='approved'||next==='rejected')&&before!==next){if(next==='approved'){playApprovalSound();setTimeout(playApprovalSound,360)}else playAlertSound();try{await loadRequestHistory()}catch{}}
       if(['approved','rejected'].includes(next))stopPoll();
@@ -200,7 +201,7 @@
       $('#flowTitle').textContent=state.mode==='excuse'?'طلب استئذان مبكر':'طلب نداء انصراف';
       setHeaderAction(validSession());
       $('#reasonWrap').classList.toggle('hidden',state.mode!=='excuse');
-      $('#requestStatus').classList.add('hidden');$('#studentsWrap').classList.add('hidden');$('#parentDelegatePanel').classList.add('hidden');home.classList.add('hidden');screen.classList.remove('hidden');say('');
+      $('#requestStatus').classList.add('hidden');$('#studentsWrap').classList.add('hidden');$('#parentDelegatePanel').classList.add('hidden');$('#portalLegalLinks')?.classList.add('hidden');home.classList.add('hidden');screen.classList.remove('hidden');setHeaderAction(validSession());say('');
       if(validSession()){$('#parentForm').classList.add('hidden');$('#parentSessionBar').classList.remove('hidden');$('#identity').value=state.parent.national_id||$('#identity').value||'';$('#mobile').value=state.parent.mobile||sessionStorage.getItem('bsmat.parent.mobile')||$('#mobile').value||'';lookupChildren().then(()=>{loadRequestHistory();say('');startSessionMonitor()}).catch(e=>{if(e?.status===401||e?.status===403)expireParentSession('تعذر التحقق من ارتباط هذا الجهاز. سجل الدخول مجددًا.');else say(e.message)})}
       else{$('#parentForm').classList.remove('hidden');$('#parentSessionBar').classList.add('hidden');$('#parentForm').classList.remove('compact')}
     };
@@ -225,11 +226,11 @@
     try{
       const clientId=Bsmat.getClientId();const data=await Bsmat.request('parent-login',{body:{action:'parent_login',national_id:identity,mobile,parent_client_id:clientId},clientId});
       state.parent=data.parent||{};state.token=data.parent_session||data.session_token||data.token;if(!state.token)throw new Error('لم يُرجع الخادم جلسة ولي أمر.');
-      const mobileMatch=data.mobile_match===true;
+      const mobileMatch=data.mobile_match===true,loginMobileSlot=Number(data.login_mobile_slot||data.login_mobile);
       setFieldVerification('identityCheck','','');
       setFieldVerification('mobileCheck','','');
-      localStorage.setItem(Bsmat.keys.parentSession,state.token);localStorage.setItem(Bsmat.keys.parentData,JSON.stringify({...state.parent,mobile_match:mobileMatch,national_id:identity}));localStorage.setItem('bsmat.parent.mobile',mobile);sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData);sessionStorage.removeItem('bsmat.parent.mobile');
-      state.children=mergeChildrenStable(data.students||data.children||[]);state.selected.clear();$('#parentGreeting').textContent=state.parent.display_name||'ولي الأمر';$('#parentForm').classList.add('hidden');$('#parentSessionBar').classList.remove('hidden');drawChildren();loadRequestHistory();startSessionMonitor();
+      localStorage.setItem(Bsmat.keys.parentSession,state.token);localStorage.setItem(Bsmat.keys.parentData,JSON.stringify({...state.parent,mobile_match:mobileMatch,login_mobile_slot:loginMobileSlot||null,national_id:identity}));localStorage.setItem('bsmat.parent.mobile',mobile);sessionStorage.removeItem(Bsmat.keys.parentSession);sessionStorage.removeItem(Bsmat.keys.parentData);sessionStorage.removeItem('bsmat.parent.mobile');
+      state.children=mergeChildrenStable(data.students||data.children||[]);state.selected.clear();$('#parentGreeting').textContent=`${state.parent.display_name||'ولي الأمر'}${loginMobileSlot?` · رقم الجوال ${loginMobileSlot}`:''}`;$('#parentForm').classList.add('hidden');$('#parentSessionBar').classList.remove('hidden');drawChildren();loadRequestHistory();startSessionMonitor();setHeaderAction(true);
       say('');
     }catch(error){if(error?.data?.device_pending)say('هذا الحساب مرتبط بجهاز آخر. تمت إحالة الجهاز الجديد إلى إدارة المدرسة للمراجعة.');else say(error.message)}finally{button.disabled=false;button.textContent='عرض الأبناء المسجلين'}
   });
@@ -256,6 +257,7 @@
   $('#headerPortalAction').addEventListener('click',event=>{
     const action=$('#headerPortalAction');
     if(action.dataset.action==='logout'){event.preventDefault();if(!logoutDialog.open)logoutDialog.showModal();return}
+    if(action.dataset.action==='parent-login'){event.preventDefault();$('#parentForm').scrollIntoView({behavior:'smooth',block:'center'});$('#identity').focus({preventScroll:true});return}
     event.preventDefault();const shell=$('#adminPortalShell'),frame=$('#adminPortalFrame');if(!shell||!frame)return;
     sessionStorage.setItem('bsmat.adminFrameOpen','1');shell.hidden=false;frame.src='admin.html';
   });

@@ -24,6 +24,7 @@ body .site-header{z-index:30}
 .admin-wrap #dashboard>.admin-tabs button{flex:1 1 0;min-height:44px;padding:8px 10px;border:1px solid transparent;background:transparent;color:var(--admin-muted)!important;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:900}
 .admin-wrap #dashboard>.admin-tabs button:hover{background:var(--admin-surface-3);color:var(--admin-primary)!important}
 .admin-wrap #dashboard>.admin-tabs button.active{background:linear-gradient(135deg,var(--admin-primary),var(--admin-primary-2));color:#fff!important;box-shadow:0 8px 18px rgba(74,46,111,.18)}
+.admin-wrap #dashboard>.admin-tabs button{position:relative}.pending-request-badge{position:absolute;inset-block-start:-7px;inset-inline-end:-7px;z-index:3;display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#c33a46;color:#fff;font-size:11px;font-weight:950;line-height:1}
 .admin-wrap .tab-icon{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .settings-accordion{overflow:hidden}
 .settings-accordion>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;cursor:pointer;list-style:none;color:var(--admin-primary)}
@@ -37,6 +38,7 @@ body .site-header{z-index:30}
 .audit-log-list{max-height:none}
 @media print{.settings-accordion:not([open]){display:none}.settings-accordion[open]>summary{display:none}}
 .admin-wrap #adminContent{padding:20px;border:1px solid var(--admin-line);border-radius:20px;background:var(--admin-surface)!important;color:var(--admin-text)!important;box-shadow:var(--admin-shadow);min-height:420px}
+.request-outcome{margin:10px 0;padding:9px 11px;border-radius:10px;background:var(--admin-surface-3);color:var(--admin-text);font-size:12px;line-height:1.8}.request-reject-entry{display:grid;gap:8px;margin-top:10px;color:var(--admin-muted);font-size:12px;font-weight:800}.request-reject-entry textarea{width:100%;min-height:68px;padding:9px;border:1px solid var(--admin-line);border-radius:9px;background:var(--admin-surface-2);color:var(--admin-text)}
 .admin-section-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
 .admin-section-title h2{margin:0;color:var(--admin-text)!important;font-size:20px;display:flex;align-items:center;gap:8px}
 .admin-section-title p{margin:4px 0 0;color:var(--admin-muted)!important;font-size:12px}
@@ -80,6 +82,16 @@ body.site-dark:has(.admin-wrap) .stars-container .star{opacity:.82!important}
 
 @media(max-width:900px){.admin-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.report-tool-row{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-wrap #dashboard>.admin-tabs{overflow:auto;justify-content:flex-start}.admin-wrap #dashboard>.admin-tabs button{flex:0 0 auto;min-width:118px}.device-request-grid,.delegate-grid-admin{grid-template-columns:1fr}}
 @media(max-width:620px){.admin-wrap #adminContent{padding:12px}.admin-stat-grid{grid-template-columns:1fr}.report-tool-row{grid-template-columns:1fr}.settings-grid,.dialog-form-grid{grid-template-columns:1fr}.report-meta{display:grid;grid-template-columns:1fr}.report-export-actions{flex-wrap:wrap}.report-export-actions .button{flex:1 1 110px}.admin-section-title h2{font-size:17px}.report-brand h1{font-size:14px}.report-preview{padding:10px}.admin-table{font-size:10px}}
+
+@media(max-width:620px){
+  html,body{max-width:100%;overflow-x:hidden}
+  .admin-wrap#mainCardContainer{width:100%;max-width:100%;min-width:0;margin-inline:auto;padding-inline:10px}
+  .admin-wrap #dashboard,.admin-wrap #adminContent,.admin-wrap .admin-dashboard-top,.admin-wrap .admin-nested-panel,.admin-wrap .settings-panel,.admin-wrap .admin-table-card,.admin-wrap .table-wrap,.admin-wrap .portal-footer{max-width:100%;min-width:0}
+  .admin-wrap #dashboard>.admin-tabs{position:relative;z-index:2;touch-action:pan-x;overscroll-behavior-inline:contain;scroll-padding-inline:8px;-webkit-overflow-scrolling:touch}
+  .admin-wrap #dashboard>.admin-tabs button{position:relative;z-index:1;pointer-events:auto;touch-action:manipulation;min-height:48px}
+  .admin-wrap .admin-table-card,.admin-wrap .table-wrap{overflow-x:auto;overscroll-behavior-inline:contain}
+  .admin-wrap .request-card,.admin-wrap .admin-nested-panel,.admin-wrap .settings-panel{overflow-wrap:anywhere}
+}
 
 @media print{
   body{background:#fff!important;color:#111!important}

@@ -32,12 +32,13 @@
     return `${cfg.api.baseUrl.replace(/\/$/,'')}/${String(path).replace(/^\//,'')}`;
   }
 
-  function headersFor(endpoint,token,clientId){
+  function headersFor(endpoint,token,clientId,adminSession){
     const headers={
       'Content-Type':'application/json',
       apikey:cfg.api.publicKey,
       Authorization:`Bearer ${cfg.api.publicKey}`
     };
+    if(endpoint==='parent-api'&&adminSession)headers['x-admin-session']=adminSession;
     if(token){
       if(endpoint==='admin-api'||endpoint==='admin-account'||endpoint==='admin-delegations'||endpoint==='admin-log-action') headers['x-admin-session']=token;
       else if(endpoint==='delegate-api') headers['x-delegate-session']=token;
@@ -47,13 +48,13 @@
       }else if(endpoint==='delegation-api'){
         headers['x-parent-session']=token;
         headers['x-parent-client-id']=clientId||getClientId();
-      }else if(endpoint==='parent-api'){headers['x-parent-session']=token;headers['x-parent-client-id']=clientId||getClientId();}
+      }else if(endpoint==='parent-api'&&!adminSession){headers['x-parent-session']=token;headers['x-parent-client-id']=clientId||getClientId()}
     }
     if(endpoint==='parent-login') headers['x-parent-client-id']=getClientId();
     return headers;
   }
 
-  async function request(endpoint,{method='POST',body,token,signal,clientId}={}){
+  async function request(endpoint,{method='POST',body,token,signal,clientId,adminSession}={}){
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),cfg.api.timeoutMs);
     if(signal) signal.addEventListener('abort',()=>controller.abort(),{once:true});
@@ -61,7 +62,7 @@
       const response=await fetch(endpointPath(endpoint),{
         method,
         signal:controller.signal,
-        headers:headersFor(endpoint,token,clientId),
+        headers:headersFor(endpoint,token,clientId,adminSession),
         ...(body!==undefined?{body:JSON.stringify(body)}:{})
       });
       const raw=await response.text();

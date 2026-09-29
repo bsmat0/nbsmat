@@ -17,7 +17,10 @@
   const sessionAdminClaims=()=>{try{const payload=token?.split('.')?.[1];if(!payload)return null;return JSON.parse(decodeURIComponent(escape(atob(payload.replace(/-/g,'+').replace(/_/g,'/')))))}catch{return null}};
   const sessionAdminName=()=>sessionAdminClaims()?.display_name||school.staff;
   const canManageStaff=()=>{const current=sessionAdminClaims();return current?.role_name==='super_admin'||current?.permissions?.includes('manage_staff')===true};
+  async function staffApi(action,data={}){try{return await Bsmat.request('parent-api',{body:{action,...data},token,adminSession:token})}catch(error){if(error?.status===401)expire();throw error}}
   const ADMIN_PERMISSION_OPTIONS=[['view_dashboard','نظرة عامة'],['manage_requests','إدارة الطلبات'],['manage_students','إدارة الطلاب'],['manage_parents','إدارة أولياء الأمور'],['manage_reports','التقارير والسجلات'],['manage_settings','الإعدادات'],['manage_staff','إدارة الموظفين'],['view_audit','عرض سجل العمليات']];
+  const TAB_PERMISSIONS={stats:'view_dashboard',requests:'manage_requests',students:'manage_students',parents:'manage_parents',delegations:'manage_parents',reports:'manage_reports',settings:'manage_settings'};
+  const canAccessTab=tab=>{const claims=sessionAdminClaims();return claims?.role_name==='super_admin'||!Array.isArray(claims?.permissions)||claims.permissions.includes(TAB_PERMISSIONS[tab])||(tab==='settings'&&canManageStaff())};
 
   const defaultSettings={sound:true,soundPreset:'signal-1',confirmDelete:true,dayStartTime:'06:00',dismissalTime:'15:00'};
   const defaultSiteContent={
@@ -39,6 +42,7 @@
   const settings=()=>{
     try{
       const v={...defaultSettings,...JSON.parse(localStorage.getItem(localSettingsKey)||'{}')};
+      const selectedSound=localStorage.getItem('admin_alert_sound');if(selectedSound)v.soundPreset=selectedSound;
       if(v.dayStartTime==='07:00'&&v.dismissalTime==='11:20'){v.dayStartTime='06:00';v.dismissalTime='15:00';}
       return v;
     }catch{return {...defaultSettings}}
@@ -107,6 +111,7 @@
   document.addEventListener('pointerdown',()=>{primeSoundContext()}, {once:true,passive:true});
   document.addEventListener('keydown',()=>{primeSoundContext()}, {once:true});
   const setLoggedIn=logged=>{
+    $$('[data-tab]').forEach(button=>{const allowed=logged&&canAccessTab(button.dataset.tab);button.classList.toggle('hidden',!allowed);button.disabled=!allowed});
     login.classList.toggle('hidden',logged); dashboard.classList.toggle('hidden',!logged);
     $('.admin-tabs')?.classList.toggle('hidden',!logged); $('#staff')?.classList.toggle('hidden',!logged);
     if(!logged){$('#staffCard')?.classList.add('hidden');$('#staff')?.setAttribute('aria-expanded','false')}
@@ -121,7 +126,7 @@
   function heading(icon,title,sub=''){return `<div class="admin-section-title"><div><h2><span class="admin-section-icon" aria-hidden="true">${icon}</span><span>${esc(title)}</span></h2>${sub?`<p>${esc(sub)}</p>`:''}</div></div>`}
   function activateTab(tab){
     const valid=new Set($$('[data-tab]').map(b=>b.dataset.tab));
-    const next=valid.has(tab)?tab:'stats';
+    const next=valid.has(tab)&&canAccessTab(tab)?tab:($$('[data-tab]').map(b=>b.dataset.tab).find(canAccessTab)||'stats');
     activeTab=next;
     $$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===next));
     load(next);
@@ -130,6 +135,13 @@
   function statusLabel(s){return s==='approved'?'تمت الموافقة':s==='rejected'?'مرفوض':'بانتظار الإجراء'}
   function typeLabel(s){return s==='excuse'?'استئذان مبكر':'نداء انصراف'}
   function sourceLabel(s){return s==='delegate'?'مفوض':'ولي أمر'}
+  function parentPhoneDetails(row){
+    const phones=row.parent_phones||row.phones;
+    const phoneValue=value=>typeof value==='object'&&value!==null?(value.mobile||value.phone||value.number||''):value;
+    const values=Array.isArray(phones)?phones.slice(0,2).map(phoneValue):[row.parent_mobile_1||row.parent_phone_1||row.parent_mobile||row.parent_phone,row.parent_mobile_2||row.parent_phone_2];
+    const unique=values.filter((value,index,array)=>value&&array.indexOf(value)===index);
+    return unique.map((value,index)=>`<span dir="ltr">ولي الأمر — رقم ${index+1}: ${esc(value)}</span>`).join('');
+  }
   function dateLabel(value){try{return value?new Date(value).toLocaleString('ar-SA'):'—'}catch{return '—'}}
   function isoDate(value){try{return new Date(value).toISOString().slice(0,10)}catch{return ''}}
   function studentNames(row){
@@ -171,9 +183,11 @@
 
   function renderRequestCard(row){
     requestAuditMap.set(String(row.id),row);
+    const explanation=row.status==='approved'?(row.request_source==='delegate'?'تمت الموافقة على طلب الاستلام المقدم من المفوض، ويجري تجهيز خروج الطالب وتوجيهه إلى البوابة.':row.request_type==='excuse'?'تمت الموافقة على طلب الاستئذان، وسيتم تجهيز خروج الطالب وتوجيهه إلى البوابة وفق إجراءات المدرسة.':'تمت الموافقة على طلب النداء، وتتم الآن مناداة الطالب عبر مكبرات الصوت داخل المدرسة، وسيتم توجيهه إلى البوابة مباشرة.'):row.status==='rejected'?`تم رفض الطلب من قبل الإدارة بسبب: ${String(row.reject_reason||'لم يحدد سبب إضافي.').trim()}`:'';
     return `<article class="request-card admin-request-card" data-id="${esc(row.id)}" data-status="${esc(row.status||'')}" data-search="${esc([studentNames(row),row.parent_name,row.parent_mobile,row.delegate_name,row.delegate_mobile].filter(Boolean).join(' ')).toLowerCase()}">
       <div class="request-top"><div><strong>${esc(studentNames(row))}</strong><span class="request-meta">${typeLabel(row.request_type)} · ${sourceLabel(row.request_source)}</span>${Array.isArray(row.student_classes)&&row.student_classes.length?`<span class="request-meta">الصف: ${esc(row.student_classes.join('، '))}</span>`:''}</div><span class="badge ${esc(row.status||'pending')}">${statusLabel(row.status)}</span></div>
-      <div class="request-details"><span>ولي الأمر: ${esc(row.parent_name||'—')}</span><span dir="ltr">${esc(row.parent_mobile||'')}</span>${row.delegate_name?`<span>المفوض: ${esc(row.delegate_name)}</span><span dir="ltr">${esc(row.delegate_mobile||'')}</span>`:''}${row.excuse_reason?`<span>السبب: ${esc(row.excuse_reason)}</span>`:''}</div>
+      ${explanation?`<p class="request-outcome" role="status">${esc(explanation)}</p>`:''}
+      <div class="request-details"><span>ولي الأمر: ${esc(row.parent_name||'—')}</span>${parentPhoneDetails(row)}${row.delegate_name?`<span>المفوض: ${esc(row.delegate_name)}</span><span dir="ltr">${esc(row.delegate_mobile||'')}</span>`:''}${row.excuse_reason?`<span>السبب: ${esc(row.excuse_reason)}</span>`:''}</div>
       <p class="muted request-time">${dateLabel(row.created_at)}</p>
       ${row.status==='pending'?'<div class="actions request-actions"><button class="button primary" data-status-action="approved" type="button">موافقة</button><button class="button reject" data-status-action="rejected" type="button">رفض</button></div>':''}
     </article>`;
@@ -194,19 +208,25 @@
   function bindRequestActions(){
     $$('[data-status-action]').forEach(button=>button.onclick=async()=>{
       const card=button.closest('[data-id]');if(!card)return;let reason='';
-      if(button.dataset.statusAction==='rejected'){reason=prompt('اكتب سبب الرفض:');if(reason===null)return;if(!reason.trim()){alert('سبب الرفض مطلوب.');return}}
-      button.disabled=true;
+      if(button.dataset.statusAction==='rejected'){const field=card.querySelector('.request-reject-entry');if(!field){const entry=document.createElement('label');entry.className='request-reject-entry';entry.innerHTML='سبب الرفض<textarea data-reject-reason rows="2" maxlength="500" required></textarea><button class="button reject" type="button" data-submit-rejection>تأكيد الرفض</button>';card.append(entry);entry.querySelector('textarea').focus();entry.querySelector('[data-submit-rejection]').onclick=()=>{reason=entry.querySelector('textarea').value.trim();if(!reason){entry.querySelector('textarea').focus();return}card.querySelectorAll('[data-status-action]').forEach(x=>x.disabled=true);submitStatus(button,reason)};return}return}
+      const action=button.dataset.statusAction;card.querySelectorAll('[data-status-action]').forEach(x=>x.disabled=true);button.closest('.actions')?.setAttribute('aria-busy','true');
+      await submitStatus(button,reason);
+    });
+  }
+  async function submitStatus(button,reason=''){
+      const card=button.closest('[data-id]');if(!card)return;const action=button.dataset.statusAction;
       try{
         const before=requestAuditMap.get(String(card.dataset.id))||null;
         const result=await call('admin_update_request',{request_id:card.dataset.id,status:button.dataset.statusAction,reject_reason:reason.trim()});
         const after=result.request||null;
-        await logDetailedChange(button.dataset.statusAction==='approved'?'admin_approve_request':'admin_reject_request','request','الطلب #'+card.dataset.id,before,after,{request_id:Number(card.dataset.id),student_id:Number(before?.student_id)||null,student_name:studentNames(before||{}),recipient_name:before?.recipient_name||before?.delegate_name||before?.parent_name||'',method:button.dataset.statusAction==='approved'?'تمت الموافقة على الطلب من تبويب الطلبات الحية.':'تم رفض الطلب من تبويب الطلبات الحية.',reason:reason.trim(),actor_name:school.staff});
         requestAuditMap.set(String(card.dataset.id),after||before);
-        stopRequestAlert(card.dataset.id);
-        notify(button.dataset.statusAction==='approved'?'تمت الموافقة على الطلب.':'تم رفض الطلب.');
-        await load(activeTab);
-      }catch(e){alert(e.message);button.disabled=false}
-    });
+        activeRequestAlerts.delete(String(card.dataset.id));reconcilePendingAlerts(activeRequestAlerts);
+        logDetailedChange(button.dataset.statusAction==='approved'?'admin_approve_request':'admin_reject_request','request','الطلب #'+card.dataset.id,before,after,{request_id:Number(card.dataset.id),student_id:Number(before?.student_id)||null,student_name:studentNames(before||{}),recipient_name:before?.recipient_name||before?.delegate_name||before?.parent_name||'',method:button.dataset.statusAction==='approved'?'تمت الموافقة على الطلب من تبويب الطلبات الحية.':'تم رفض الطلب من تبويب الطلبات الحية.',reason:reason.trim(),actor_name:school.staff});
+        const updated={...(before||{}),...(after||{}),status:action,...(action==='rejected'?{reject_reason:after?.reject_reason||reason}:{})};
+        const replacement=document.createRange().createContextualFragment(renderRequestCard(updated));card.replaceWith(replacement);bindRequestActions();
+        if(activeTab==='stats'){const stats=content.querySelector('.admin-stat-grid');if(stats)load('stats')}
+        notify(action==='approved'?'تمت الموافقة على الطلب.':'تم رفض الطلب.');
+      }catch(e){notify(e.message||'تعذر تحديث الطلب.','error');card.querySelectorAll('[data-status-action]').forEach(x=>x.disabled=false);card.querySelector('.request-reject-entry')?.remove()}
   }
 
   function openDialog(title,body,onSave,saveText='حفظ',danger=false){
@@ -231,7 +251,7 @@
 
 
   function openStudentDialog(){
-    openDialog('إضافة طالب','<div class="dialog-form-grid"><label>اسم الطالب<input name="student_name" required maxlength="200"></label><label>رقم هوية الطالب<input name="student_national_id" inputmode="numeric" maxlength="10" required></label><label>المرحلة<select name="stage" required><option value="روضة">روضة</option><option value="ابتدائي">ابتدائي</option></select></label><label>الصف<input name="class_name" required maxlength="100"></label><label>رقم هوية ولي الأمر<input name="parent_national_id" inputmode="numeric" maxlength="10" required></label><label>رقم جوال ولي الأمر<input name="parent_mobile" inputmode="numeric" maxlength="10" required placeholder="05xxxxxxxx"></label></div>',async form=>{try{const data=Object.fromEntries(form.entries());const result=await call('admin_add_student',data);await logDetailedChange('admin_add_student','student','الطالب '+(data.student_name||result.student?.student_name||''),null,{student:data,parent:{national_id:data.parent_national_id,mobile:data.parent_mobile}},{method:'تمت إضافة الطالب وربطه بولي الأمر من نموذج إدارة الطلاب.'});closeDialog();notify('تمت إضافة الطالب وربطه بولي الأمر.');await load('students')}catch(e){alert(e.message)}},'إضافة الطالب');
+    openDialog('إضافة طالب','<div class="dialog-form-grid"><label>اسم الطالب<input name="student_name" required maxlength="200"></label><label>رقم هوية الطالب<input name="student_national_id" inputmode="numeric" maxlength="10" required></label><label>المرحلة<select name="stage"><option value="روضة">روضة</option><option value="ابتدائي">ابتدائي</option></select></label><label>الصف<input name="class_name" required maxlength="100"></label><label>رقم هوية ولي الأمر<input name="parent_national_id" inputmode="numeric" maxlength="10" required></label><label>رقم جوال ولي الأمر<input name="parent_mobile" inputmode="numeric" maxlength="10" required placeholder="05xxxxxxxx"></label></div>',async form=>{const data=Object.fromEntries(form.entries());try{const result=await call('admin_add_student',data);closeDialog();notify(result.message||'تمت إضافة الطالب وربطه بولي الأمر.');try{await logDetailedChange('admin_add_student','student','الطالب '+(data.student_name||result.student?.student_name||''),null,{student:data,parent:{national_id:data.parent_national_id,mobile:data.parent_mobile}},{method:'تمت إضافة الطالب وربطه بولي الأمر من نموذج إدارة الطلاب.'})}catch{}try{await load('students')}catch{notify('تمت الإضافة، وتعذر تحديث القائمة. استخدم زر التحديث.') }}catch(e){alert(e.message||'تعذر إضافة الطالب.')}} ,'إضافة الطالب');
   }
 
   function openStudentEdit(row){
@@ -280,7 +300,7 @@
       return `<tr><td><strong>${esc(r.parent_name||'ولي أمر')}</strong><small dir="ltr">${esc(r.parent_national_id||'—')}</small></td><td dir="ltr">${esc(r.entered_mobile||'—')}</td><td>${status}</td><td>${dateLabel(r.created_at)}</td></tr>`;
     }).join('')}</tbody></table></div>`;
   }
-  function openParentDialog(){openDialog('إضافة ولي أمر','<div class="dialog-form-grid"><label>الاسم<input name="display_name" required maxlength="200"></label><label>رقم الهوية<input name="national_id" inputmode="numeric" maxlength="10" required></label><label>رقم الجوال<input name="mobile" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" required></label><label>صلة القرابة<input name="relationship" maxlength="80" value="ولي أمر"></label></div>',async form=>{try{const data=Object.fromEntries(form.entries());await call('admin_create_parent',data);await logDetailedChange('admin_add_parent','parent','ولي الأمر '+(data.display_name||''),null,{display_name:data.display_name,national_id:data.national_id,mobile:data.mobile,relationship:data.relationship},{method:'تمت إضافة حساب ولي الأمر من لوحة الإدارة.'});closeDialog();notify('تمت إضافة ولي الأمر.');await load('parents')}catch(e){alert(e.message)}},'إضافة ولي الأمر')}
+  function openParentDialog(){openDialog('إضافة ولي أمر','<div class="dialog-form-grid"><label>الاسم<input name="display_name" required maxlength="200"></label><label>رقم الهوية<input name="national_id" inputmode="numeric" maxlength="10" required></label><label>رقم الجوال<input name="mobile" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" required></label><label>صلة القرابة<input name="relationship" maxlength="80" value="ولي أمر"></label></div>',async form=>{const data=Object.fromEntries(form.entries());try{const result=await call('admin_create_parent',data);closeDialog();notify(result.message||'تمت إضافة ولي الأمر.');try{await logDetailedChange('admin_add_parent','parent','ولي الأمر '+(data.display_name||''),null,{display_name:data.display_name,national_id:data.national_id,mobile:data.mobile,relationship:data.relationship},{method:'تمت إضافة حساب ولي الأمر من لوحة الإدارة.'})}catch{}try{await load('parents')}catch{notify('تمت الإضافة، وتعذر تحديث القائمة. استخدم زر التحديث.')}}catch(e){alert(e.message||'تعذر إضافة ولي الأمر.')}},'إضافة ولي الأمر')}
   function openParentEdit(row){const body=`<div class="dialog-form-grid"><label>الاسم<input name="display_name" required maxlength="200" value="${esc(row?.display_name||'')}"></label><label>رقم الهوية<input name="national_id" inputmode="numeric" maxlength="10" required value="${esc(row?.national_id||'')}"></label><label>رقم الجوال<input name="mobile" inputmode="numeric" maxlength="10" required placeholder="05xxxxxxxx" value="${esc(row?.mobile||'')}"></label><label>صلة القرابة<input name="relationship" maxlength="80" value="${esc(row?.relationship||'ولي أمر')}"></label><label>الحالة<select name="status"><option value="active" ${row?.status==='active'?'selected':''}>فعال</option><option value="blocked" ${row?.status==='blocked'?'selected':''}>موقوف</option><option value="pending_review" ${row?.status==='pending_review'?'selected':''}>مراجعة</option></select></label></div><p class="muted">يجب إدخال رقم الجوال الأساسي عند التعديل.</p>`;openDialog('تعديل ولي الأمر',body,async form=>{try{const after=Object.fromEntries(form.entries());await call('admin_update_parent',{parent_id:row.id,...after});await logDetailedChange('admin_edit_parent','parent','ولي الأمر '+(row.display_name||row.id),{display_name:row.display_name,national_id:row.national_id,mobile:row.mobile,relationship:row.relationship,status:row.status},{display_name:after.display_name,national_id:after.national_id,mobile:after.mobile,relationship:after.relationship,status:after.status},{method:'تم تعديل بيانات ولي الأمر من نموذج إدارة أولياء الأمور.'});closeDialog();notify('تم تحديث بيانات ولي الأمر.');await load('parents')}catch(e){alert(e.message)}},'حفظ التعديل')}
 
   async function renderDelegations(){
@@ -354,11 +374,12 @@
     const staffAdmin=canManageStaff();
     const permissionInputs=ADMIN_PERMISSION_OPTIONS.map(([value,label],index)=>`<label class="toggle-line"><input type="checkbox" name="employeePermissions" value="${value}" ${index===0||index===1?'checked':''}><span>${label}</span></label>`).join('');
     const roleOptions=`<option value="staff">موظف</option><option value="manager">مدير</option><option value="admin">مسؤول</option>${sessionAdminClaims()?.role_name==='super_admin'?'<option value="super_admin">مدير أعلى</option>':''}`;
+    let staffRows=[];if(staffAdmin){try{const response=await staffApi('admin_get_staff');staffRows=response.staff||[]}catch{}}
     content.innerHTML=`${heading('⚙','الإعدادات','اختيار صوت التنبيه وأوقات النظام وإدارة محتوى صفحات الموقع دون المساس بالجلسات أو البيانات')}
       <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>حسابي · تغيير كلمة المرور</strong><span>تحديث كلمة مرور الحساب الحالي</span></summary><div class="settings-accordion-body">
         <form id="currentPasswordForm"><div class="site-content-grid"><label class="site-content-field">كلمة المرور الحالية<input id="currentAdminPassword" type="password" autocomplete="current-password" required></label><label class="site-content-field">كلمة المرور الجديدة<input id="newAdminPassword" type="password" autocomplete="new-password" minlength="8" required></label><label class="site-content-field">تأكيد كلمة المرور الجديدة<input id="confirmAdminPassword" type="password" autocomplete="new-password" minlength="8" required></label></div><div class="settings-save-row"><button id="changeAdminPassword" class="button primary" type="submit">تغيير كلمة المرور</button><span id="passwordChangeMessage" class="message" role="status" aria-live="polite"></span></div></form>
       </div></details>
-      ${staffAdmin?`<details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>إضافة حساب موظف</strong><span>إنشاء حساب وصلاحياته</span></summary><div class="settings-accordion-body"><form id="createStaffForm"><div class="site-content-grid"><label class="site-content-field">رقم الهوية / اسم الدخول (10 أرقام)<input name="national_id" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" autocomplete="off" required></label><label class="site-content-field">الاسم<input name="display_name" maxlength="120" required></label><label class="site-content-field">كلمة المرور<input name="password" type="password" minlength="8" autocomplete="new-password" required></label><label class="site-content-field">الدور<select name="role">${roleOptions}</select></label></div><fieldset class="admin-nested-panel"><legend>الصلاحيات</legend><div class="site-content-grid">${permissionInputs}</div></fieldset><div class="settings-save-row"><button id="createStaffAccount" class="button primary" type="submit">إضافة حساب الموظف</button><span id="staffCreateMessage" class="message" role="status" aria-live="polite"></span></div></form></div></details>`:''}
+      ${staffAdmin?`<details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>إدارة الموظفين</strong><span>قائمة الحسابات وتعديل الصلاحيات</span></summary><div class="settings-accordion-body"><div id="staffList">${staffRows.map(staff=>`<details class="admin-nested-panel settings-accordion" data-staff-id="${esc(staff.user_id)}"><summary><strong>${esc(staff.display_name||'موظف')}</strong><span>${esc(staff.national_id||'')}</span></summary><button class="button quiet compact-action" type="button" data-edit-staff="${esc(staff.user_id)}">تعديل</button><form class="staff-edit-form hidden" data-user-id="${esc(staff.user_id)}"><div class="site-content-grid"><label class="site-content-field">الاسم<input name="display_name" value="${esc(staff.display_name||'')}" required></label><label class="site-content-field">رقم الهوية<input name="national_id" value="${esc(staff.national_id||'')}" inputmode="numeric" maxlength="10" required></label><label class="site-content-field">كلمة مرور جديدة (اختياري)<input name="password" type="password" autocomplete="new-password"></label><label class="site-content-field">الدور<select name="role">${roleOptions}</select></label><label class="site-content-field">الحالة<input name="status" value="${esc(staff.status||'')}" required></label></div><fieldset class="admin-nested-panel"><legend>الصلاحيات</legend><div class="site-content-grid">${ADMIN_PERMISSION_OPTIONS.map(([value,label])=>`<label class="toggle-line"><input type="checkbox" name="permissions" value="${value}" ${(staff.permissions||[]).includes(value)?'checked':''}><span>${label}</span></label>`).join('')}</div></fieldset><div class="settings-save-row"><button class="button primary" type="submit">حفظ التعديلات</button><span class="message" data-staff-message role="status" aria-live="polite"></span></div></form></details>`).join('')||'<div class="empty-state">لا توجد حسابات موظفين.</div>'}</div></div></details><details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>إضافة حساب موظف</strong><span>إنشاء حساب وصلاحياته</span></summary><div class="settings-accordion-body"><form id="createStaffForm"><div class="site-content-grid"><label class="site-content-field">رقم الهوية / اسم الدخول (10 أرقام)<input name="national_id" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" autocomplete="off" required></label><label class="site-content-field">الاسم<input name="display_name" maxlength="120" required></label><label class="site-content-field">كلمة المرور<input name="password" type="password" minlength="8" autocomplete="new-password" required></label><label class="site-content-field">الدور<select name="role">${roleOptions}</select></label></div><fieldset class="admin-nested-panel"><legend>الصلاحيات</legend><div class="site-content-grid">${permissionInputs}</div></fieldset><div class="settings-save-row"><button id="createStaffAccount" class="button primary" type="submit">إضافة حساب الموظف</button><span id="staffCreateMessage" class="message" role="status" aria-live="polite"></span></div></form></div></details>`:''}
       <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>أوقات اليوم</strong><span>بداية اليوم ووقت الانصراف</span></summary><div class="settings-accordion-body">
         <div class="admin-panel-head"><div><h3>أوقات اليوم</h3><p>وقت بداية اليوم الافتراضي ووقت انصراف الطلاب الظاهر في بوابة الأهالي.</p></div></div>
         <div class="school-schedule-settings"><label>بداية اليوم<input id="dayStartTime" type="time" value="${esc(pref.dayStartTime||'06:00')}"></label><label>انصراف الطلاب<input id="dismissalTime" type="time" value="${esc(pref.dismissalTime||'15:00')}"></label><button id="saveSchedule" class="button primary" type="button">حفظ أوقات اليوم</button></div>
@@ -405,7 +426,9 @@
       </section>`;
     $$('.settings-accordion').forEach(item=>item.addEventListener('toggle',()=>{if(item.open)$$('.settings-accordion').forEach(other=>{if(other!==item)other.open=false})}));
     $('#currentPasswordForm').onsubmit=async event=>{event.preventDefault();const form=event.currentTarget,current=$('#currentAdminPassword').value,newPass=$('#newAdminPassword').value,confirmPass=$('#confirmAdminPassword').value,message=$('#passwordChangeMessage'),button=$('#changeAdminPassword');message.textContent='';if(newPass.length<8){message.textContent='كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.';return}if(newPass!==confirmPass){message.textContent='تأكيد كلمة المرور غير مطابق.';return}button.disabled=true;try{const result=await Bsmat.request('admin-account',{body:{action:'change_password',current_password:current,new_password:newPass},token});message.textContent=result.message||'تم تغيير كلمة المرور بنجاح.';form.reset()}catch(error){if(error?.status===401&&/جلسة|حساب/.test(error.message||''))expire();message.textContent=error.message||'تعذر تغيير كلمة المرور.'}finally{button.disabled=false}};
-    $('#createStaffForm')?.addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,button=$('#createStaffAccount'),message=$('#staffCreateMessage'),data=new FormData(form),national_id=String(data.get('national_id')||'').replace(/\D/g,'').slice(0,10),display_name=String(data.get('display_name')||'').trim(),password=String(data.get('password')||''),role=String(data.get('role')||'staff'),permissions=[...form.querySelectorAll('[name="employeePermissions"]:checked')].map(input=>input.value);message.textContent='';if(!/^\d{10}$/.test(national_id)){message.textContent='رقم الهوية يجب أن يتكون من 10 أرقام.';return}if(password.length<8){message.textContent='كلمة المرور يجب أن تكون 8 أحرف على الأقل.';return}if(!permissions.length&&role!=='super_admin'){message.textContent='اختر صلاحية واحدة على الأقل.';return}button.disabled=true;try{const result=await call('admin_create_staff',{national_id,display_name,password,role,permissions});message.textContent=result.message||'تم إنشاء الحساب بنجاح.';form.reset()}catch(error){message.textContent=error.message||'تعذر إنشاء حساب الموظف.'}finally{button.disabled=false}});
+    $('#createStaffForm')?.addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,button=$('#createStaffAccount'),message=$('#staffCreateMessage'),data=new FormData(form),national_id=String(data.get('national_id')||'').replace(/\D/g,'').slice(0,10),display_name=String(data.get('display_name')||'').trim(),password=String(data.get('password')||''),role=String(data.get('role')||'staff'),permissions=[...form.querySelectorAll('[name="employeePermissions"]:checked')].map(input=>input.value);message.textContent='';if(!/^\d{10}$/.test(national_id)){message.textContent='رقم الهوية يجب أن يتكون من 10 أرقام.';return}if(password.length<8){message.textContent='كلمة المرور يجب أن تكون 8 أحرف على الأقل.';return}if(!permissions.length&&role!=='super_admin'){message.textContent='اختر صلاحية واحدة على الأقل.';return}button.disabled=true;try{const result=await staffApi('admin_create_staff',{national_id,display_name,password,role,permissions});message.textContent=result.message||'تم إنشاء الحساب بنجاح.';form.reset()}catch(error){message.textContent=error.message||'تعذر إنشاء حساب الموظف.'}finally{button.disabled=false}});
+    $$('[data-edit-staff]').forEach(button=>button.addEventListener('click',event=>{event.preventDefault();const card=button.closest('[data-staff-id]'),form=card?.querySelector('.staff-edit-form');if(form){form.classList.toggle('hidden');button.textContent=form.classList.contains('hidden')?'تعديل':'إلغاء'}}));
+    $$('.staff-edit-form').forEach(form=>form.addEventListener('submit',async event=>{event.preventDefault();if(!canManageStaff())return;const button=form.querySelector('[type="submit"]'),message=form.querySelector('[data-staff-message]'),data=new FormData(form),national_id=String(data.get('national_id')||'').replace(/\D/g,'').slice(0,10),display_name=String(data.get('display_name')||'').trim(),password=String(data.get('password')||''),role=String(data.get('role')||'staff'),status=String(data.get('status')||'inactive'),permissions=[...form.querySelectorAll('[name="permissions"]:checked')].map(input=>input.value),payload={user_id:form.dataset.userId,display_name,national_id,role,status,permissions};if(password)payload.password=password;message.textContent='';if(!/^\d{10}$/.test(national_id)){message.textContent='رقم الهوية يجب أن يتكون من 10 أرقام.';return}if(password&&password.length<8){message.textContent='كلمة المرور يجب أن تكون 8 أحرف على الأقل.';return}button.disabled=true;try{const result=await staffApi('admin_update_staff',payload),staff=staffRows.find(item=>String(item.user_id)===String(payload.user_id));if(staff)Object.assign(staff,{display_name,national_id,role,status,permissions});const card=form.closest('[data-staff-id]');card.querySelector('summary strong').textContent=display_name;card.querySelector('summary span').textContent=national_id;form.querySelector('[name="password"]').value='';form.classList.add('hidden');card.querySelector('[data-edit-staff]').textContent='تعديل';message.textContent=result.message||'تم تحديث بيانات الموظف.'}catch(error){message.textContent=error.message||'تعذر تحديث بيانات الموظف.'}finally{button.disabled=false}}));
     $('#createStaffForm [name="national_id"]')?.addEventListener('input',event=>{event.currentTarget.value=event.currentTarget.value.replace(/\D/g,'').slice(0,10)});
     const commit=patch=>saveSettings({...settings(),...patch});
   const logAdminChange=async(action,details)=>{try{await Bsmat.request('admin-log-action',{body:{logged_action:action,details},token})}catch{}};
@@ -418,7 +441,7 @@
     return logAdminChange(action,{entity_type:entityType,entity_label:entityLabel,entity_id:extra.entity_id||b?.id||a?.id||null,request_id:requestId,student_id:Number(extra.student_id)||null,student_name:extra.student_name||b?.student_name||a?.student_name||'',student_names:extra.student_names||b?.student_names||a?.student_names||[],recipient_name:extra.recipient_name||b?.recipient_name||a?.recipient_name||b?.delegate_name||a?.delegate_name||'',actor_name:extra.actor_name||school.staff,method:extra.method||'تم تنفيذ العملية من لوحة الإدارة بعد تسجيل الدخول.',changed_fields:changed,changes,before:b,after:a,reason:extra.reason||''});
   };
     $('#adminSoundEnabled').onchange=e=>{commit({sound:e.target.checked});if(e.target.checked)playPreset();logAdminChange('update_admin_sound_setting',{setting:'sound',after:e.target.checked});};
-    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=()=>{const before=settings().soundPreset;commit({soundPreset:r.value});$$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));playPreset(r.value);logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:r.value});});
+    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=()=>{const before=settings().soundPreset;commit({soundPreset:r.value});try{localStorage.setItem('admin_alert_sound',r.value)}catch{}$$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));playPreset(r.value);logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:r.value});});
     $$('[data-sound-preview]').forEach(btn=>btn.onclick=()=>playPreset(btn.dataset.soundPreview));
     $('#refreshAuditLog').onclick=async()=>{const b=$('#refreshAuditLog');b.disabled=true;try{const d=await call('admin_get_audit_logs');$('#adminAuditLog').innerHTML=renderAuditLogs(d.logs||[]);notify('تم تحديث سجل التعديلات.')}catch(e){notify(e.message||'تعذر تحديث السجل.',true)}finally{b.disabled=false}};
     $('#printAuditLog').onclick=()=>{const popup=window.open('','_blank');if(!popup){notify('يرجى السماح بفتح نافذة الطباعة.',true);return}const currentName=sessionAdminName(),auditMarkup=$('#adminAuditLog').innerHTML.replace(/<details class="audit-log-row"/g,'<details open class="audit-log-row"');popup.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>سجل التعديلات والعمليات</title><style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#241a30;position:relative}body:before{content:'${esc(currentName)}';position:fixed;inset:38% 0 auto;text-align:center;font-size:58px;font-weight:900;color:rgba(74,46,111,.08);transform:rotate(-28deg);z-index:-1;pointer-events:none}.print-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #c18a20;padding-bottom:12px;margin-bottom:16px}.print-head img{width:72px;height:72px;object-fit:contain}.print-head h1{font-size:19px;color:#4a2e6f;margin:0}.print-head p{font-size:12px;margin:4px 0}.print-meta{margin-inline-start:auto;text-align:left;font-size:11px}details{border:1px solid #ccc;border-radius:8px;margin:8px 0;padding:10px;break-inside:avoid}summary{font-weight:bold}.audit-log-meta{color:#555}.audit-log-detail{padding:8px}.audit-change-list{line-height:2}pre{white-space:pre-wrap;direction:ltr;text-align:left;border:1px solid #ddd;padding:8px}button{display:none}.print-foot{text-align:center;border-top:1px solid #ccc;padding-top:8px;margin-top:18px;font-size:10px}@media print{body{padding:0}}</style></head><body><header class="print-head"><img src="${new URL(school.logo,location.href).href}" alt="شعار المدرسة"><div><h1>${esc(school.name)}</h1><p>${esc(school.subtitle)}</p></div><div class="print-meta"><strong>سجل التعديلات والعمليات</strong><br>تاريخ الطباعة: ${esc(dateLabel(new Date().toISOString()))}<br>إعداد: ${esc(currentName)} — ${esc(school.role)}</div></header>${auditMarkup}<footer class="print-foot">منظومة النداء والاستئذان المدرسي المعتمدة</footer></body></html>`);popup.document.close();popup.focus();popup.print()};
@@ -537,6 +560,10 @@
   }
   let livePoll=null,liveInitialized=false,liveSyncInFlight=false,seenPendingRequestIds=new Set();
   let activeRequestAlerts=new Set(),requestAlertTimer=null;
+  let pendingRequestCount=0,soundUnlockBound=false;
+  function renderPendingRequestBadge(count){pendingRequestCount=count;const badge=$('#pendingRequestBadge');if(!badge)return;badge.textContent=String(count);badge.classList.toggle('hidden',count===0);badge.setAttribute('aria-label',`${count} طلبات معلقة`)}
+  function unlockAlertSound(){if(!pendingRequestCount)return;primeSoundContext().then(()=>{if(getSoundContext()?.state==='running'){playNewRequestAlert();document.removeEventListener('pointerdown',unlockAlertSound);document.removeEventListener('keydown',unlockAlertSound);soundUnlockBound=false}})}
+  function bindAlertSoundUnlock(){if(soundUnlockBound)return;soundUnlockBound=true;document.addEventListener('pointerdown',unlockAlertSound);document.addEventListener('keydown',unlockAlertSound)}
   async function playNewRequestAlert(){
     const pref=settings(); if(pref.sound===false)return;
     await playPreset(pref.soundPreset);
@@ -554,6 +581,14 @@
     activeRequestAlerts.clear();
     if(requestAlertTimer){clearInterval(requestAlertTimer);requestAlertTimer=null}
   }
+  function reconcilePendingAlerts(ids){
+    activeRequestAlerts=new Set(ids);
+    renderPendingRequestBadge(ids.length);
+    if(!ids.length){if(requestAlertTimer){clearInterval(requestAlertTimer);requestAlertTimer=null}return}
+    if(!requestAlertTimer){playNewRequestAlert();requestAlertTimer=setInterval(()=>{if(activeRequestAlerts.size)playNewRequestAlert()},3000)}
+    bindAlertSoundUnlock();
+  }
+  function updateDashboardStats(pending){renderPendingRequestBadge(pending)}
   function startRequestAlert(requestId){
     const id=String(requestId);
     activeRequestAlerts.add(id);
@@ -568,31 +603,30 @@
     if(livePoll)clearInterval(livePoll);
     livePoll=null;liveInitialized=false;seenPendingRequestIds=new Set();
     stopAllRequestAlerts();
+    renderPendingRequestBadge(0);
   }
   async function syncLiveRequests(silent=false){
     if(!token||liveSyncInFlight)return;liveSyncInFlight=true;
     try{
-      const d=await call('admin_get_all_requests');
+      const d=await call('admin_get_requests');
       const pending=(d.requests||[]).filter(r=>r.status==='pending');
       const ids=new Set(pending.map(r=>String(r.id)));
-      if(!liveInitialized){seenPendingRequestIds=ids;liveInitialized=true;return;}
-
-      for(const id of [...activeRequestAlerts]){
-        if(!ids.has(id))stopRequestAlert(id);
-      }
+      const wasInitialized=liveInitialized;
       const newIds=[...ids].filter(id=>!seenPendingRequestIds.has(id));
       seenPendingRequestIds=ids;
-      if(!silent&&newIds.length){
-        newIds.forEach(startRequestAlert);
-        notify(newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`);
-        if(activeTab==='requests')await load('requests');
+      liveInitialized=true;
+      const changed=ids.size!==activeRequestAlerts.size||[...ids].some(id=>!activeRequestAlerts.has(id));
+      reconcilePendingAlerts(ids);
+      if((!wasInitialized&&ids.size)||(!silent&&newIds.length)){
+        notify(newIds.length?newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`:`يوجد ${ids.size} طلبات معلقة.`);
       }
+      if((!wasInitialized||changed||newIds.length)&&activeTab==='requests')await load('requests');
+      updateDashboardStats(pending.length);
     }catch{}finally{liveSyncInFlight=false}
   }
   function startLiveRequestMonitor(){
     stopLiveRequestMonitor();
-    syncLiveRequests(true);
-    livePoll=setInterval(()=>syncLiveRequests(false),2000);
+    syncLiveRequests(true).finally(()=>{if(token&&!livePoll)livePoll=setInterval(()=>syncLiveRequests(false),2000)});
   }
 
   nationalId?.addEventListener('input',()=>{nationalId.value=String(nationalId.value||'').replace(/\D/g,'').slice(0,10)});
