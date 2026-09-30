@@ -14,7 +14,7 @@
         const cfg=window.APP_CONFIG?.api;
         if(!cfg?.baseUrl||!cfg?.publicKey)throw new Error('تعذر تهيئة اتصال التحديث اللحظي.');
         const url=String(cfg.baseUrl).replace(/\/functions\/v1\/?$/,'');
-        state.client=mod.createClient(url,cfg.publicKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},realtime:{params:{eventsPerSecond:20}}});
+        state.client=mod.createClient(url,cfg.publicKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},realtime:{params:{eventsPerSecond:20},timeout:10000}});
         return state.client;
       })
       .catch(error=>{state.clientPromise=null;throw error});
@@ -41,7 +41,7 @@
     await stopAdmin();
     const client=await load();
     state.adminHandler=handler;
-    const channel=client.channel('bsmat:admin:requests');
+    const channel=client.channel('bsmat:admin:requests',{config:{broadcast:{ack:true,self:false}}});
     channel.on('broadcast',{event:'request_changed'},payload=>{try{state.adminHandler?.(payload?.payload||{})}catch{}});
     state.adminChannel=channel;
     return await new Promise((resolve,reject)=>{
@@ -77,7 +77,7 @@
         try{await subscribeRequest(token,h)}catch{}
       },3000));
     };
-    const channel=client.channel(`bsmat:req:${token}`);
+    const channel=client.channel(`bsmat:req:${token}`,{config:{broadcast:{ack:true,self:false}}});
     channel.on('broadcast',{event:'status_changed'},payload=>{try{state.requestHandlers.get(token)?.(payload?.payload||{})}catch{}});
     state.requestChannels.set(token,channel);
     return await new Promise((resolve,reject)=>{
