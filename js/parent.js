@@ -1,7 +1,7 @@
 (()=>{
   'use strict';
   const $=selector=>document.querySelector(selector);
-  const state={mode:'pickup',children:[],selected:new Set(),parent:null,token:null,poll:null,pollToken:null,sessionPoll:null,cooldown:null};
+  const state={mode:'pickup',children:[],selected:new Set(),parent:null,token:null,poll:null,pollToken:null,pollStatusCleanup:null,sessionPoll:null,cooldown:null};
   const home=$('#home'),screen=$('#request'),message=$('#formMessage');
   const say=(text,ok=false)=>{message.textContent=text||'';message.classList.toggle('hidden',!text);message.classList.toggle('ok',ok)};
   const digits=value=>String(value||'').replace(/[٠-٩]/g,char=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(char))).replace(/[۰-۹]/g,char=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(char))).replace(/\D/g,'');
@@ -53,7 +53,7 @@
   document.addEventListener('pointerdown',()=>{primeAlertAudio()}, {once:true,passive:true});
   document.addEventListener('keydown',()=>{primeAlertAudio()}, {once:true});
 
-  function stopPoll(){if(state.poll)clearInterval(state.poll);state.poll=null;if(state.pollToken){window.BsmatRealtime?.stopRequest?.(state.pollToken).catch?.(()=>{});state.pollToken=null}}
+  function stopPoll(){if(state.poll)clearTimeout(state.poll);state.poll=null;if(state.pollStatusCleanup){try{state.pollStatusCleanup()}catch{}state.pollStatusCleanup=null}if(state.pollToken){window.BsmatRealtime?.stopRequest?.(state.pollToken).catch?.(()=>{});state.pollToken=null}}
   function stopSessionMonitor(){if(state.sessionPoll)clearInterval(state.sessionPoll);state.sessionPoll=null}
   function clearParentSessionUi(messageText=''){
     stopPoll();stopSessionMonitor();state.token=null;state.parent=null;state.children=[];state.selected.clear();
@@ -179,26 +179,52 @@
 
   function setRequestFeedback(statusKey,text){const el=$('#requestStatus');el.classList.remove('hidden');el.classList.add('request-status-feedback');el.dataset.state=statusKey;el.textContent=text;$('#sendRequest').classList.remove('is-sending')}
   function startPoll(requestToken){
-    stopPoll();if(!requestToken)return;state.pollToken=String(requestToken);const status=$('#requestStatus');let checking=false,closed=false;
-    const feedbackFor=(stateValue,type,reason='')=>{
+    stopPoll();if(!requestToken)return;state.pollToken=String(requestToken);const status=$('#requestStatus');let checking=false,closed=false,lastFinalSound='',realtimeConnected=false,fallbackTimer=null;
+    const stopFallback=()=>{const t=fallbackTimer;if(t)clearTimeout(t);if(state.poll===t)state.poll=null;fallbackTimer=null};
+    const scheduleCheck=(delay)=>{if(closed)return;if(fallbackTimer)clearTimeout(fallbackTimer);const ms=Math.max(5000,Number(delay)||120000);fallbackTimer=setTimeout(async()=>{fallbackTimer=null;state.poll=null;await check();if(!closed)scheduleCheck(realtimeConnected?120000:15000)},ms);state.poll=fallbackTimer};
+    const feedbackFor=(req,statusValue,reasonOverride='')=>{
+      const type=req?.request_type||state.mode;
       const approved=type==='excuse'?'تمت الموافقة على طلب الاستئذان، وسيتم تجهيز خروج الطالب وتوجيهه إلى البوابة وفق إجراءات المدرسة.':'تمت الموافقة على طلب النداء، وتتم الآن مناداة الطالب عبر مكبرات الصوت داخل المدرسة، وسيتم توجيهه إلى البوابة مباشرة.';
+      const reason=String(reasonOverride||req?.reject_reason||'').trim();
       const rejected=reason?`تم رفض طلب ${type==='excuse'?'الاستئذان':'النداء'} من قبل الإدارة بسبب: ${reason}`:`تم رفض طلب ${type==='excuse'?'الاستئذان':'النداء'} من قبل الإدارة.`;
-      return stateValue==='approved'?approved:stateValue==='rejected'?rejected:'تم إرسال الطلب، بانتظار موافقة الإدارة.';
+      return {next:String(statusValue||'pending').toLowerCase(),text:statusValue==='approved'?approved:statusValue==='rejected'?rejected:'تم إرسال الطلب، بانتظار موافقة الإدارة.'};
     };
-    const applyLiveState=async(stateValue,type=state.mode,reason='')=>{
-      if(!['approved','rejected'].includes(stateValue))return;
-      const before=status.dataset.state;
-      setRequestFeedback(stateValue,feedbackFor(stateValue,type,reason));
-      renderParentUtility();
-      if(before!==stateValue){if(stateValue==='approved'){playApprovalSound();setTimeout(playApprovalSound,360)}else playAlertSound();try{await loadRequestHistory()}catch{}}
+    const applyLiveState=(statusValue,reason='')=>{
+      const next=String(statusValue||'').toLowerCase();if(!['pending','approved','rejected'].includes(next))return;
+      const current=status.dataset.state||'pending';const feedback=feedbackFor({request_type:state.mode},next,reason);
+      setRequestFeedback(feedback.next,feedback.text);renderParentUtility();
+      if((next==='approved'||next==='rejected')&&current!==next&&lastFinalSound!==next){
+        lastFinalSound=next;if(next==='approved'){playApprovalSound();setTimeout(playApprovalSound,360)}else playAlertSound();loadRequestHistory().catch(()=>{});
+      }
     };
-    const check=async()=>{if(closed||checking)return;checking=true;try{const data=await Bsmat.request('parent-api',{body:{action:'get_request_status',request_token:requestToken,parent_session:state.token},token:state.token});const req=data.request||data;const type=req.request_type||state.mode,reason=String(req.reject_reason||'').trim(),next=req.status||'pending',before=status.dataset.state;setRequestFeedback(next,feedbackFor(next,type,reason));renderParentUtility();
-      if((next==='approved'||next==='rejected')&&before!==next){if(next==='approved'){playApprovalSound();setTimeout(playApprovalSound,360)}else playAlertSound();try{await loadRequestHistory()}catch{}}
-      if(['approved','rejected'].includes(next)){closed=true;window.BsmatRealtime?.stopRequest?.(requestToken);stopPoll()}
-    }catch(error){if(error?.status===401||error?.status===403){closed=true;window.BsmatRealtime?.stopRequest?.(requestToken);expireParentSession('انتهى ارتباط هذا الجهاز أو جلسة ولي الأمر. سجل الدخول من جديد.')}}finally{checking=false}};
-    const onRealtime=async payload=>{const stateValue=String(payload?.status||''),type=String(payload?.request_type||state.mode);if(!['approved','rejected'].includes(stateValue))return;await applyLiveState(stateValue,type,String(payload?.reject_reason||''));await check();};
-    window.BsmatRealtime?.subscribeRequest?.(requestToken,onRealtime).catch?.(()=>{});
-    check();state.poll=setInterval(check,30000);
+    const check=async()=>{
+      if(closed||checking)return;checking=true;
+      try{
+        const data=await Bsmat.request('parent-api',{body:{action:'get_request_status',request_token:requestToken,parent_session:state.token},token:state.token});
+        const req=data.request||data,feedback=feedbackFor(req,req.status,req.reject_reason),before=status.dataset.state||'pending';
+        setRequestFeedback(feedback.next,feedback.text);renderParentUtility();
+        if((feedback.next==='approved'||feedback.next==='rejected')&&before!==feedback.next&&lastFinalSound!==feedback.next){
+          lastFinalSound=feedback.next;if(feedback.next==='approved'){playApprovalSound();setTimeout(playApprovalSound,360)}else playAlertSound();try{await loadRequestHistory()}catch{}
+        }
+        if(['approved','rejected'].includes(feedback.next)){closed=true;stopFallback();state.pollStatusCleanup?.();state.pollStatusCleanup=null;window.BsmatRealtime?.stopRequest?.(requestToken);stopPoll()}
+      }catch(error){
+        if(error?.status===401||error?.status===403){closed=true;stopFallback();state.pollStatusCleanup?.();state.pollStatusCleanup=null;window.BsmatRealtime?.stopRequest?.(requestToken);expireParentSession('انتهى ارتباط هذا الجهاز أو جلسة ولي الأمر. سجل الدخول من جديد.')}
+      }finally{checking=false}
+    };
+    const onRealtime=async payload=>{
+      const liveStatus=String(payload?.status||'').toLowerCase();if(!['approved','rejected'].includes(liveStatus))return;
+      realtimeConnected=true;stopFallback();applyLiveState(liveStatus,String(payload?.reject_reason||''));await check();
+    };
+    const onRealtimeStatus=event=>{
+      const detail=event.detail||{};if(detail.scope!=='request'||String(detail.token||'')!==String(requestToken))return;
+      const st=String(detail.status||'');
+      if(st==='SUBSCRIBED'){realtimeConnected=true;scheduleCheck(120000);check()}
+      else if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(st)){realtimeConnected=false;scheduleCheck(5000);check()}
+    };
+    window.addEventListener('bsmat-realtime-status',onRealtimeStatus);
+    state.pollStatusCleanup=()=>window.removeEventListener('bsmat-realtime-status',onRealtimeStatus);
+    window.BsmatRealtime?.subscribeRequest?.(requestToken,onRealtime).catch?.(()=>{realtimeConnected=false;scheduleCheck(5000)});
+    check();scheduleCheck(120000);
   }
 
   async function loadRequestHistory(){

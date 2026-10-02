@@ -16,15 +16,7 @@
     role:'وكيلة المدرسة',
     logo:'assets/logo.png'
   };
-  const sessionAdminClaims=()=>{
-    try{
-      const payload=String(token||'').split('.')?.[0]||'';
-      if(!payload)return null;
-      const normalized=payload.replace(/-/g,'+').replace(/_/g,'/');
-      const padded=normalized+'='.repeat((4-normalized.length%4)%4);
-      return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(padded),c=>c.charCodeAt(0))));
-    }catch{return null}
-  };
+  const sessionAdminClaims=()=>{try{const payload=token?.split('.')?.[0];if(!payload)return null;const normalized=payload.replace(/-/g,'+').replace(/_/g,'/');const padded=normalized+'='.repeat((4-normalized.length%4)%4);const bytes=Uint8Array.from(atob(padded),c=>c.charCodeAt(0));return JSON.parse(new TextDecoder().decode(bytes))}catch{return null}};
   const sessionAdminName=()=>sessionAdminClaims()?.display_name||school.staff;
   const canManageStaff=()=>{const current=sessionAdminClaims();return current?.role_name==='super_admin'||current?.permissions?.includes('manage_staff')===true};
   async function staffApi(action,data={}){try{return await Bsmat.request('parent-api',{body:{action,...data},token,adminSession:token})}catch(error){if(error?.status===401)expire();throw error}}
@@ -52,7 +44,6 @@
   const settings=()=>{
     try{
       const v={...defaultSettings,...JSON.parse(localStorage.getItem(localSettingsKey)||'{}')};
-      const selectedSound=localStorage.getItem('admin_alert_sound');if(selectedSound)v.soundPreset=selectedSound;
       if(v.dayStartTime==='07:00'&&v.dismissalTime==='11:20'){v.dayStartTime='06:00';v.dismissalTime='15:00';}
       return v;
     }catch{return {...defaultSettings}}
@@ -73,24 +64,7 @@
   ];
 
   let soundContext=null;
-  let alertAudio=null,alertAudioUnlocked=false,alertAudioUrls=new Map(),alertAudioPresetId='';
-  function wavDataUrl(preset){
-    const key=preset.id;if(alertAudioUrls.has(key))return alertAudioUrls.get(key);
-    const sampleRate=22050,tail=.18,total=Math.max(...preset.tones.map(t=>t[1]+t[2]))+tail,samples=Math.ceil(total*sampleRate),buffer=new ArrayBuffer(44+samples*2),view=new DataView(buffer);
-    const write=(off,str)=>{for(let i=0;i<str.length;i++)view.setUint8(off+i,str.charCodeAt(i))};
-    write(0,'RIFF');view.setUint32(4,36+samples*2,true);write(8,'WAVE');write(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,sampleRate,true);view.setUint32(28,sampleRate*2,true);view.setUint16(32,2,true);view.setUint16(34,16,true);write(36,'data');view.setUint32(40,samples*2,true);
-    const clamp=x=>Math.max(-1,Math.min(1,x)),wave=(phase,type)=>{const p=phase-Math.floor(phase);if(type==='square')return p<.5?1:-1;if(type==='sawtooth')return 2*p-1;if(type==='triangle')return 1-4*Math.abs(Math.round(p)-p);return Math.sin(2*Math.PI*p)};
-    for(let i=0;i<samples;i++){const t=i/sampleRate;let value=0;for(const [freq,offset,duration,type,volume] of preset.tones){const rel=t-offset;if(rel<0||rel>duration)continue;const attack=Math.min(1,rel/.012),release=Math.min(1,(duration-rel)/.035),env=Math.max(.0001,Math.min(attack,release));value+=wave(rel*freq,type)*volume*env*.78}view.setInt16(44+i*2,clamp(value)*32767,true)}
-    const bytes=new Uint8Array(buffer);let raw='';for(const b of bytes)raw+=String.fromCharCode(b);const url='data:audio/wav;base64,'+btoa(raw);alertAudioUrls.set(key,url);return url;
-  }
-  function getAlertAudio(){if(!alertAudio){alertAudio=document.getElementById('adminAlertAudio')||new Audio();alertAudio.preload='auto';alertAudio.loop=true;alertAudio.setAttribute('playsinline','');}return alertAudio}
-  function unlockAlertAudio(){
-    try{const pref=settings(),preset=SOUND_PRESETS.find(x=>x.id===pref.soundPreset)||SOUND_PRESETS[0],audio=getAlertAudio();audio.src=wavDataUrl(preset);audio.volume=.001;alertAudioPresetId=preset.id;const promise=audio.play();if(promise?.then)promise.then(()=>{audio.pause();audio.currentTime=0;audio.volume=.92;alertAudioUnlocked=true}).catch(()=>{});else{alertAudioUnlocked=true}}catch{}
-  }
-  function startAlertAudio(){
-    const pref=settings();if(pref.sound===false)return false;try{const preset=SOUND_PRESETS.find(x=>x.id===pref.soundPreset)||SOUND_PRESETS[0],audio=getAlertAudio();audio.loop=true;if(alertAudioPresetId!==preset.id){audio.src=wavDataUrl(preset);alertAudioPresetId=preset.id}audio.volume=.92;if(!audio.paused)return true;const p=audio.play();if(p?.catch)p.catch(()=>{alertAudioUnlocked=false;playPreset(pref.soundPreset)});return true}catch{return false}
-  }
-  function stopAlertAudio(){try{const audio=getAlertAudio();audio.pause();audio.currentTime=0}catch{} }
+  let alertLoopTimer=null,alertLoopActive=false,alertLoopRevision=0;
   async function primeSoundContext(){
     try{
       const C=window.AudioContext||window.webkitAudioContext;
@@ -132,6 +106,50 @@
     });
     setTimeout(()=>{try{master.disconnect()}catch{}},900);
   }
+  function selectedAlertDurationMs(){
+    const preset=SOUND_PRESETS.find(x=>x.id===settings().soundPreset)||SOUND_PRESETS[0];
+    return Math.max(700,...preset.tones.map(t=>Number(t[1]||0)*1000+Number(t[2]||0)*1000))+250;
+  }
+  function stopAlertAudio(){
+    alertLoopActive=false;
+    alertLoopRevision++;
+    if(alertLoopTimer){clearTimeout(alertLoopTimer);alertLoopTimer=null}
+  }
+  function bindAlertSoundUnlock(){
+    if(soundUnlockBound)return;
+    soundUnlockBound=true;
+    const unlock=()=>{
+      soundUnlockBound=false;
+      primeSoundContext().catch(()=>{});
+    };
+    document.addEventListener('pointerdown',unlock,{once:true,passive:true});
+    document.addEventListener('keydown',unlock,{once:true});
+  }
+  async function unlockAlertSound(){
+    const ctx=await primeSoundContext();
+    if(!ctx||ctx.state!=='running'){bindAlertSoundUnlock();return false}
+    soundUnlockBound=false;
+    return true;
+  }
+  async function playNewRequestAlert(){
+    const pref=settings();
+    if(pref.sound===false||pendingRequestCount<=0)return;
+    if(alertLoopActive)return;
+    const unlocked=await unlockAlertSound();
+    if(!unlocked)return;
+    alertLoopActive=true;
+    const revision=++alertLoopRevision;
+    const loop=async()=>{
+      if(!alertLoopActive||revision!==alertLoopRevision||pendingRequestCount<=0||settings().sound===false){stopAlertAudio();return}
+      const currentPreset=settings().soundPreset;
+      await playPreset(currentPreset);
+      if(!alertLoopActive||revision!==alertLoopRevision||pendingRequestCount<=0||settings().sound===false){stopAlertAudio();return}
+      const delay=Math.max(450,selectedAlertDurationMs());
+      alertLoopTimer=setTimeout(()=>{alertLoopTimer=null;loop().catch(()=>stopAlertAudio())},delay);
+    };
+    loop().catch(()=>stopAlertAudio());
+  }
+  function stopAllRequestAlerts(){stopAlertAudio()}
   async function clearTemporaryCache(){
     let removed=0;
     try{
@@ -148,8 +166,8 @@
     notify(removed?`تم تنظيف ${removed} من ذاكرة الكاش المؤقتة بدون المساس ببيانات الحسابات.`:'تم تنظيف الذاكرة المؤقتة المتاحة. لم يتم حذف الجلسات أو إعدادات الموقع.');
   }
   const notify=(text,error=false)=>{if(!toast)return;toast.textContent=text;toast.classList.toggle('error',error);toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2600)};
-  document.addEventListener('pointerdown',()=>{primeSoundContext();unlockAlertAudio()}, {once:true,passive:true});
-  document.addEventListener('keydown',()=>{primeSoundContext();unlockAlertAudio()}, {once:true});
+  document.addEventListener('pointerdown',()=>{primeSoundContext();unlockAlertSound()}, {once:true,passive:true});
+  document.addEventListener('keydown',()=>{primeSoundContext();unlockAlertSound()}, {once:true});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&pendingRequestCount)unlockAlertSound()});
   const setLoggedIn=logged=>{
     $$('[data-tab]').forEach(button=>{const allowed=logged&&canAccessTab(button.dataset.tab);button.classList.toggle('hidden',!allowed);button.disabled=!allowed});
@@ -242,9 +260,9 @@
 
   function metricCard(label,value,kind='default',icon='•'){return `<article class="admin-stat-card ${kind}"><span class="admin-stat-icon" aria-hidden="true">${icon}</span><div><small>${esc(label)}</small><strong>${esc(value)}</strong></div></article>`}
 
-  async function renderStats(){
-    const d=await call('admin_get_today_stats'),rows=d.requests||[];
-    const total=Number(d.total)||rows.length,pending=Number(d.pending)||rows.filter(r=>r.status==='pending').length,approved=Number(d.approved)||rows.filter(r=>r.status==='approved').length,rejected=Number(d.rejected)||rows.filter(r=>r.status==='rejected').length;
+  function renderStatsData(d){
+    const rows=Array.isArray(d?.requests)?d.requests:[];
+    const total=Number(d?.total)||rows.length,pending=Number(d?.pending)||rows.filter(r=>r.status==='pending').length,approved=Number(d?.approved)||rows.filter(r=>r.status==='approved').length,rejected=Number(d?.rejected)||rows.filter(r=>r.status==='rejected').length;
     renderPendingRequestBadge(pending);
     const pendingRows=rows.filter(r=>r.status==='pending').slice(0,10);
     content.innerHTML=`${heading('◈','نظرة عامة','لوحة متابعة فورية من قاعدة البيانات')}<div class="admin-stat-grid">
@@ -252,8 +270,24 @@
     </div>
     <div class="admin-toolbar admin-toolbar-wrap"><div class="toolbar-copy"><strong>حالة النظام</strong><span>آخر مزامنة: ${dateLabel(new Date().toISOString())}</span></div><button id="statsRefresh" class="button quiet" type="button">تحديث الآن</button></div>
     <section class="admin-nested-panel"><div class="admin-panel-head"><div><h3>الطلبات المعلقة الآن</h3><p>${pendingRows.length} معروضة من أصل ${pending}</p></div><button class="link-button" data-go-tab="requests" type="button">عرض كل الطلبات</button></div><div class="request-list">${pendingRows.map(renderRequestCard).join('')||'<div class="empty-state">لا توجد طلبات معلقة حاليًا.</div>'}</div></section>`;
-    $('#statsRefresh').onclick=()=>load('stats'); bindRequestActions(); $$('[data-go-tab]').forEach(b=>b.onclick=()=>activateTab(b.dataset.goTab));
+    $('#statsRefresh').onclick=()=>load('stats');bindRequestActions();$$('[data-go-tab]').forEach(b=>b.onclick=()=>activateTab(b.dataset.goTab));
   }
+  async function renderStats(){const d=await call('admin_get_today_stats');renderStatsData(d)}
+
+  function renderRequestsData(rows, preserveFilters=true){
+    const oldSearch=preserveFilters?String($('#requestSearch')?.value||''):'';
+    const oldStatus=preserveFilters?String($('#requestFilter')?.value||'all'):'all';
+    const oldType=preserveFilters?String($('#requestTypeFilter')?.value||'all'):'all';
+    renderPendingRequestBadge(rows.filter(r=>r.status==='pending').length);
+    content.innerHTML=`${heading('◉','الطلبات الحية','مراجعة الطلبات الحالية والطلبات السابقة مع تصفية واضحة')}
+      <div class="admin-toolbar admin-filter-toolbar"><input id="requestSearch" placeholder="بحث باسم الطالب أو ولي الأمر أو الجوال" aria-label="بحث في الطلبات"><select id="requestFilter" aria-label="تصفية الحالة"><option value="all">كل الحالات</option><option value="pending">بانتظار الإجراء</option><option value="approved">تمت الموافقة</option><option value="rejected">مرفوض</option></select><select id="requestTypeFilter" aria-label="تصفية النوع"><option value="all">كل الأنواع</option><option value="pickup">نداء انصراف</option><option value="excuse">استئذان مبكر</option></select><button id="requestRefresh" class="button quiet" type="button">تحديث</button></div>
+      <div class="results-summary"><strong id="requestCount">${rows.length}</strong><span>طلبًا في العرض الحالي</span></div><div id="requestList" class="request-list">${rows.map(renderRequestCard).join('')||'<div class="empty-state">لا توجد طلبات.</div>'}</div>`;
+    const search=$('#requestSearch'),filterStatus=$('#requestFilter'),filterType=$('#requestTypeFilter');
+    search.value=oldSearch;filterStatus.value=oldStatus;filterType.value=oldType;
+    const filter=()=>{const q=search.value.trim().toLowerCase(),st=filterStatus.value,t=filterType.value;let shown=0;$$('#requestList [data-id]').forEach(card=>{const okQ=!q||card.dataset.search.includes(q),okS=st==='all'||st===card.dataset.status,okT=t==='all'||card.querySelector('.request-meta')?.textContent.includes(typeLabel(t));const show=okQ&&okS&&okT;card.classList.toggle('hidden',!show);if(show)shown++});$('#requestCount').textContent=shown};
+    search.oninput=filter;filterStatus.onchange=filter;filterType.onchange=filter;$('#requestRefresh').onclick=()=>load('requests');bindRequestActions();filter();
+  }
+  async function renderRequests(){const d=await call('admin_get_all_requests');renderRequestsData(d.requests||[],false)}
 
   function renderRequestCard(row){
     requestAuditMap.set(String(row.id),row);
@@ -524,8 +558,8 @@
     const requestId=Number(extra.request_id)||Number((String(entityLabel).match(/#(\d+)/)||[])[1])||null;
     return logAdminChange(action,{entity_type:entityType,entity_label:entityLabel,entity_id:extra.entity_id||b?.id||a?.id||null,request_id:requestId,student_id:Number(extra.student_id)||null,student_name:extra.student_name||b?.student_name||a?.student_name||'',student_names:extra.student_names||b?.student_names||a?.student_names||[],recipient_name:extra.recipient_name||b?.recipient_name||a?.recipient_name||b?.delegate_name||a?.delegate_name||'',actor_name:extra.actor_name||school.staff,method:extra.method||'تم تنفيذ العملية من لوحة الإدارة بعد تسجيل الدخول.',changed_fields:changed,changes,before:b,after:a,reason:extra.reason||''});
   };
-    $('#adminSoundEnabled').onchange=e=>{commit({sound:e.target.checked});if(e.target.checked)unlockAlertAudio();playPreset();logAdminChange('update_admin_sound_setting',{setting:'sound',after:e.target.checked});};
-    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=()=>{const before=settings().soundPreset;commit({soundPreset:r.value});try{localStorage.setItem('admin_alert_sound',r.value)}catch{}$$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));unlockAlertAudio();playPreset(r.value);logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:r.value});});
+    $('#adminSoundEnabled').onchange=e=>{commit({sound:e.target.checked});if(e.target.checked){unlockAlertAudio();playPreset()}else stopAlertAudio();logAdminChange('update_admin_sound_setting',{setting:'sound',after:e.target.checked});};
+    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=()=>{const before=settings().soundPreset;commit({soundPreset:r.value});try{localStorage.setItem('admin_alert_sound',r.value)}catch{}$$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));stopAlertAudio();unlockAlertSound();playPreset(r.value);if(pendingRequestCount>0)setTimeout(()=>playNewRequestAlert(),80);logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:r.value});});
     $$('[data-sound-preview]').forEach(btn=>btn.onclick=()=>{unlockAlertAudio();playPreset(btn.dataset.soundPreview)});
     $('#refreshAuditLog').onclick=async()=>{const b=$('#refreshAuditLog');b.disabled=true;try{const d=await call('admin_get_audit_logs');$('#adminAuditLog').innerHTML=renderAuditLogs(d.logs||[]);notify('تم تحديث سجل التعديلات.')}catch(e){notify(e.message||'تعذر تحديث السجل.',true)}finally{b.disabled=false}};
     $('#printAuditLog').onclick=()=>{const popup=window.open('','_blank');if(!popup){notify('يرجى السماح بفتح نافذة الطباعة.',true);return}const currentName=sessionAdminName(),auditMarkup=$('#adminAuditLog').innerHTML.replace(/<details class="audit-log-row"/g,'<details open class="audit-log-row"');popup.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>سجل التعديلات والعمليات</title><style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#241a30;position:relative}body:before{content:'${esc(currentName)}';position:fixed;inset:38% 0 auto;text-align:center;font-size:58px;font-weight:900;color:rgba(74,46,111,.08);transform:rotate(-28deg);z-index:-1;pointer-events:none}.print-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #c18a20;padding-bottom:12px;margin-bottom:16px}.print-head img{width:72px;height:72px;object-fit:contain}.print-head h1{font-size:19px;color:#4a2e6f;margin:0}.print-head p{font-size:12px;margin:4px 0}.print-meta{margin-inline-start:auto;text-align:left;font-size:11px}details{border:1px solid #ccc;border-radius:8px;margin:8px 0;padding:10px;break-inside:avoid}summary{font-weight:bold}.audit-log-meta{color:#555}.audit-log-detail{padding:8px}.audit-change-list{line-height:2}pre{white-space:pre-wrap;direction:ltr;text-align:left;border:1px solid #ddd;padding:8px}button{display:none}.print-foot{text-align:center;border-top:1px solid #ccc;padding-top:8px;margin-top:18px;font-size:10px}@media print{body{padding:0}}</style></head><body><header class="print-head"><img src="${new URL(school.logo,location.href).href}" alt="شعار المدرسة"><div><h1>${esc(school.name)}</h1><p>${esc(school.subtitle)}</p></div><div class="print-meta"><strong>سجل التعديلات والعمليات</strong><br>تاريخ الطباعة: ${esc(dateLabel(new Date().toISOString()))}<br>إعداد: ${esc(currentName)} — ${esc(school.role)}</div></header>${auditMarkup}<footer class="print-foot">منظومة النداء والاستئذان المدرسي المعتمدة</footer></body></html>`);popup.document.close();popup.focus();popup.print()};
@@ -642,39 +676,15 @@
     const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
     downloadBlob(zip.build([['[Content_Types].xml',ct],['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],['xl/workbook.xml',workbook],['xl/_rels/workbook.xml.rels',wbRels],['xl/worksheets/sheet1.xml',sheet]]),'bsmat-'+reportTab+'-report.xlsx');notify('تم إنشاء ملف Excel.');
   }
-  let livePoll=null,liveInitialized=false,liveSyncInFlight=false,seenPendingRequestIds=new Set();
+  let livePoll=null,liveInitialized=false,liveSyncInFlight=false,liveSyncQueued=false,liveSyncRetryTimer=null,liveSyncRetryCount=0,seenPendingRequestIds=new Set(),liveRealtimeConnected=false;
   let activeRequestAlerts=new Set();
   let pendingRequestCount=0,soundUnlockBound=false;
-  function renderPendingRequestBadge(count){pendingRequestCount=count;const badge=$('#pendingRequestBadge');if(!badge)return;badge.textContent=String(count);badge.classList.toggle('hidden',count===0);badge.setAttribute('aria-label',`${count} طلبات معلقة`)}
-  async function unlockAlertSound(){
-    if(!pendingRequestCount)return;
-    const wasRunning=getSoundContext()?.state==='running';
-    unlockAlertAudio();
-    const ctx=await primeSoundContext();
-    if(ctx?.state==='running'&&!wasRunning)playNewRequestAlert();
-  }
-  function bindAlertSoundUnlock(){
-    if(soundUnlockBound)return;
-    soundUnlockBound=true;
-    document.addEventListener('pointerdown',unlockAlertSound,{passive:true});
-    document.addEventListener('keydown',unlockAlertSound);
-  }
-  async function playNewRequestAlert(){
-    const pref=settings();if(pref.sound===false)return;
-    if(alertAudioUnlocked){startAlertAudio();return}
-    unlockAlertAudio();
-    if(getSoundContext()?.state!=='running'){bindAlertSoundUnlock();return}
-    await playPreset(pref.soundPreset);
-    setTimeout(()=>playPreset(pref.soundPreset),260);
-    setTimeout(()=>playPreset(pref.soundPreset),520);
-  }
-  function stopRequestAlert(requestId){
-    activeRequestAlerts.delete(String(requestId));
-    if(!activeRequestAlerts.size)stopAlertAudio()
-  }
-  function stopAllRequestAlerts(){
-    activeRequestAlerts.clear();
-    stopAlertAudio()
+  function renderPendingRequestBadge(count){pendingRequestCount=Math.max(0,Number(count)||0);const badge=$('#pendingRequestBadge');if(!badge)return;badge.textContent=String(pendingRequestCount);badge.classList.toggle('hidden',pendingRequestCount===0);badge.setAttribute('aria-label',`${pendingRequestCount} طلبات معلقة`)}
+  function stopLiveRetry(){if(liveSyncRetryTimer){clearTimeout(liveSyncRetryTimer);liveSyncRetryTimer=null}}
+  function scheduleLiveRetry(){
+    if(!token||liveSyncRetryTimer||liveSyncRetryCount>=2)return;
+    const delay=liveSyncRetryCount===0?700:1800;liveSyncRetryCount++;
+    liveSyncRetryTimer=setTimeout(()=>{liveSyncRetryTimer=null;syncLiveRequests(true)},delay);
   }
   function reconcilePendingAlerts(ids){
     const previous=activeRequestAlerts;
@@ -682,43 +692,115 @@
     renderPendingRequestBadge(ids.length);
     if(!ids.length){stopAlertAudio();return}
     const hasNewPending=[...activeRequestAlerts].some(id=>!previous.has(id));
-    if(hasNewPending||!previous.size||getAlertAudio().paused)playNewRequestAlert();
+    if(hasNewPending||!previous.size)playNewRequestAlert();
     if(getSoundContext()?.state!=='running')bindAlertSoundUnlock();
   }
   function updateDashboardStats(pending){renderPendingRequestBadge(pending)}
   function stopLiveRequestMonitor(){
-    if(livePoll)clearTimeout(livePoll);
-    livePoll=null;liveInitialized=false;seenPendingRequestIds=new Set();adminRealtimeBound=false;
+    stopLiveRetry();if(livePoll)clearTimeout(livePoll);livePoll=null;liveInitialized=false;liveSyncInFlight=false;liveSyncQueued=false;liveSyncRetryCount=0;seenPendingRequestIds=new Set();adminRealtimeBound=false;liveRealtimeConnected=false;
     stopAllRequestAlerts();renderPendingRequestBadge(0);window.BsmatRealtime?.stopAdmin?.().catch?.(()=>{});
   }
+  function refreshLiveView(payload){
+    const viewTab=payload?.viewTab,afterTab=activeTab;if(!viewTab||afterTab!==viewTab)return;
+    if(viewTab==='stats')renderStatsData(payload.data);
+    else if(viewTab==='requests')renderRequestsData(payload.rows,true);
+  }
   async function syncLiveRequests(silent=false){
-    if(!token||liveSyncInFlight)return false;liveSyncInFlight=true;const revision=liveSyncRevision;
+    if(!token)return false;
+    if(liveSyncInFlight){liveSyncQueued=true;return false}
+    liveSyncInFlight=true;const revision=liveSyncRevision,viewTab=activeTab;
     try{
-      const d=await call('admin_get_requests');
+      const action=viewTab==='stats'?'admin_get_today_stats':'admin_get_requests';
+      const d=await call(action);
       if(revision!==liveSyncRevision)return false;
-      const hasRequestRows=Array.isArray(d)||Array.isArray(d.requests)||Array.isArray(d.data?.requests)||Array.isArray(d.rows);
-      if(!hasRequestRows)throw new Error('استجابة الطلبات من الخادم غير مفهومة.');
-      const requestRows=Array.isArray(d)?d:Array.isArray(d.requests)?d:Array.isArray(d.data?.requests)?d.data.requests:d.rows;
-      requestRows.forEach(row=>requestAuditMap.set(String(row.id),row));
-      const pending=requestRows.filter(r=>r.status==='pending'),ids=new Set(pending.map(r=>String(r.id)));
+      const rows=Array.isArray(d)?d:(Array.isArray(d.requests)?d.requests:Array.isArray(d.data?.requests)?d.data.requests:Array.isArray(d.rows)?d.rows:[]);
+      if(!Array.isArray(rows))throw new Error('استجابة الطلبات من الخادم غير مفهومة.');
+      stopLiveRetry();liveSyncRetryCount=0;
+      rows.forEach(row=>requestAuditMap.set(String(row.id),row));
+      const pendingRows=rows.filter(r=>r.status==='pending');
+      const ids=new Set(pendingRows.map(r=>String(r.id)));
       const wasInitialized=liveInitialized,newIds=[...ids].filter(id=>!seenPendingRequestIds.has(id));
       seenPendingRequestIds=ids;liveInitialized=true;
-      const changed=ids.size!==activeRequestAlerts.size||[...ids].some(id=>!activeRequestAlerts.has(id));
       reconcilePendingAlerts(ids);
-      if((!wasInitialized&&ids.size)||(!silent&&newIds.length))notify(newIds.length?newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`:`يوجد ${ids.size} طلبات معلقة.`);
-      if(!wasInitialized&&ids.size&&activeTab==='stats')activateTab('requests');
-      else if((wasInitialized&&(changed||newIds.length))&&(activeTab==='requests'||activeTab==='stats'))await load(activeTab);
-      updateDashboardStats(pending.length);return true;
+      if((!wasInitialized&&ids.size)||(!silent&&newIds.length)){notify(newIds.length?newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`:`يوجد ${ids.size} طلبات معلقة.`)}
+      if(!wasInitialized&&ids.size&&activeTab==='stats'){activateTab('requests');}
+      else if(wasInitialized||newIds.length){refreshLiveView({viewTab,data:d,rows});}
+      updateDashboardStats(pendingRows.length);
+      return true;
     }catch(error){
-      // Background synchronization is best-effort. Do not show a red error toast that can
-      // repeatedly interrupt staff while the Realtime channel remains usable. Manual refreshes
-      // and actual action failures still surface their own errors normally.
+      scheduleLiveRetry();
       return false;
-    }finally{liveSyncInFlight=false}
+    }finally{
+      liveSyncInFlight=false;
+      if(liveSyncQueued&&token){liveSyncQueued=false;queueMicrotask(()=>syncLiveRequests(true))}
+    }
   }
-  function scheduleLivePoll(delay=60000){
+  function riyadhMinutes(){
+    const now=new Date();
+    const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Riyadh',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(now);
+    const h=Number(parts.find(x=>x.type==='hour')?.value||0),m=Number(parts.find(x=>x.type==='minute')?.value||0);
+    return h*60+m;
+  }
+  function operationalHours(){const minutes=riyadhMinutes();return minutes>=360&&minutes<840;}
+  function msUntilNextStart(){
+    const now=new Date(),parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+    const y=Number(parts.find(x=>x.type==='year')?.value||now.getFullYear()),m=Number(parts.find(x=>x.type==='month')?.value||now.getMonth()+1),d=Number(parts.find(x=>x.type==='day')?.value||now.getDate());
+    const start=new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T06:00:00+03:00`);
+    if(start.getTime()<=now.getTime())start.setTime(start.getTime()+86400000);
+    return Math.max(1000,start.getTime()-now.getTime());
+  }
+  function scheduleLivePoll(delay=300000){
     if(livePoll)clearTimeout(livePoll);livePoll=null;if(!token)return;
-    livePoll=setTimeout(()=>{livePoll=null;syncLiveRequests(false).finally(()=>scheduleLivePoll(60000))},delay);
+    if(!operationalHours()){
+      livePoll=setTimeout(()=>{livePoll=null;if(token)scheduleLivePoll(5000)},msUntilNextStart());
+      return;
+    }
+    const nextDelay=liveRealtimeConnected?300000:Math.max(5000,Number(delay)||15000);
+    livePoll=setTimeout(()=>{
+      livePoll=null;
+      if(!token)return;
+      if(!operationalHours()){scheduleLivePoll(5000);return;}
+      syncLiveRequests(true).finally(()=>scheduleLivePoll(300000));
+    },nextDelay);
+  }
+  function stopLiveRequestMonitor(){
+    stopLiveRetry();if(livePoll)clearTimeout(livePoll);livePoll=null;liveInitialized=false;liveSyncInFlight=false;liveSyncQueued=false;liveSyncRetryCount=0;seenPendingRequestIds=new Set();adminRealtimeBound=false;liveRealtimeConnected=false;
+    stopAllRequestAlerts();renderPendingRequestBadge(0);window.BsmatRealtime?.stopAdmin?.().catch?.(()=>{});
+  }
+  function refreshLiveView(payload){
+    const viewTab=payload?.viewTab,afterTab=activeTab;if(!viewTab||afterTab!==viewTab)return;
+    if(viewTab==='stats')renderStatsData(payload.data);
+    else if(viewTab==='requests')renderRequestsData(payload.rows,true);
+  }
+  async function syncLiveRequests(silent=false){
+    if(!token)return false;
+    if(liveSyncInFlight){liveSyncQueued=true;return false}
+    liveSyncInFlight=true;const revision=liveSyncRevision,viewTab=activeTab;
+    try{
+      const action=viewTab==='stats'?'admin_get_today_stats':'admin_get_requests';
+      const d=await call(action);
+      if(revision!==liveSyncRevision)return false;
+      const rows=Array.isArray(d)?d:(Array.isArray(d.requests)?d.requests:Array.isArray(d.data?.requests)?d.data.requests:Array.isArray(d.rows)?d.rows:[]);
+      if(!Array.isArray(rows))throw new Error('استجابة الطلبات من الخادم غير مفهومة.');
+      stopLiveRetry();liveSyncRetryCount=0;
+      rows.forEach(row=>requestAuditMap.set(String(row.id),row));
+      const pendingRows=rows.filter(r=>r.status==='pending');
+      const ids=new Set(pendingRows.map(r=>String(r.id)));
+      const wasInitialized=liveInitialized,newIds=[...ids].filter(id=>!seenPendingRequestIds.has(id));
+      seenPendingRequestIds=ids;liveInitialized=true;
+      reconcilePendingAlerts(ids);
+      if((!wasInitialized&&ids.size)||(!silent&&newIds.length)){notify(newIds.length?newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`:`يوجد ${ids.size} طلبات معلقة.`)}
+      if(!wasInitialized&&ids.size&&activeTab==='stats'){activateTab('requests');}
+      else if(wasInitialized||newIds.length){refreshLiveView({viewTab,data:d,rows});}
+      updateDashboardStats(pendingRows.length);
+      return true;
+    }catch(error){
+      scheduleLiveRetry();
+      return false;
+    }finally{
+      liveSyncInFlight=false;
+      if(liveSyncQueued&&token){liveSyncQueued=false;queueMicrotask(()=>syncLiveRequests(true))}
+    }
   }
   async function bindAdminRealtime(){
     if(!token||adminRealtimeBound||!window.BsmatRealtime?.subscribeAdmin)return;
@@ -726,8 +808,13 @@
     try{
       await window.BsmatRealtime.subscribeAdmin(async event=>{
         if(!token)return;
-        const kind=String(event?.kind||event?.operation||'');
-        if(kind==='INSERT'||kind==='insert'){playNewRequestAlert();notify('وصل طلب جديد مباشرة.');}
+        const kind=String(event?.kind||event?.operation||'').toUpperCase();
+        const requestId=String(event?.request_id||'');
+        if(kind==='INSERT'&&requestId&&!activeRequestAlerts.has(requestId)){
+          const optimistic=new Set(activeRequestAlerts);optimistic.add(requestId);renderPendingRequestBadge(optimistic.size);playNewRequestAlert();
+          notify('وصل طلب جديد مباشرة.');
+        }
+        liveSyncQueued=liveSyncInFlight||liveSyncQueued;
         await syncLiveRequests(true);
       });
     }catch{adminRealtimeBound=false}
@@ -735,43 +822,42 @@
   function wakeLiveMonitor(){
     if(!token)return;refreshAdminSession();
     if(livePoll){clearTimeout(livePoll);livePoll=null}
-    syncLiveRequests(false).finally(()=>{bindAdminRealtime();scheduleLivePoll(60000)});
+    liveSyncQueued=false;syncLiveRequests(true).finally(()=>{bindAdminRealtime();scheduleLivePoll(liveRealtimeConnected?300000:15000)});
   }
   function startLiveRequestMonitor(){
     stopLiveRequestMonitor();scheduleAdminRefresh();
     unlockAlertAudio();
-    syncLiveRequests(true).finally(()=>{bindAdminRealtime();scheduleLivePoll(60000)});
+    syncLiveRequests(true).finally(()=>{bindAdminRealtime();scheduleLivePoll(liveRealtimeConnected?300000:15000)});
   }
-  window.addEventListener('bsmat-realtime-status',event=>{if(event.detail?.scope==='admin'&&['SUBSCRIBED','CHANNEL_ERROR','TIMED_OUT'].includes(event.detail.status)){if(event.detail.status==='SUBSCRIBED')notify('الاتصال اللحظي بالطلبات نشط.')}});
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wakeLiveMonitor()});
-  window.addEventListener('online',wakeLiveMonitor);
-  window.addEventListener('pageshow',wakeLiveMonitor);
-  nationalId?.addEventListener('input',()=>{nationalId.value=String(nationalId.value||'').replace(/\D/g,'').slice(0,10)});
-  loginForm.addEventListener('submit',async event=>{
-    event.preventDefault();
-    unlockAlertAudio();
-    primeSoundContext();
-    const nid=String(nationalId?.value||'').trim();
-    const pass=String(password.value||'').trim();
-    if(!/^\d{10}$/.test(nid)){loginMessage.textContent='أدخل رقم الهوية المكون من 10 أرقام.';nationalId?.focus();return}
-    if(!pass){loginMessage.textContent='أدخل الرقم السري.';password.focus();return}
-    const button=$('#loginButton');button.disabled=true;loginMessage.textContent='جارٍ التحقق…';
-    try{
-      const data=await Bsmat.request('admin-api',{body:{action:'admin_login',national_id:nid,password:pass}});
-      token=data.session_token||data.token||'';
-      if(!token)throw new Error('لم يُرجع الخادم جلسة إدارة.');
-      sessionStorage.setItem(Bsmat.keys.adminSession,token);
-      setLoggedIn(true);
-      loginMessage.textContent='تم تسجيل الدخول بنجاح.';
-      nationalId.value='';
-      password.value='';
-      activateTab('stats');
-      startLiveRequestMonitor();
-    }catch(error){
-      loginMessage.textContent=error.message||'تعذر تسجيل الدخول.';
-      setLoggedIn(false);
-    }finally{button.disabled=false}
+  window.addEventListener('bsmat-realtime-status',event=>{
+    const detail=event.detail||{};
+    if(detail.scope!=='admin'||!token)return;
+    const status=String(detail.status||'');
+    if(status==='SUBSCRIBED'){
+      liveRealtimeConnected=true;
+      if(livePoll){clearTimeout(livePoll);livePoll=null}
+      syncLiveRequests(true);
+      scheduleLivePoll(300000);
+    }else if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status)){
+      liveRealtimeConnected=false;
+      syncLiveRequests(true);
+      scheduleLivePoll(5000);
+    }
   });
+  window.addEventListener('bsmat-realtime-heartbeat',event=>{
+    const status=String(event.detail?.status||'');
+    if(!token)return;
+    if(status==='ok'){liveRealtimeConnected=true;scheduleLivePoll(300000)}
+    if(['timeout','disconnected'].includes(status)){
+      liveRealtimeConnected=false;
+      syncLiveRequests(true);
+      scheduleLivePoll(5000);
+    }
+  });
+  window.addEventListener('focus',()=>{if(token)wakeLiveMonitor()});
+  window.addEventListener('pageshow',()=>{if(token)wakeLiveMonitor()});
+  window.addEventListener('online',()=>{if(token)wakeLiveMonitor()});
+  window.addEventListener('resume',()=>{if(token)wakeLiveMonitor()});
   $('#logout').onclick=()=>{stopLiveRequestMonitor();sessionStorage.removeItem(Bsmat.keys.adminSession);token=null;setLoggedIn(false);nationalId.value='';password.value='';loginMessage.textContent='تم تسجيل الخروج.';notify('تم تسجيل الخروج')};
   $$('[data-tab]').forEach(button=>button.addEventListener('click',()=>{if(token)activateTab(button.dataset.tab)}));
   $$('[data-go-tab]').forEach(button=>button.addEventListener('click',()=>{if(token)activateTab(button.dataset.goTab)}));
