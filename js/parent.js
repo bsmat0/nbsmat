@@ -186,7 +186,7 @@
       if(['approved','rejected'].includes(next)){closed=true;window.BsmatRealtime?.stopRequest?.(requestToken);stopPoll()}
     }catch(error){if(error?.status===401||error?.status===403){closed=true;window.BsmatRealtime?.stopRequest?.(requestToken);expireParentSession('انتهى ارتباط هذا الجهاز أو جلسة ولي الأمر. سجل الدخول من جديد.')}}finally{checking=false}};
     const onRealtime=async payload=>{const stateValue=String(payload?.status||'');if(stateValue==='approved'||stateValue==='rejected')await check();};
-    window.BsmatRealtime?.subscribeRequest?.(requestToken,onRealtime).catch?.(()=>{check()});
+    window.BsmatRealtime?.subscribeRequest?.(requestToken,onRealtime).catch?.(()=>{});
     check();state.poll=setInterval(check,30000);
   }
 

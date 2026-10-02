@@ -7,7 +7,7 @@
   const localSettingsKey='bsmat.admin.preferences.v5';
   let token=sessionStorage.getItem(Bsmat.keys.adminSession), activeTab='stats', dialogSave=null, requestAuditMap=new Map();
   let adminRefreshTimer=null,adminRefreshInFlight=null;
-  let liveSyncRevision=0,adminRealtimeBound=false,liveSyncQueued=false;
+  let liveSyncRevision=0,adminRealtimeBound=false;
 
   const school={
     name:'روضة وابتدائية بسمات الوعد الأهلية',
@@ -44,7 +44,7 @@
   const settings=()=>{
     try{
       const v={...defaultSettings,...JSON.parse(localStorage.getItem(localSettingsKey)||'{}')};
-      if(!SOUND_PRESETS?.some?.(x=>x.id===v.soundPreset))v.soundPreset=defaultSettings.soundPreset;
+      const selectedSound=localStorage.getItem('admin_alert_sound');if(selectedSound)v.soundPreset=selectedSound;
       if(v.dayStartTime==='07:00'&&v.dismissalTime==='11:20'){v.dayStartTime='06:00';v.dismissalTime='15:00';}
       return v;
     }catch{return {...defaultSettings}}
@@ -79,26 +79,10 @@
   function unlockAlertAudio(){
     try{const pref=settings(),preset=SOUND_PRESETS.find(x=>x.id===pref.soundPreset)||SOUND_PRESETS[0],audio=getAlertAudio();audio.src=wavDataUrl(preset);audio.volume=.001;alertAudioPresetId=preset.id;const promise=audio.play();if(promise?.then)promise.then(()=>{audio.pause();audio.currentTime=0;audio.volume=.92;alertAudioUnlocked=true}).catch(()=>{});else{alertAudioUnlocked=true}}catch{}
   }
-  let soundLoopTimer=null;
-  function stopAlertAudio(){
-    if(soundLoopTimer){clearInterval(soundLoopTimer);soundLoopTimer=null}
-    try{const audio=getAlertAudio();audio.pause();audio.currentTime=0}catch{}
+  function startAlertAudio(){
+    const pref=settings();if(pref.sound===false)return false;try{const preset=SOUND_PRESETS.find(x=>x.id===pref.soundPreset)||SOUND_PRESETS[0],audio=getAlertAudio();audio.loop=true;if(alertAudioPresetId!==preset.id){audio.src=wavDataUrl(preset);alertAudioPresetId=preset.id}audio.volume=.92;if(!audio.paused)return true;const p=audio.play();if(p?.catch)p.catch(()=>{alertAudioUnlocked=false;playPreset(pref.soundPreset)});return true}catch{return false}
   }
-  async function startAlertAudio(){
-    const pref=settings();
-    if(pref.sound===false)return false;
-    const ctx=await primeSoundContext();
-    if(ctx?.state!=='running'){bindAlertSoundUnlock();return false}
-    if(soundLoopTimer)clearInterval(soundLoopTimer);
-    const tick=()=>{
-      const current=settings();
-      if(current.sound===false){stopAlertAudio();return}
-      void playPreset(current.soundPreset);
-    };
-    tick();
-    soundLoopTimer=setInterval(tick,1350);
-    return true;
-  }
+  function stopAlertAudio(){try{const audio=getAlertAudio();audio.pause();audio.currentTime=0}catch{} }
   async function primeSoundContext(){
     try{
       const C=window.AudioContext||window.webkitAudioContext;
@@ -253,6 +237,7 @@
   async function renderStats(){
     const d=await call('admin_get_today_stats'),rows=d.requests||[];
     const total=Number(d.total)||rows.length,pending=Number(d.pending)||rows.filter(r=>r.status==='pending').length,approved=Number(d.approved)||rows.filter(r=>r.status==='approved').length,rejected=Number(d.rejected)||rows.filter(r=>r.status==='rejected').length;
+    renderPendingRequestBadge(pending);
     const pendingRows=rows.filter(r=>r.status==='pending').slice(0,10);
     content.innerHTML=`${heading('◈','نظرة عامة','لوحة متابعة فورية من قاعدة البيانات')}<div class="admin-stat-grid">
       ${metricCard('إجمالي الطلبات',total,'purple','↗')}${metricCard('بانتظار الإجراء',pending,'gold','!')}${metricCard('تمت الموافقة',approved,'success','✓')}${metricCard('مرفوضة',rejected,'danger','×')}
@@ -276,6 +261,7 @@
 
   async function renderRequests(){
     const d=await call('admin_get_all_requests'),rows=d.requests||[];
+    renderPendingRequestBadge(rows.filter(r=>r.status==='pending').length);
     content.innerHTML=`${heading('◉','الطلبات الحية','مراجعة الطلبات الحالية والطلبات السابقة مع تصفية واضحة')}
       <div class="admin-toolbar admin-filter-toolbar"><input id="requestSearch" placeholder="بحث باسم الطالب أو ولي الأمر أو الجوال" aria-label="بحث في الطلبات"><select id="requestFilter" aria-label="تصفية الحالة"><option value="all">كل الحالات</option><option value="pending">بانتظار الإجراء</option><option value="approved">تمت الموافقة</option><option value="rejected">مرفوض</option></select><select id="requestTypeFilter" aria-label="تصفية النوع"><option value="all">كل الأنواع</option><option value="pickup">نداء انصراف</option><option value="excuse">استئذان مبكر</option></select><button id="requestRefresh" class="button quiet" type="button">تحديث</button></div>
       <div class="results-summary"><strong id="requestCount">${rows.length}</strong><span>طلبًا في العرض الحالي</span></div><div id="requestList" class="request-list">${rows.map(renderRequestCard).join('')||'<div class="empty-state">لا توجد طلبات.</div>'}</div>`;
@@ -356,7 +342,7 @@
       <div class="nested-stack">
         <details class="admin-nested-panel nested-item" open><summary><span>حسابات أولياء الأمور</span><em>${rows.length}</em></summary><div class="nested-body">
           <div class="admin-toolbar"><input id="parentSearch" placeholder="بحث بالاسم أو رقم الهوية"><button id="addParent" class="button primary" type="button">إضافة ولي أمر</button><button id="parentRefresh" class="button quiet" type="button">تحديث</button></div>
-          <div class="table-wrap admin-table-card"><table class="admin-table"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الأبناء</th><th>الحالة</th><th>الجهاز</th><th>إجراء</th></tr></thead><tbody id="parentRows">${rows.map(r=>{const pd=devices.filter(dv=>String(dv.parent_id)===String(r.id));const activeDevice=pd.find(dv=>dv.status==='approved');const active=Boolean(activeDevice);const pending=pd.filter(dv=>dv.status==='pending').length;const deviceText=active?'جهاز مرتبط':pending?'جهاز بانتظار الاعتماد':'لا يوجد جهاز';const deviceClass=active?'active':pending?'pending attention-red':'muted';return `<tr data-search="${esc([r.display_name,r.national_id].join(' ').toLowerCase())}"><td><strong>${esc(r.display_name||'—')}</strong><small>${esc(r.relationship||'')}</small></td><td dir="ltr">${esc(r.national_id||'—')}</td><td>${(r.students||[]).length} أبناء</td><td><span class="status-chip ${esc(r.status||'')}">${esc(r.status==='active'?'فعال':r.status==='blocked'?'موقوف':'مراجعة')}</span></td><td><span class="status-chip ${deviceClass}">${deviceText}</span>${active?`<button class="button reject compact-action" data-device-action="${esc(activeDevice.id)}" data-device-status="rejected" data-unlink-device="${esc(activeDevice.id)}" type="button">فك الارتباط</button>`:''}${pending?`<small class="device-pending-note">يوجد جهاز جديد ينتظر الاعتماد</small>`:''}</td><td><div class="actions"><button class="button quiet compact-action" data-edit-parent="${esc(r.id)}" type="button">تعديل</button><button class="button reject compact-action" data-delete-parent="${esc(r.id)}" type="button">حذف</button></div></td></tr>`}).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد حسابات.</div></td></tr>'}</tbody></table></div>
+          <div class="table-wrap admin-table-card"><table class="admin-table"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الأبناء</th><th>الحالة</th><th>الجهاز</th><th>إجراء</th></tr></thead><tbody id="parentRows">${rows.map(r=>{const pd=devices.filter(dv=>String(dv.parent_id)===String(r.id));const activeDevice=pd.find(dv=>dv.status==='approved');const active=Boolean(activeDevice);const pending=pd.filter(dv=>dv.status==='pending').length;const deviceText=active?'جهاز مرتبط':pending?'جهاز بانتظار الاعتماد':'لا يوجد جهاز';const deviceClass=active?'active':pending?'pending attention-red':'muted';const toggleLabel=r.status==='blocked'?'تفعيل':'تعطيل';return `<tr data-search="${esc([r.display_name,r.national_id].join(' ').toLowerCase())}"><td><strong>${esc(r.display_name||'—')}</strong><small>${esc(r.relationship||'')}</small></td><td dir="ltr">${esc(r.national_id||'—')}</td><td>${(r.students||[]).length} أبناء</td><td><span class="status-chip ${esc(r.status||'')}">${esc(r.status==='active'?'فعال':r.status==='blocked'?'موقوف':'مراجعة')}</span></td><td><span class="status-chip ${deviceClass}">${deviceText}</span>${active?`<button class="button reject compact-action" data-device-action="${esc(activeDevice.id)}" data-device-status="rejected" data-unlink-device="${esc(activeDevice.id)}" type="button">فك الارتباط</button>`:''}${pending?`<small class="device-pending-note">يوجد جهاز جديد ينتظر الاعتماد</small>`:''}</td><td><div class="actions"><button class="button quiet compact-action" data-edit-parent="${esc(r.id)}" type="button">تعديل</button>${r.status==='active'||r.status==='blocked'?`<button class="button quiet compact-action" data-toggle-parent="${esc(r.id)}" data-next-status="${r.status==='active'?'blocked':'active'}" type="button">${toggleLabel}</button>`:''}<button class="button reject compact-action" data-delete-parent="${esc(r.id)}" type="button">حذف</button></div></td></tr>`}).join('')||'<tr><td colspan="6"><div class="empty-state">لا توجد حسابات.</div></td></tr>'}</tbody></table></div>
         </div></details>
         <details class="admin-nested-panel nested-item" ${pendingDevices.length?'open':''}><summary><span>طلبات ربط الأجهزة</span><em>${pendingDevices.length}</em></summary><div class="nested-body">${renderDeviceRequests(pendingDevices)}</div></details>
         <details class="admin-nested-panel nested-item"><summary><span>سجل تسجيلات أولياء الأمور</span><em>${registrations.length}</em></summary><div class="nested-body">${renderRegistrations(registrations.slice(0,100))}</div></details>
@@ -365,7 +351,8 @@
     $('#parentSearch').oninput=e=>$$('#parentRows tr').forEach(r=>r.classList.toggle('hidden',!r.dataset.search.includes(e.target.value.trim().toLowerCase())));
     $('#parentRefresh').onclick=()=>load('parents');$('#addParent').onclick=()=>openParentDialog();
     $$('[data-edit-parent]').forEach(b=>b.onclick=()=>openParentEdit(rowsMap.get(String(b.dataset.editParent))));
-    $$('[data-delete-parent]').forEach(b=>b.onclick=async()=>{if(!confirm('قد يؤدي حذف ولي الأمر إلى رفض العملية إذا كانت له سجلات مرتبطة. هل تريد المتابعة؟'))return;const before=rowsMap.get(String(b.dataset.deleteParent));try{await call('admin_delete_parent',{parent_id:b.dataset.deleteParent});await logDetailedChange('admin_delete_parent','parent','ولي الأمر '+(before?.display_name||b.dataset.deleteParent),before||null,null,{method:'تم حذف حساب ولي الأمر من لوحة الإدارة بعد التحقق من السجلات المرتبطة.'});notify('تم حذف ولي الأمر.');await load('parents')}catch(e){alert(e.message)}});
+    $$('[data-toggle-parent]').forEach(b=>b.onclick=async()=>{const before=rowsMap.get(String(b.dataset.toggleParent));if(!before)return;const next=String(b.dataset.nextStatus||'');if(!['active','blocked'].includes(next))return;const nextLabel=next==='blocked'?'تعطيل':'تفعيل';if(!confirm(`هل تريد ${nextLabel} ولي الأمر «${before.display_name||''}»؟`))return;b.disabled=true;try{await call('admin_update_parent',{parent_id:before.id,display_name:before.display_name||'',national_id:before.national_id||'',mobile:before.mobile||'',relationship:before.relationship||'ولي أمر',status:next});await logDetailedChange('admin_edit_parent','parent','ولي الأمر '+(before.display_name||before.id),{status:before.status||''},{status:next},{method:`تم ${next==='blocked'?'تعطيل':'تفعيل'} حساب ولي الأمر من قائمة أولياء الأمور.`});notify(next==='blocked'?'تم تعطيل ولي الأمر.':'تم تفعيل ولي الأمر.');await load('parents')}catch(e){alert(e.message);b.disabled=false}});
+    $$('[data-delete-parent]').forEach(b=>b.onclick=async()=>{if(!confirm('سيتم حذف ولي الأمر نهائيًا فقط إذا لم يكن مرتبطًا بأي طالب. هل تريد المتابعة؟'))return;const before=rowsMap.get(String(b.dataset.deleteParent));try{await call('admin_delete_parent',{parent_id:b.dataset.deleteParent});await logDetailedChange('admin_delete_parent','parent','ولي الأمر '+(before?.display_name||b.dataset.deleteParent),before||null,null,{method:'تم حذف حساب ولي الأمر من لوحة الإدارة بعد التحقق من ارتباطه بالطلاب.'});notify('تم حذف ولي الأمر.');await load('parents')}catch(e){alert(e.message)}});
     $$('[data-device-action]').forEach(b=>b.onclick=async()=>{if(b.hasAttribute('data-unlink-device')&&!confirm('سيتم فك ارتباط هذا الجهاز، ويمكن بعد ذلك اعتماد جهاز آخر لولي الأمر. هل تريد المتابعة؟'))return;b.disabled=true;const before=devices.find(x=>String(x.id)===String(b.dataset.deviceAction));try{await call('admin_update_parent_device',{device_id:b.dataset.deviceAction,status:b.dataset.deviceStatus});await logDetailedChange('admin_edit_parent_device','device','جهاز ولي الأمر '+b.dataset.deviceAction,{status:before?.status||'pending',device_id:before?.id||b.dataset.deviceAction},{status:b.dataset.deviceStatus,device_id:b.dataset.deviceAction},{method:b.hasAttribute('data-unlink-device')?'تم فك ارتباط جهاز ولي الأمر من لوحة الإدارة.':b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز من لوحة الإدارة.':'تم رفض جهاز ولي الأمر من لوحة الإدارة.'});notify(b.hasAttribute('data-unlink-device')?'تم فك ارتباط الجهاز.':b.dataset.deviceStatus==='approved'?'تم اعتماد الجهاز.':'تم رفض الجهاز.');await load('parents')}catch(e){alert(e.message);b.disabled=false}});
     $$('[data-verify-mobile]').forEach(b=>b.onclick=async()=>{
       if(!confirm('هل أنت متأكد أن هذا رقم ولي الأمر؟'))return;
@@ -476,7 +463,7 @@
       <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>أصوات التنبيه</strong><span>إدارة أصوات التنبيه ومعاينتها</span></summary><div class="settings-accordion-body">
         <div class="admin-panel-head"><div><h3>أصوات التنبيه</h3><p>اختر واحدًا من 10 أصوات قوية. زر المعاينة يشغّل الصوت فورًا، والاختيار محفوظ على هذا الجهاز.</p></div></div>
         <div class="sound-settings-head"><label class="toggle-line"><input id="adminSoundEnabled" type="checkbox" ${pref.sound!==false?'checked':''}><span><strong>تفعيل أصوات التنبيه</strong><small>السماح بتشغيل الصوت من لوحة الإدارة.</small></span></label><span class="sound-current">الصوت الحالي: <strong>${esc((SOUND_PRESETS.find(x=>x.id===pref.soundPreset)||SOUND_PRESETS[0]).name)}</strong></span></div>
-        <div class="sound-grid">${SOUND_PRESETS.map((sound,index)=>{const checked=(pref.soundPreset||'signal-1')===sound.id;return `<div class="sound-choice ${checked?'is-selected':''}"><label class="sound-choice-select"><input type="radio" name="adminSoundPreset" value="${esc(sound.id)}" ${checked?'checked':''}><span class="sound-index">${index+1}</span><span class="sound-choice-copy"><strong>${esc(sound.name)}</strong><small>${esc(sound.desc)}</small></span></label><button type="button" class="button quiet sound-preview" data-sound-preview="${esc(sound.id)}">معاينة</button></div>`}).join('')}</div>
+        <div class="sound-grid">${SOUND_PRESETS.map((sound,index)=>{const checked=(pref.soundPreset||'signal-1')===sound.id;return `<label class="sound-choice ${checked?'is-selected':''}"><input type="radio" name="adminSoundPreset" value="${esc(sound.id)}" ${checked?'checked':''}><span class="sound-index">${index+1}</span><span class="sound-choice-copy"><strong>${esc(sound.name)}</strong><small>${esc(sound.desc)}</small></span><button type="button" class="button quiet sound-preview" data-sound-preview="${esc(sound.id)}">معاينة</button></label>`}).join('')}</div>
       </div></details>
       <details class="settings-panel admin-nested-panel settings-accordion"><summary><strong>سياسة الخصوصية وشروط الاستخدام</strong><span>تعديل النصوص المنشورة</span></summary><div class="settings-accordion-body">
         <div class="admin-panel-head"><div><h3>سياسة الخصوصية وشروط الاستخدام</h3><p>يمكن تعديل النصوص المنشورة في الصفحات العامة وحفظها مباشرة في قاعدة البيانات.</p></div></div>
@@ -530,22 +517,7 @@
     return logAdminChange(action,{entity_type:entityType,entity_label:entityLabel,entity_id:extra.entity_id||b?.id||a?.id||null,request_id:requestId,student_id:Number(extra.student_id)||null,student_name:extra.student_name||b?.student_name||a?.student_name||'',student_names:extra.student_names||b?.student_names||a?.student_names||[],recipient_name:extra.recipient_name||b?.recipient_name||a?.recipient_name||b?.delegate_name||a?.delegate_name||'',actor_name:extra.actor_name||school.staff,method:extra.method||'تم تنفيذ العملية من لوحة الإدارة بعد تسجيل الدخول.',changed_fields:changed,changes,before:b,after:a,reason:extra.reason||''});
   };
     $('#adminSoundEnabled').onchange=e=>{commit({sound:e.target.checked});if(e.target.checked)unlockAlertAudio();playPreset();logAdminChange('update_admin_sound_setting',{setting:'sound',after:e.target.checked});};
-    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=async()=>{
-      const before=settings().soundPreset;
-      const next=SOUND_PRESETS.some(x=>x.id===String(r.value||''))?String(r.value):defaultSettings.soundPreset;
-      commit({soundPreset:next});
-      try{localStorage.setItem('admin_alert_sound',next)}catch{}
-      $$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));
-      const current=$('.sound-current strong');
-      if(current){const chosen=SOUND_PRESETS.find(x=>x.id===next)||SOUND_PRESETS[0];current.textContent=chosen.name}
-      stopAlertAudio();
-      alertAudioPresetId='';
-      alertAudioUnlocked=false;
-      await primeSoundContext();
-      await playPreset(next);
-      if(activeRequestAlerts.size)await startAlertAudio();
-      logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:next});
-    });
+    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=()=>{const before=settings().soundPreset;commit({soundPreset:r.value});try{localStorage.setItem('admin_alert_sound',r.value)}catch{}$$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));unlockAlertAudio();playPreset(r.value);logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:r.value});});
     $$('[data-sound-preview]').forEach(btn=>btn.onclick=()=>{unlockAlertAudio();playPreset(btn.dataset.soundPreview)});
     $('#refreshAuditLog').onclick=async()=>{const b=$('#refreshAuditLog');b.disabled=true;try{const d=await call('admin_get_audit_logs');$('#adminAuditLog').innerHTML=renderAuditLogs(d.logs||[]);notify('تم تحديث سجل التعديلات.')}catch(e){notify(e.message||'تعذر تحديث السجل.',true)}finally{b.disabled=false}};
     $('#printAuditLog').onclick=()=>{const popup=window.open('','_blank');if(!popup){notify('يرجى السماح بفتح نافذة الطباعة.',true);return}const currentName=sessionAdminName(),auditMarkup=$('#adminAuditLog').innerHTML.replace(/<details class="audit-log-row"/g,'<details open class="audit-log-row"');popup.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>سجل التعديلات والعمليات</title><style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#241a30;position:relative}body:before{content:'${esc(currentName)}';position:fixed;inset:38% 0 auto;text-align:center;font-size:58px;font-weight:900;color:rgba(74,46,111,.08);transform:rotate(-28deg);z-index:-1;pointer-events:none}.print-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #c18a20;padding-bottom:12px;margin-bottom:16px}.print-head img{width:72px;height:72px;object-fit:contain}.print-head h1{font-size:19px;color:#4a2e6f;margin:0}.print-head p{font-size:12px;margin:4px 0}.print-meta{margin-inline-start:auto;text-align:left;font-size:11px}details{border:1px solid #ccc;border-radius:8px;margin:8px 0;padding:10px;break-inside:avoid}summary{font-weight:bold}.audit-log-meta{color:#555}.audit-log-detail{padding:8px}.audit-change-list{line-height:2}pre{white-space:pre-wrap;direction:ltr;text-align:left;border:1px solid #ddd;padding:8px}button{display:none}.print-foot{text-align:center;border-top:1px solid #ccc;padding-top:8px;margin-top:18px;font-size:10px}@media print{body{padding:0}}</style></head><body><header class="print-head"><img src="${new URL(school.logo,location.href).href}" alt="شعار المدرسة"><div><h1>${esc(school.name)}</h1><p>${esc(school.subtitle)}</p></div><div class="print-meta"><strong>سجل التعديلات والعمليات</strong><br>تاريخ الطباعة: ${esc(dateLabel(new Date().toISOString()))}<br>إعداد: ${esc(currentName)} — ${esc(school.role)}</div></header>${auditMarkup}<footer class="print-foot">منظومة النداء والاستئذان المدرسي المعتمدة</footer></body></html>`);popup.document.close();popup.focus();popup.print()};
@@ -662,7 +634,7 @@
     const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
     downloadBlob(zip.build([['[Content_Types].xml',ct],['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],['xl/workbook.xml',workbook],['xl/_rels/workbook.xml.rels',wbRels],['xl/worksheets/sheet1.xml',sheet]]),'bsmat-'+reportTab+'-report.xlsx');notify('تم إنشاء ملف Excel.');
   }
-  let livePoll=null,liveInitialized=false,liveSyncInFlight=false,liveSyncFailureShown=false,liveSyncFailureCount=0,seenPendingRequestIds=new Set();
+  let livePoll=null,liveInitialized=false,liveSyncInFlight=false,liveSyncFailureShown=false,seenPendingRequestIds=new Set();
   let activeRequestAlerts=new Set();
   let pendingRequestCount=0,soundUnlockBound=false;
   function renderPendingRequestBadge(count){pendingRequestCount=count;const badge=$('#pendingRequestBadge');if(!badge)return;badge.textContent=String(count);badge.classList.toggle('hidden',count===0);badge.setAttribute('aria-label',`${count} طلبات معلقة`)}
@@ -681,8 +653,12 @@
   }
   async function playNewRequestAlert(){
     const pref=settings();if(pref.sound===false)return;
-    if(getSoundContext()?.state!=='running')unlockAlertAudio();
-    await startAlertAudio();
+    if(alertAudioUnlocked){startAlertAudio();return}
+    unlockAlertAudio();
+    if(getSoundContext()?.state!=='running'){bindAlertSoundUnlock();return}
+    await playPreset(pref.soundPreset);
+    setTimeout(()=>playPreset(pref.soundPreset),260);
+    setTimeout(()=>playPreset(pref.soundPreset),520);
   }
   function stopRequestAlert(requestId){
     activeRequestAlerts.delete(String(requestId));
@@ -704,21 +680,18 @@
   function updateDashboardStats(pending){renderPendingRequestBadge(pending)}
   function stopLiveRequestMonitor(){
     if(livePoll)clearTimeout(livePoll);
-    livePoll=null;liveInitialized=false;liveSyncFailureCount=0;liveSyncFailureShown=false;seenPendingRequestIds=new Set();adminRealtimeBound=false;liveSyncQueued=false;
+    livePoll=null;liveInitialized=false;seenPendingRequestIds=new Set();adminRealtimeBound=false;
     stopAllRequestAlerts();renderPendingRequestBadge(0);window.BsmatRealtime?.stopAdmin?.().catch?.(()=>{});
   }
   async function syncLiveRequests(silent=false){
-    if(!token)return false;
-    if(liveSyncInFlight){liveSyncQueued=true;return false}
-    liveSyncInFlight=true;const revision=liveSyncRevision;
+    if(!token||liveSyncInFlight)return false;liveSyncInFlight=true;const revision=liveSyncRevision;
     try{
       const d=await call('admin_get_requests');
       if(revision!==liveSyncRevision)return false;
       const hasRequestRows=Array.isArray(d)||Array.isArray(d.requests)||Array.isArray(d.data?.requests)||Array.isArray(d.rows);
       if(!hasRequestRows)throw new Error('استجابة الطلبات من الخادم غير مفهومة.');
       const requestRows=Array.isArray(d)?d:Array.isArray(d.requests)?d:Array.isArray(d.data?.requests)?d.data.requests:d.rows;
-      if(liveSyncFailureShown){liveSyncFailureShown=false;liveSyncFailureCount=0;notify('عاد الاتصال بمراقبة الطلبات.')}
-      else liveSyncFailureCount=0;
+      if(liveSyncFailureShown){liveSyncFailureShown=false;notify('عاد الاتصال بمراقبة الطلبات.')}
       requestRows.forEach(row=>requestAuditMap.set(String(row.id),row));
       const pending=requestRows.filter(r=>r.status==='pending'),ids=new Set(pending.map(r=>String(r.id)));
       const wasInitialized=liveInitialized,newIds=[...ids].filter(id=>!seenPendingRequestIds.has(id));
@@ -730,16 +703,9 @@
       else if((!wasInitialized||changed||newIds.length)&&activeTab==='requests')await load('requests');
       updateDashboardStats(pending.length);return true;
     }catch(error){
-      liveSyncFailureCount++;
-      if(!silent && liveSyncFailureCount>=3 && !liveSyncFailureShown){liveSyncFailureShown=true;notify('تعذر تحديث الطلبات مؤقتًا. سيعاد الاتصال تلقائيًا.',true)}
+      if(!liveSyncFailureShown){liveSyncFailureShown=true;notify(`تعذر تحديث الطلبات: ${error?.message||'تحققي من اتصال الإدارة بالخادم.'}`,true)}
       return false;
-    }finally{
-      liveSyncInFlight=false;
-      if(liveSyncQueued&&token){
-        liveSyncQueued=false;
-        setTimeout(()=>{void syncLiveRequests(true)},0);
-      }
-    }
+    }finally{liveSyncInFlight=false}
   }
   function scheduleLivePoll(delay=60000){
     if(livePoll)clearTimeout(livePoll);livePoll=null;if(!token)return;
@@ -751,10 +717,9 @@
     try{
       await window.BsmatRealtime.subscribeAdmin(async event=>{
         if(!token)return;
-        const kind=String(event?.kind||event?.operation||'').toUpperCase();
-        if(kind==='INSERT'){void playNewRequestAlert();notify('وصل طلب جديد مباشرة.');}
+        const kind=String(event?.kind||event?.operation||'');
+        if(kind==='INSERT'||kind==='insert'){playNewRequestAlert();notify('وصل طلب جديد مباشرة.');}
         await syncLiveRequests(false);
-        if(kind==='UPDATE')setTimeout(()=>{void syncLiveRequests(true)},150);
       });
     }catch{adminRealtimeBound=false}
   }
@@ -768,7 +733,7 @@
     unlockAlertAudio();
     syncLiveRequests(true).finally(()=>{bindAdminRealtime();scheduleLivePoll(60000)});
   }
-  window.addEventListener('bsmat-realtime-status',event=>{if(event.detail?.scope!=='admin')return;const st=event.detail.status;if(st==='SUBSCRIBED'){liveSyncFailureCount=0;return}if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(st)){syncLiveRequests(true).finally(()=>{if(token)bindAdminRealtime()})}});
+  window.addEventListener('bsmat-realtime-status',event=>{if(event.detail?.scope==='admin'&&['SUBSCRIBED','CHANNEL_ERROR','TIMED_OUT'].includes(event.detail.status)){if(event.detail.status==='SUBSCRIBED')notify('الاتصال اللحظي بالطلبات نشط.')}});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wakeLiveMonitor()});
   window.addEventListener('online',wakeLiveMonitor);
   window.addEventListener('pageshow',wakeLiveMonitor);
