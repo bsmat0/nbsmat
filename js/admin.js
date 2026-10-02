@@ -5,7 +5,9 @@
   const esc=Bsmat.escape;
   const login=$('#loginPanel'),dashboard=$('#dashboard'),content=$('#adminContent'),loginForm=$('#loginForm'),nationalId=$('#nationalId'),password=$('#password'),loginMessage=$('#loginMessage'),dialog=$('#adminDialog'),dialogForm=$('#adminDialogForm'),toast=$('#adminToast'),printRoot=$('#printOnlyReport');
   const localSettingsKey='bsmat.admin.preferences.v5';
+  const soundChoiceKey='admin_alert_sound';
   let token=sessionStorage.getItem(Bsmat.keys.adminSession), activeTab='stats', dialogSave=null, requestAuditMap=new Map();
+  let activeSoundPresetId=null;
   let adminRefreshTimer=null,adminRefreshInFlight=null;
   let liveSyncRevision=0,adminRealtimeBound=false;
 
@@ -49,6 +51,18 @@
     }catch{return {...defaultSettings}}
   };
   const saveSettings=x=>{try{localStorage.setItem(localSettingsKey,JSON.stringify(x))}catch{}};
+  const isValidSoundPreset=id=>typeof id==='string'&&/^signal-(?:[1-9]|10)$/.test(id);
+  const storedSoundPreset=()=>{
+    try{
+      const legacy=localStorage.getItem(soundChoiceKey);
+      if(isValidSoundPreset(legacy))return legacy;
+    }catch{}
+    try{
+      const prefs=JSON.parse(localStorage.getItem(localSettingsKey)||'{}');
+      if(isValidSoundPreset(prefs?.soundPreset))return prefs.soundPreset;
+    }catch{}
+    return 'signal-1';
+  };
 
   const SOUND_PRESETS=[
     {id:'signal-1',name:'تنبيه حازم',desc:'ثلاث نبضات قوية وواضحة',tones:[[880,0,.16,'square',.22],[660,.08,.16,'square',.22],[990,.16,.22,'square',.25]]},
@@ -62,6 +76,16 @@
     {id:'signal-9',name:'تنبيه ذهبي',desc:'صعود موسيقي قصير وواضح',tones:[[392,0,.18,'triangle',.22],[494,.2,.18,'triangle',.22],[587,.4,.18,'triangle',.24],[784,.6,.3,'triangle',.26]]},
     {id:'signal-10',name:'نداء طوارئ',desc:'إشارة قوية ومتكررة للانتباه',tones:[[1000,0,.12,'square',.26],[500,.15,.12,'square',.26],[1000,.3,.12,'square',.26],[500,.45,.12,'square',.26],[1000,.6,.22,'square',.28]]}
   ];
+  const normalizeSoundPresetId=id=>isValidSoundPreset(id)&&SOUND_PRESETS.some(x=>x.id===id)?id:'signal-1';
+  const getSelectedSoundPresetId=()=>normalizeSoundPresetId(activeSoundPresetId||storedSoundPreset());
+  const setSelectedSoundPresetId=id=>{
+    const value=normalizeSoundPresetId(id);
+    activeSoundPresetId=value;
+    try{localStorage.setItem(soundChoiceKey,value)}catch{}
+    try{saveSettings({...settings(),soundPreset:value})}catch{}
+    return value;
+  };
+  activeSoundPresetId=storedSoundPreset();
 
   let soundContext=null;
   let alertLoopTimer=null,alertLoopActive=false,alertLoopRevision=0;
@@ -91,7 +115,8 @@
   async function playPreset(id){
     const pref=settings();
     if(pref.sound===false)return;
-    const preset=SOUND_PRESETS.find(x=>x.id===(id||pref.soundPreset))||SOUND_PRESETS[0];
+    const presetId=normalizeSoundPresetId(id||getSelectedSoundPresetId());
+    const preset=SOUND_PRESETS.find(x=>x.id===presetId)||SOUND_PRESETS[0];
     const ctx=getSoundContext()||await primeSoundContext();
     if(!ctx)return;
     try{if(ctx.state!=="running")await ctx.resume()}catch{return}
@@ -109,7 +134,7 @@
     setTimeout(()=>{try{master.disconnect()}catch{}},1200);
   }
   function selectedAlertDurationMs(){
-    const preset=SOUND_PRESETS.find(x=>x.id===settings().soundPreset)||SOUND_PRESETS[0];
+    const preset=SOUND_PRESETS.find(x=>x.id===getSelectedSoundPresetId())||SOUND_PRESETS[0];
     return Math.max(700,...preset.tones.map(t=>Number(t[1]||0)*1000+Number(t[2]||0)*1000))+100;
   }
   function stopAlertAudio(){
@@ -174,7 +199,7 @@
   async function playNewRequestAlert(){
     const pref=settings();
     if(pref.sound===false||pendingRequestCount<=0)return;
-    const wantedPreset=pref.soundPreset||SOUND_PRESETS[0].id;
+    const wantedPreset=getSelectedSoundPresetId();
     if(alertLoopActive&&alertLoopSource&&alertLoopPresetId===wantedPreset)return;
     if(alertLoopActive)stopAlertAudio();
     const unlocked=await unlockAlertSound();
@@ -536,7 +561,8 @@
   }
 
   async function renderSettings(){
-    const pref=settings();
+    const pref={...settings(),soundPreset:getSelectedSoundPresetId()};
+    activeSoundPresetId=pref.soundPreset;
     let site=JSON.parse(JSON.stringify(defaultSiteContent));
     let auditLogs=[];
     try{
@@ -613,9 +639,20 @@
     const requestId=Number(extra.request_id)||Number((String(entityLabel).match(/#(\d+)/)||[])[1])||null;
     return logAdminChange(action,{entity_type:entityType,entity_label:entityLabel,entity_id:extra.entity_id||b?.id||a?.id||null,request_id:requestId,student_id:Number(extra.student_id)||null,student_name:extra.student_name||b?.student_name||a?.student_name||'',student_names:extra.student_names||b?.student_names||a?.student_names||[],recipient_name:extra.recipient_name||b?.recipient_name||a?.recipient_name||b?.delegate_name||a?.delegate_name||'',actor_name:extra.actor_name||school.staff,method:extra.method||'تم تنفيذ العملية من لوحة الإدارة بعد تسجيل الدخول.',changed_fields:changed,changes,before:b,after:a,reason:extra.reason||''});
   };
-    $('#adminSoundEnabled').onchange=e=>{commit({sound:e.target.checked});if(e.target.checked){unlockAlertAudio();playPreset()}else stopAlertAudio();logAdminChange('update_admin_sound_setting',{setting:'sound',after:e.target.checked});};
-    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=()=>{const before=settings().soundPreset;commit({soundPreset:r.value});try{localStorage.setItem('admin_alert_sound',r.value)}catch{}$$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));stopAlertAudio();unlockAlertSound();playPreset(r.value);if(pendingRequestCount>0)setTimeout(()=>playNewRequestAlert(),80);logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:r.value});});
-    $$('[data-sound-preview]').forEach(btn=>btn.onclick=()=>{unlockAlertAudio();playPreset(btn.dataset.soundPreview)});
+    $('#adminSoundEnabled').onchange=e=>{commit({sound:e.target.checked,soundPreset:getSelectedSoundPresetId()});if(e.target.checked){unlockAlertAudio();playPreset(getSelectedSoundPresetId())}else stopAlertAudio();logAdminChange('update_admin_sound_setting',{setting:'sound',after:e.target.checked});};
+    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=()=>{
+      const before=getSelectedSoundPresetId();
+      const selected=setSelectedSoundPresetId(r.value);
+      $$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));
+      const current=$('.sound-current strong');
+      if(current)current.textContent=(SOUND_PRESETS.find(x=>x.id===selected)||SOUND_PRESETS[0]).name;
+      stopAlertAudio();
+      unlockAlertSound();
+      playPreset(selected);
+      if(pendingRequestCount>0)setTimeout(()=>playNewRequestAlert(),80);
+      logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:selected});
+    });
+    $$('[data-sound-preview]').forEach(btn=>btn.onclick=event=>{event.preventDefault();event.stopPropagation();const selected=normalizeSoundPresetId(btn.dataset.soundPreview);unlockAlertSound();playPreset(selected)});
     $('#refreshAuditLog').onclick=async()=>{const b=$('#refreshAuditLog');b.disabled=true;try{const d=await call('admin_get_audit_logs');$('#adminAuditLog').innerHTML=renderAuditLogs(d.logs||[]);notify('تم تحديث سجل التعديلات.')}catch(e){notify(e.message||'تعذر تحديث السجل.',true)}finally{b.disabled=false}};
     $('#printAuditLog').onclick=()=>{const popup=window.open('','_blank');if(!popup){notify('يرجى السماح بفتح نافذة الطباعة.',true);return}const currentName=sessionAdminName(),auditMarkup=$('#adminAuditLog').innerHTML.replace(/<details class="audit-log-row"/g,'<details open class="audit-log-row"');popup.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>سجل التعديلات والعمليات</title><style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#241a30;position:relative}body:before{content:'${esc(currentName)}';position:fixed;inset:38% 0 auto;text-align:center;font-size:58px;font-weight:900;color:rgba(74,46,111,.08);transform:rotate(-28deg);z-index:-1;pointer-events:none}.print-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #c18a20;padding-bottom:12px;margin-bottom:16px}.print-head img{width:72px;height:72px;object-fit:contain}.print-head h1{font-size:19px;color:#4a2e6f;margin:0}.print-head p{font-size:12px;margin:4px 0}.print-meta{margin-inline-start:auto;text-align:left;font-size:11px}details{border:1px solid #ccc;border-radius:8px;margin:8px 0;padding:10px;break-inside:avoid}summary{font-weight:bold}.audit-log-meta{color:#555}.audit-log-detail{padding:8px}.audit-change-list{line-height:2}pre{white-space:pre-wrap;direction:ltr;text-align:left;border:1px solid #ddd;padding:8px}button{display:none}.print-foot{text-align:center;border-top:1px solid #ccc;padding-top:8px;margin-top:18px;font-size:10px}@media print{body{padding:0}}</style></head><body><header class="print-head"><img src="${new URL(school.logo,location.href).href}" alt="شعار المدرسة"><div><h1>${esc(school.name)}</h1><p>${esc(school.subtitle)}</p></div><div class="print-meta"><strong>سجل التعديلات والعمليات</strong><br>تاريخ الطباعة: ${esc(dateLabel(new Date().toISOString()))}<br>إعداد: ${esc(currentName)} — ${esc(school.role)}</div></header>${auditMarkup}<footer class="print-foot">منظومة النداء والاستئذان المدرسي المعتمدة</footer></body></html>`);popup.document.close();popup.focus();popup.print()};
     $('#clearCache').onclick=clearTemporaryCache;
