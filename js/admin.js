@@ -858,6 +858,32 @@
   window.addEventListener('pageshow',()=>{if(token)wakeLiveMonitor()});
   window.addEventListener('online',()=>{if(token)wakeLiveMonitor()});
   window.addEventListener('resume',()=>{if(token)wakeLiveMonitor()});
+  nationalId?.addEventListener('input',()=>{nationalId.value=String(nationalId.value||'').replace(/\D/g,'').slice(0,10)});
+  loginForm.addEventListener('submit',async event=>{
+    event.preventDefault();
+    unlockAlertAudio();
+    primeSoundContext();
+    const nid=String(nationalId?.value||'').trim();
+    const pass=String(password.value||'').trim();
+    if(!/^\d{10}$/.test(nid)){loginMessage.textContent='أدخل رقم الهوية المكون من 10 أرقام.';nationalId?.focus();return}
+    if(!pass){loginMessage.textContent='أدخل الرقم السري.';password.focus();return}
+    const button=$('#loginButton');button.disabled=true;loginMessage.textContent='جارٍ التحقق…';
+    try{
+      const data=await Bsmat.request('admin-api',{body:{action:'admin_login',national_id:nid,password:pass}});
+      token=data.session_token||data.token||'';
+      if(!token)throw new Error('لم يُرجع الخادم جلسة إدارة.');
+      sessionStorage.setItem(Bsmat.keys.adminSession,token);
+      setLoggedIn(true);
+      loginMessage.textContent='تم تسجيل الدخول بنجاح.';
+      nationalId.value='';
+      password.value='';
+      activateTab('stats');
+      startLiveRequestMonitor();
+    }catch(error){
+      loginMessage.textContent=error.message||'تعذر تسجيل الدخول.';
+      setLoggedIn(false);
+    }finally{button.disabled=false}
+  });
   $('#logout').onclick=()=>{stopLiveRequestMonitor();sessionStorage.removeItem(Bsmat.keys.adminSession);token=null;setLoggedIn(false);nationalId.value='';password.value='';loginMessage.textContent='تم تسجيل الخروج.';notify('تم تسجيل الخروج')};
   $$('[data-tab]').forEach(button=>button.addEventListener('click',()=>{if(token)activateTab(button.dataset.tab)}));
   $$('[data-go-tab]').forEach(button=>button.addEventListener('click',()=>{if(token)activateTab(button.dataset.goTab)}));
