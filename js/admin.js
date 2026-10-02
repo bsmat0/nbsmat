@@ -16,7 +16,15 @@
     role:'وكيلة المدرسة',
     logo:'assets/logo.png'
   };
-  const sessionAdminClaims=()=>{try{const payload=token?.split('.')?.[1];if(!payload)return null;return JSON.parse(decodeURIComponent(escape(atob(payload.replace(/-/g,'+').replace(/_/g,'/')))))}catch{return null}};
+  const sessionAdminClaims=()=>{
+    try{
+      const payload=String(token||'').split('.')?.[0]||'';
+      if(!payload)return null;
+      const normalized=payload.replace(/-/g,'+').replace(/_/g,'/');
+      const padded=normalized+'='.repeat((4-normalized.length%4)%4);
+      return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(padded),c=>c.charCodeAt(0))));
+    }catch{return null}
+  };
   const sessionAdminName=()=>sessionAdminClaims()?.display_name||school.staff;
   const canManageStaff=()=>{const current=sessionAdminClaims();return current?.role_name==='super_admin'||current?.permissions?.includes('manage_staff')===true};
   async function staffApi(action,data={}){try{return await Bsmat.request('parent-api',{body:{action,...data},token,adminSession:token})}catch(error){if(error?.status===401)expire();throw error}}
@@ -79,26 +87,10 @@
   function unlockAlertAudio(){
     try{const pref=settings(),preset=SOUND_PRESETS.find(x=>x.id===pref.soundPreset)||SOUND_PRESETS[0],audio=getAlertAudio();audio.src=wavDataUrl(preset);audio.volume=.001;alertAudioPresetId=preset.id;const promise=audio.play();if(promise?.then)promise.then(()=>{audio.pause();audio.currentTime=0;audio.volume=.92;alertAudioUnlocked=true}).catch(()=>{});else{alertAudioUnlocked=true}}catch{}
   }
-  let soundLoopTimer=null;
-  function stopAlertAudio(){
-    if(soundLoopTimer){clearInterval(soundLoopTimer);soundLoopTimer=null}
-    try{const audio=getAlertAudio();audio.pause();audio.currentTime=0}catch{}
+  function startAlertAudio(){
+    const pref=settings();if(pref.sound===false)return false;try{const preset=SOUND_PRESETS.find(x=>x.id===pref.soundPreset)||SOUND_PRESETS[0],audio=getAlertAudio();audio.loop=true;if(alertAudioPresetId!==preset.id){audio.src=wavDataUrl(preset);alertAudioPresetId=preset.id}audio.volume=.92;if(!audio.paused)return true;const p=audio.play();if(p?.catch)p.catch(()=>{alertAudioUnlocked=false;playPreset(pref.soundPreset)});return true}catch{return false}
   }
-  async function startAlertAudio(){
-    const pref=settings();
-    if(pref.sound===false)return false;
-    const ctx=await primeSoundContext();
-    if(ctx?.state!=='running'){bindAlertSoundUnlock();return false}
-    if(soundLoopTimer)clearInterval(soundLoopTimer);
-    const tick=()=>{
-      const current=settings();
-      if(current.sound===false){stopAlertAudio();return}
-      void playPreset(current.soundPreset);
-    };
-    tick();
-    soundLoopTimer=setInterval(tick,1350);
-    return true;
-  }
+  function stopAlertAudio(){try{const audio=getAlertAudio();audio.pause();audio.currentTime=0}catch{} }
   async function primeSoundContext(){
     try{
       const C=window.AudioContext||window.webkitAudioContext;
@@ -533,19 +525,7 @@
     return logAdminChange(action,{entity_type:entityType,entity_label:entityLabel,entity_id:extra.entity_id||b?.id||a?.id||null,request_id:requestId,student_id:Number(extra.student_id)||null,student_name:extra.student_name||b?.student_name||a?.student_name||'',student_names:extra.student_names||b?.student_names||a?.student_names||[],recipient_name:extra.recipient_name||b?.recipient_name||a?.recipient_name||b?.delegate_name||a?.delegate_name||'',actor_name:extra.actor_name||school.staff,method:extra.method||'تم تنفيذ العملية من لوحة الإدارة بعد تسجيل الدخول.',changed_fields:changed,changes,before:b,after:a,reason:extra.reason||''});
   };
     $('#adminSoundEnabled').onchange=e=>{commit({sound:e.target.checked});if(e.target.checked)unlockAlertAudio();playPreset();logAdminChange('update_admin_sound_setting',{setting:'sound',after:e.target.checked});};
-    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=async()=>{
-      const before=settings().soundPreset;
-      const next=SOUND_PRESETS.some(x=>x.id===String(r.value||''))?String(r.value):defaultSettings.soundPreset;
-      commit({soundPreset:next});
-      try{localStorage.setItem('admin_alert_sound',next)}catch{}
-      $$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));
-      const current=$('.sound-current strong');
-      if(current)current.textContent=(SOUND_PRESETS.find(x=>x.id===next)||SOUND_PRESETS[0]).name;
-      unlockAlertAudio();
-      await playPreset(next);
-      if(activeRequestAlerts.size)await startAlertAudio();
-      logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:next});
-    });
+    $$('input[name=adminSoundPreset]').forEach(r=>r.onchange=()=>{const before=settings().soundPreset;commit({soundPreset:r.value});try{localStorage.setItem('admin_alert_sound',r.value)}catch{}$$('.sound-choice').forEach(x=>x.classList.toggle('is-selected',x.querySelector('input')?.checked));unlockAlertAudio();playPreset(r.value);logAdminChange('update_admin_sound_setting',{setting:'soundPreset',before,after:r.value});});
     $$('[data-sound-preview]').forEach(btn=>btn.onclick=()=>{unlockAlertAudio();playPreset(btn.dataset.soundPreview)});
     $('#refreshAuditLog').onclick=async()=>{const b=$('#refreshAuditLog');b.disabled=true;try{const d=await call('admin_get_audit_logs');$('#adminAuditLog').innerHTML=renderAuditLogs(d.logs||[]);notify('تم تحديث سجل التعديلات.')}catch(e){notify(e.message||'تعذر تحديث السجل.',true)}finally{b.disabled=false}};
     $('#printAuditLog').onclick=()=>{const popup=window.open('','_blank');if(!popup){notify('يرجى السماح بفتح نافذة الطباعة.',true);return}const currentName=sessionAdminName(),auditMarkup=$('#adminAuditLog').innerHTML.replace(/<details class="audit-log-row"/g,'<details open class="audit-log-row"');popup.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>سجل التعديلات والعمليات</title><style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#241a30;position:relative}body:before{content:'${esc(currentName)}';position:fixed;inset:38% 0 auto;text-align:center;font-size:58px;font-weight:900;color:rgba(74,46,111,.08);transform:rotate(-28deg);z-index:-1;pointer-events:none}.print-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #c18a20;padding-bottom:12px;margin-bottom:16px}.print-head img{width:72px;height:72px;object-fit:contain}.print-head h1{font-size:19px;color:#4a2e6f;margin:0}.print-head p{font-size:12px;margin:4px 0}.print-meta{margin-inline-start:auto;text-align:left;font-size:11px}details{border:1px solid #ccc;border-radius:8px;margin:8px 0;padding:10px;break-inside:avoid}summary{font-weight:bold}.audit-log-meta{color:#555}.audit-log-detail{padding:8px}.audit-change-list{line-height:2}pre{white-space:pre-wrap;direction:ltr;text-align:left;border:1px solid #ddd;padding:8px}button{display:none}.print-foot{text-align:center;border-top:1px solid #ccc;padding-top:8px;margin-top:18px;font-size:10px}@media print{body{padding:0}}</style></head><body><header class="print-head"><img src="${new URL(school.logo,location.href).href}" alt="شعار المدرسة"><div><h1>${esc(school.name)}</h1><p>${esc(school.subtitle)}</p></div><div class="print-meta"><strong>سجل التعديلات والعمليات</strong><br>تاريخ الطباعة: ${esc(dateLabel(new Date().toISOString()))}<br>إعداد: ${esc(currentName)} — ${esc(school.role)}</div></header>${auditMarkup}<footer class="print-foot">منظومة النداء والاستئذان المدرسي المعتمدة</footer></body></html>`);popup.document.close();popup.focus();popup.print()};
@@ -662,7 +642,7 @@
     const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
     downloadBlob(zip.build([['[Content_Types].xml',ct],['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],['xl/workbook.xml',workbook],['xl/_rels/workbook.xml.rels',wbRels],['xl/worksheets/sheet1.xml',sheet]]),'bsmat-'+reportTab+'-report.xlsx');notify('تم إنشاء ملف Excel.');
   }
-  let livePoll=null,liveInitialized=false,liveSyncInFlight=false,liveSyncFailureShown=false,seenPendingRequestIds=new Set();
+  let livePoll=null,liveInitialized=false,liveSyncInFlight=false,seenPendingRequestIds=new Set();
   let activeRequestAlerts=new Set();
   let pendingRequestCount=0,soundUnlockBound=false;
   function renderPendingRequestBadge(count){pendingRequestCount=count;const badge=$('#pendingRequestBadge');if(!badge)return;badge.textContent=String(count);badge.classList.toggle('hidden',count===0);badge.setAttribute('aria-label',`${count} طلبات معلقة`)}
@@ -719,7 +699,6 @@
       const hasRequestRows=Array.isArray(d)||Array.isArray(d.requests)||Array.isArray(d.data?.requests)||Array.isArray(d.rows);
       if(!hasRequestRows)throw new Error('استجابة الطلبات من الخادم غير مفهومة.');
       const requestRows=Array.isArray(d)?d:Array.isArray(d.requests)?d:Array.isArray(d.data?.requests)?d.data.requests:d.rows;
-      if(liveSyncFailureShown){liveSyncFailureShown=false;notify('عاد الاتصال بمراقبة الطلبات.')}
       requestRows.forEach(row=>requestAuditMap.set(String(row.id),row));
       const pending=requestRows.filter(r=>r.status==='pending'),ids=new Set(pending.map(r=>String(r.id)));
       const wasInitialized=liveInitialized,newIds=[...ids].filter(id=>!seenPendingRequestIds.has(id));
@@ -728,10 +707,12 @@
       reconcilePendingAlerts(ids);
       if((!wasInitialized&&ids.size)||(!silent&&newIds.length))notify(newIds.length?newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`:`يوجد ${ids.size} طلبات معلقة.`);
       if(!wasInitialized&&ids.size&&activeTab==='stats')activateTab('requests');
-      else if((!wasInitialized||changed||newIds.length)&&activeTab==='requests')await load('requests');
+      else if((wasInitialized&&(changed||newIds.length))&&(activeTab==='requests'||activeTab==='stats'))await load(activeTab);
       updateDashboardStats(pending.length);return true;
     }catch(error){
-      if(!liveSyncFailureShown){liveSyncFailureShown=true;notify(`تعذر تحديث الطلبات: ${error?.message||'تحققي من اتصال الإدارة بالخادم.'}`,true)}
+      // Background synchronization is best-effort. Do not show a red error toast that can
+      // repeatedly interrupt staff while the Realtime channel remains usable. Manual refreshes
+      // and actual action failures still surface their own errors normally.
       return false;
     }finally{liveSyncInFlight=false}
   }
@@ -747,7 +728,7 @@
         if(!token)return;
         const kind=String(event?.kind||event?.operation||'');
         if(kind==='INSERT'||kind==='insert'){playNewRequestAlert();notify('وصل طلب جديد مباشرة.');}
-        await syncLiveRequests(false);
+        await syncLiveRequests(true);
       });
     }catch{adminRealtimeBound=false}
   }

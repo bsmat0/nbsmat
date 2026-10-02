@@ -180,12 +180,23 @@
   function setRequestFeedback(statusKey,text){const el=$('#requestStatus');el.classList.remove('hidden');el.classList.add('request-status-feedback');el.dataset.state=statusKey;el.textContent=text;$('#sendRequest').classList.remove('is-sending')}
   function startPoll(requestToken){
     stopPoll();if(!requestToken)return;state.pollToken=String(requestToken);const status=$('#requestStatus');let checking=false,closed=false;
-    const check=async()=>{if(closed||checking)return;checking=true;try{const data=await Bsmat.request('parent-api',{body:{action:'get_request_status',request_token:requestToken,parent_session:state.token},token:state.token});const req=data.request||data;const type=req.request_type||state.mode,approved=type==='excuse'?'تمت الموافقة على طلب الاستئذان، وسيتم تجهيز خروج الطالب وتوجيهه إلى البوابة وفق إجراءات المدرسة.':'تمت الموافقة على طلب النداء، وتتم الآن مناداة الطالب عبر مكبرات الصوت داخل المدرسة، وسيتم توجيهه إلى البوابة مباشرة.',reason=String(req.reject_reason||'').trim(),rejected=reason?`تم رفض طلب ${type==='excuse'?'الاستئذان':'النداء'} من قبل الإدارة بسبب: ${reason}`:`تم رفض طلب ${type==='excuse'?'الاستئذان':'النداء'} من قبل الإدارة.`,labels={pending:'تم إرسال الطلب، بانتظار موافقة الإدارة.',approved,rejected};
-      const next=req.status||'pending',before=status.dataset.state;setRequestFeedback(next,labels[next]||`حالة الطلب: ${next}`);renderParentUtility();
+    const feedbackFor=(stateValue,type,reason='')=>{
+      const approved=type==='excuse'?'تمت الموافقة على طلب الاستئذان، وسيتم تجهيز خروج الطالب وتوجيهه إلى البوابة وفق إجراءات المدرسة.':'تمت الموافقة على طلب النداء، وتتم الآن مناداة الطالب عبر مكبرات الصوت داخل المدرسة، وسيتم توجيهه إلى البوابة مباشرة.';
+      const rejected=reason?`تم رفض طلب ${type==='excuse'?'الاستئذان':'النداء'} من قبل الإدارة بسبب: ${reason}`:`تم رفض طلب ${type==='excuse'?'الاستئذان':'النداء'} من قبل الإدارة.`;
+      return stateValue==='approved'?approved:stateValue==='rejected'?rejected:'تم إرسال الطلب، بانتظار موافقة الإدارة.';
+    };
+    const applyLiveState=async(stateValue,type=state.mode,reason='')=>{
+      if(!['approved','rejected'].includes(stateValue))return;
+      const before=status.dataset.state;
+      setRequestFeedback(stateValue,feedbackFor(stateValue,type,reason));
+      renderParentUtility();
+      if(before!==stateValue){if(stateValue==='approved'){playApprovalSound();setTimeout(playApprovalSound,360)}else playAlertSound();try{await loadRequestHistory()}catch{}}
+    };
+    const check=async()=>{if(closed||checking)return;checking=true;try{const data=await Bsmat.request('parent-api',{body:{action:'get_request_status',request_token:requestToken,parent_session:state.token},token:state.token});const req=data.request||data;const type=req.request_type||state.mode,reason=String(req.reject_reason||'').trim(),next=req.status||'pending',before=status.dataset.state;setRequestFeedback(next,feedbackFor(next,type,reason));renderParentUtility();
       if((next==='approved'||next==='rejected')&&before!==next){if(next==='approved'){playApprovalSound();setTimeout(playApprovalSound,360)}else playAlertSound();try{await loadRequestHistory()}catch{}}
       if(['approved','rejected'].includes(next)){closed=true;window.BsmatRealtime?.stopRequest?.(requestToken);stopPoll()}
     }catch(error){if(error?.status===401||error?.status===403){closed=true;window.BsmatRealtime?.stopRequest?.(requestToken);expireParentSession('انتهى ارتباط هذا الجهاز أو جلسة ولي الأمر. سجل الدخول من جديد.')}}finally{checking=false}};
-    const onRealtime=async payload=>{const stateValue=String(payload?.status||'');if(stateValue==='approved'||stateValue==='rejected')await check();};
+    const onRealtime=async payload=>{const stateValue=String(payload?.status||''),type=String(payload?.request_type||state.mode);if(!['approved','rejected'].includes(stateValue))return;await applyLiveState(stateValue,type,String(payload?.reject_reason||''));await check();};
     window.BsmatRealtime?.subscribeRequest?.(requestToken,onRealtime).catch?.(()=>{});
     check();state.poll=setInterval(check,30000);
   }
