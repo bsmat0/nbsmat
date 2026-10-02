@@ -65,23 +65,25 @@
 
   let soundContext=null;
   let alertLoopTimer=null,alertLoopActive=false,alertLoopRevision=0;
+  let alertLoopSource=null,alertLoopGain=null,alertLoopPresetId='';
   async function primeSoundContext(){
     try{
       const C=window.AudioContext||window.webkitAudioContext;
       if(!C)return null;
-      soundContext=soundContext&&soundContext.state!=="closed"?soundContext:new C();
-      // Mobile Safari may leave a context suspended unless a source is started
-      // synchronously inside the user's gesture. Start a silent source here so
-      // later request alerts can play even when they arrive from polling.
+      const preopened=window.__bsmatAudioContext;
+      soundContext=(preopened&&preopened.state!=="closed")?preopened:(soundContext&&soundContext.state!=="closed"?soundContext:new C());
+      window.__bsmatAudioContext=soundContext;
+      if(soundContext.state!=='running'){
+        try{await soundContext.resume()}catch{}
+      }
       if(soundContext.state!=='running'){
         const unlockOscillator=soundContext.createOscillator();
         const unlockGain=soundContext.createGain();
         unlockGain.gain.value=0;
         unlockOscillator.connect(unlockGain);unlockGain.connect(soundContext.destination);
         unlockOscillator.start();unlockOscillator.stop(soundContext.currentTime+.01);
-        await soundContext.resume();
+        try{await soundContext.resume()}catch{}
       }
-      if(soundContext.state!=="running")await soundContext.resume();
       return soundContext;
     }catch{return null}
   }
@@ -104,16 +106,54 @@
       gain.gain.exponentialRampToValueAtTime(.0001,now+offset+duration);
       osc.connect(gain);gain.connect(master);osc.start(now+offset);osc.stop(now+offset+duration+.03);
     });
-    setTimeout(()=>{try{master.disconnect()}catch{}},900);
+    setTimeout(()=>{try{master.disconnect()}catch{}},1200);
   }
   function selectedAlertDurationMs(){
     const preset=SOUND_PRESETS.find(x=>x.id===settings().soundPreset)||SOUND_PRESETS[0];
-    return Math.max(700,...preset.tones.map(t=>Number(t[1]||0)*1000+Number(t[2]||0)*1000))+250;
+    return Math.max(700,...preset.tones.map(t=>Number(t[1]||0)*1000+Number(t[2]||0)*1000))+100;
   }
   function stopAlertAudio(){
     alertLoopActive=false;
     alertLoopRevision++;
+    alertLoopPresetId='';
     if(alertLoopTimer){clearTimeout(alertLoopTimer);alertLoopTimer=null}
+    const src=alertLoopSource,gain=alertLoopGain;
+    alertLoopSource=null;alertLoopGain=null;
+    if(gain){try{gain.gain.cancelScheduledValues(soundContext?.currentTime||0);gain.gain.setValueAtTime(gain.gain.value||1,soundContext?.currentTime||0);gain.gain.linearRampToValueAtTime(0,(soundContext?.currentTime||0)+.04)}catch{}}
+    if(src){try{src.stop((soundContext?.currentTime||0)+.05)}catch{};try{src.disconnect()}catch{}}
+    if(gain){setTimeout(()=>{try{gain.disconnect()}catch{}},120)}
+  }
+  function waveValue(type,phase){
+    const p=phase-Math.floor(phase);
+    if(type==='square')return p<.5?1:-1;
+    if(type==='sawtooth')return 2*p-1;
+    if(type==='triangle')return 1-4*Math.abs(Math.round(p)-p);
+    return Math.sin(phase*Math.PI*2);
+  }
+  function buildAlertLoopBuffer(ctx,preset){
+    try{
+      const sr=ctx.sampleRate||44100;
+      const toneEnd=Math.max(.7,...preset.tones.map(t=>Number(t[1]||0)+Number(t[2]||0)))+.03;
+      const loopSeconds=toneEnd+.10;
+      const buffer=ctx.createBuffer(1,Math.ceil(loopSeconds*sr),sr);
+      const data=buffer.getChannelData(0);
+      for(const [freq,offset,duration,wave,volume] of preset.tones){
+        const start=Math.max(0,Math.floor(Number(offset)*sr));
+        const end=Math.min(data.length,Math.ceil((Number(offset)+Number(duration))*sr));
+        for(let i=start;i<end;i++){
+          const t=i/sr-Number(offset);
+          const u=t/Math.max(.001,Number(duration));
+          const attack=Math.min(1,u/.012);
+          const release=Math.min(1,(1-u)/.025);
+          const env=Math.max(.0001,Math.min(1,attack,release));
+          data[i]+=Number(volume)*env*waveValue(wave,Number(freq)*t);
+        }
+      }
+      let peak=0;for(let i=0;i<data.length;i++)peak=Math.max(peak,Math.abs(data[i]));
+      const scale=peak>0.92?.92/peak:1;
+      if(scale!==1)for(let i=0;i<data.length;i++)data[i]*=scale;
+      return buffer;
+    }catch{return null}
   }
   function bindAlertSoundUnlock(){
     if(soundUnlockBound)return;
@@ -134,20 +174,29 @@
   async function playNewRequestAlert(){
     const pref=settings();
     if(pref.sound===false||pendingRequestCount<=0)return;
-    if(alertLoopActive)return;
+    const wantedPreset=pref.soundPreset||SOUND_PRESETS[0].id;
+    if(alertLoopActive&&alertLoopSource&&alertLoopPresetId===wantedPreset)return;
+    if(alertLoopActive)stopAlertAudio();
     const unlocked=await unlockAlertSound();
     if(!unlocked)return;
-    alertLoopActive=true;
+    const ctx=getSoundContext();
+    if(!ctx||ctx.state!=='running')return;
     const revision=++alertLoopRevision;
-    const loop=async()=>{
-      if(!alertLoopActive||revision!==alertLoopRevision||pendingRequestCount<=0||settings().sound===false){stopAlertAudio();return}
-      const currentPreset=settings().soundPreset;
-      await playPreset(currentPreset);
-      if(!alertLoopActive||revision!==alertLoopRevision||pendingRequestCount<=0||settings().sound===false){stopAlertAudio();return}
-      const delay=Math.max(450,selectedAlertDurationMs());
-      alertLoopTimer=setTimeout(()=>{alertLoopTimer=null;loop().catch(()=>stopAlertAudio())},delay);
-    };
-    loop().catch(()=>stopAlertAudio());
+    alertLoopActive=true;
+    const preset=SOUND_PRESETS.find(x=>x.id===wantedPreset)||SOUND_PRESETS[0];
+    const buffer=buildAlertLoopBuffer(ctx,preset);
+    if(!buffer||revision!==alertLoopRevision||!alertLoopActive||pendingRequestCount<=0||settings().sound===false){if(revision===alertLoopRevision)stopAlertAudio();return}
+    try{
+      const src=ctx.createBufferSource(),gain=ctx.createGain();
+      src.buffer=buffer;src.loop=true;src.loopStart=0;src.loopEnd=buffer.duration;
+      gain.gain.setValueAtTime(0,ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(1,ctx.currentTime+.03);
+      src.connect(gain);gain.connect(ctx.destination);
+      alertLoopSource=src;alertLoopGain=gain;alertLoopPresetId=wantedPreset;
+      src.start();
+    }catch{
+      if(revision===alertLoopRevision)stopAlertAudio();
+    }
   }
   function stopAllRequestAlerts(){stopAlertAudio()}
   async function clearTemporaryCache(){
@@ -169,6 +218,7 @@
   document.addEventListener('pointerdown',()=>{primeSoundContext();unlockAlertSound()}, {once:true,passive:true});
   document.addEventListener('keydown',()=>{primeSoundContext();unlockAlertSound()}, {once:true});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&pendingRequestCount)unlockAlertSound()});
+  document.addEventListener('pointerdown',()=>{if(pendingRequestCount>0){unlockAlertSound().then(ok=>{if(ok)playNewRequestAlert()}).catch(()=>{})}},{passive:true});
   const setLoggedIn=logged=>{
     $$('[data-tab]').forEach(button=>{const allowed=logged&&canAccessTab(button.dataset.tab);button.classList.toggle('hidden',!allowed);button.disabled=!allowed});
     login.classList.toggle('hidden',logged); dashboard.classList.toggle('hidden',!logged);
@@ -323,27 +373,32 @@
     });
   }
   async function submitStatus(button,reason=''){
-      const card=button.closest('[data-id]');if(!card)return;const action=button.dataset.statusAction;
-      button.disabled=true;
-      card.querySelectorAll('[data-status-action]').forEach(x=>x.disabled=true);
-      card.classList.add('is-updating');
-      const mutationRevision=++liveSyncRevision;
+    const card=button.closest('[data-id]');if(!card)return;const action=button.dataset.statusAction,id=String(card.dataset.id);
+    button.disabled=true;card.querySelectorAll('[data-status-action]').forEach(x=>x.disabled=true);card.classList.add('is-updating');
+    const before=requestAuditMap.get(id)||null;
+    try{
+      const result=await call('admin_update_request',{request_id:id,status:action,reject_reason:reason.trim()});
+      if(result?.success===false)throw new Error(result.message||'تعذر تحديث حالة الطلب.');
+      const after=result?.request||result?.updated_request||result?.data?.request||null;
+      applyConfirmedRequestStatus(id,action,reason,after);
+      void logDetailedChange(action==='approved'?'admin_approve_request':'admin_reject_request','request','الطلب #'+id,before,after||{...before,status:action},{request_id:Number(id),student_id:Number(before?.student_id)||null,student_name:studentNames(before||{}),recipient_name:before?.recipient_name||before?.delegate_name||before?.parent_name||'',method:action==='approved'?'تمت الموافقة على الطلب من تبويب الطلبات الحية.':'تم رفض الطلب من تبويب الطلبات الحية.',reason:reason.trim(),actor_name:school.staff});
+      notify(action==='approved'?'تمت الموافقة على الطلب.':'تم رفض الطلب.');
+      setTimeout(()=>syncLiveRequests(true),100);
+    }catch(error){
+      let confirmed=null;
       try{
-        const before=requestAuditMap.get(String(card.dataset.id))||null;
-        const result=await call('admin_update_request',{request_id:card.dataset.id,status:action,reject_reason:reason.trim()});
-        const after=result.request||result.updated_request||result.data?.request||null;
-        if(result.success===false||result.updated===false||result.affected===0)throw new Error(result.message||'لم يؤكد الخادم تحديث حالة الطلب. حدّثي القائمة للتحقق من الحالة.');
-        if(after?.status&&after.status!==action)throw new Error('أعاد الخادم حالة مختلفة عن الحالة المطلوبة. حدّثي القائمة للتحقق من الطلب.');
-        const confirmedStatus={...(after||before||{}),status:action,...(action==='rejected'?{reject_reason:after?.reject_reason||reason}:{})};
-        requestAuditMap.set(String(card.dataset.id),confirmedStatus);
-        activeRequestAlerts.delete(String(card.dataset.id));reconcilePendingAlerts(activeRequestAlerts);
-        logDetailedChange(button.dataset.statusAction==='approved'?'admin_approve_request':'admin_reject_request','request','الطلب #'+card.dataset.id,before,after,{request_id:Number(card.dataset.id),student_id:Number(before?.student_id)||null,student_name:studentNames(before||{}),recipient_name:before?.recipient_name||before?.delegate_name||before?.parent_name||'',method:button.dataset.statusAction==='approved'?'تمت الموافقة على الطلب من تبويب الطلبات الحية.':'تم رفض الطلب من تبويب الطلبات الحية.',reason:reason.trim(),actor_name:school.staff});
-        const updated={...(before||{}),...(after||{}),status:action,...(action==='rejected'?{reject_reason:after?.reject_reason||reason}:{})};
-        const replacement=document.createRange().createContextualFragment(renderRequestCard(updated));card.replaceWith(replacement);bindRequestActions();
-        if(activeTab==='stats'){const stats=content.querySelector('.admin-stat-grid');if(stats)load('stats')}
+        const check=await call('admin_get_requests');
+        const rows=Array.isArray(check?.requests)?check.requests:[];
+        confirmed=rows.find(row=>String(row.id)===id)||null;
+      }catch{}
+      if(confirmed?.status===action){
+        applyConfirmedRequestStatus(id,action,reason,confirmed);
+        void logDetailedChange(action==='approved'?'admin_approve_request':'admin_reject_request','request','الطلب #'+id,before,confirmed,{request_id:Number(id),student_id:Number(before?.student_id)||null,student_name:studentNames(before||{}),recipient_name:before?.recipient_name||before?.delegate_name||before?.parent_name||'',method:action==='approved'?'تمت الموافقة على الطلب من تبويب الطلبات الحية.':'تم رفض الطلب من تبويب الطلبات الحية.',reason:reason.trim(),actor_name:school.staff});
         notify(action==='approved'?'تمت الموافقة على الطلب.':'تم رفض الطلب.');
-        setTimeout(()=>{if(mutationRevision===liveSyncRevision)syncLiveRequests(true)},120);
-      }catch(e){card.classList.remove('is-updating');notify(e.message||'تعذر تحديث الطلب.','error');card.querySelectorAll('[data-status-action]').forEach(x=>x.disabled=false);card.querySelector('.request-reject-entry')?.remove()}
+      }else{
+        card.classList.remove('is-updating');notify(error?.message||'تعذر تحديث الطلب.','error');card.querySelectorAll('[data-status-action]').forEach(x=>x.disabled=false);card.querySelector('.request-reject-entry')?.remove();return;
+      }
+    }
   }
 
   function openDialog(title,body,onSave,saveText='حفظ',danger=false){
@@ -679,58 +734,84 @@
   let livePoll=null,liveInitialized=false,liveSyncInFlight=false,liveSyncQueued=false,liveSyncRetryTimer=null,liveSyncRetryCount=0,seenPendingRequestIds=new Set(),liveRealtimeConnected=false;
   let activeRequestAlerts=new Set();
   let pendingRequestCount=0,soundUnlockBound=false;
+  const localRequestMutations=new Map();
   function renderPendingRequestBadge(count){pendingRequestCount=Math.max(0,Number(count)||0);const badge=$('#pendingRequestBadge');if(!badge)return;badge.textContent=String(pendingRequestCount);badge.classList.toggle('hidden',pendingRequestCount===0);badge.setAttribute('aria-label',`${pendingRequestCount} طلبات معلقة`)}
   function stopLiveRetry(){if(liveSyncRetryTimer){clearTimeout(liveSyncRetryTimer);liveSyncRetryTimer=null}}
   function scheduleLiveRetry(){
-    if(!token||liveSyncRetryTimer||liveSyncRetryCount>=2)return;
-    const delay=liveSyncRetryCount===0?700:1800;liveSyncRetryCount++;
+    if(!token||liveSyncRetryTimer||liveSyncRetryCount>=3)return;
+    const delay=[500,1200,2500][Math.min(liveSyncRetryCount,2)];liveSyncRetryCount++;
     liveSyncRetryTimer=setTimeout(()=>{liveSyncRetryTimer=null;syncLiveRequests(true)},delay);
   }
   function reconcilePendingAlerts(ids){
     const previous=activeRequestAlerts;
     activeRequestAlerts=new Set(ids);
-    renderPendingRequestBadge(ids.length);
-    if(!ids.length){stopAlertAudio();return}
+    renderPendingRequestBadge(ids.size);
+    if(!ids.size){stopAlertAudio();return}
     const hasNewPending=[...activeRequestAlerts].some(id=>!previous.has(id));
     if(hasNewPending||!previous.size)playNewRequestAlert();
     if(getSoundContext()?.state!=='running')bindAlertSoundUnlock();
   }
   function updateDashboardStats(pending){renderPendingRequestBadge(pending)}
-  function stopLiveRequestMonitor(){
-    stopLiveRetry();if(livePoll)clearTimeout(livePoll);livePoll=null;liveInitialized=false;liveSyncInFlight=false;liveSyncQueued=false;liveSyncRetryCount=0;seenPendingRequestIds=new Set();adminRealtimeBound=false;liveRealtimeConnected=false;
-    stopAllRequestAlerts();renderPendingRequestBadge(0);window.BsmatRealtime?.stopAdmin?.().catch?.(()=>{});
+  function applyRequestMutationOverlay(rows){
+    const now=Date.now();
+    return rows.map(row=>{
+      const id=String(row?.id||'');
+      const local=localRequestMutations.get(id);
+      if(!local)return row;
+      if(row?.status===local.status){localRequestMutations.delete(id);return row}
+      if(now-local.at<12000)return {...row,status:local.status,...(local.status==='rejected'?{reject_reason:local.reject_reason||row.reject_reason||''}:{})};
+      localRequestMutations.delete(id);
+      return row;
+    });
   }
-  function refreshLiveView(payload){
-    const viewTab=payload?.viewTab,afterTab=activeTab;if(!viewTab||afterTab!==viewTab)return;
-    if(viewTab==='stats')renderStatsData(payload.data);
-    else if(viewTab==='requests')renderRequestsData(payload.rows,true);
+  function replaceRequestCard(row){
+    const current=$$('[data-id]').find(x=>String(x.dataset.id)===String(row?.id||''));
+    if(!current)return false;
+    const replacement=document.createRange().createContextualFragment(renderRequestCard(row));
+    current.replaceWith(replacement);bindRequestActions();return true;
+  }
+  function applyConfirmedRequestStatus(id,action,reason,serverRow=null){
+    const key=String(id);
+    const before=requestAuditMap.get(key)||{};
+    const updated={...before,...(serverRow&&typeof serverRow==='object'?serverRow:{}),id:Number(id),status:action,...(action==='rejected'?{reject_reason:serverRow?.reject_reason||reason}:{reject_reason:null})};
+    localRequestMutations.set(key,{status:action,reject_reason:action==='rejected'?reason:'',at:Date.now()});
+    requestAuditMap.set(key,updated);
+    activeRequestAlerts.delete(key);
+    reconcilePendingAlerts(activeRequestAlerts);
+    replaceRequestCard(updated);
+    return updated;
+  }
+  function stopLiveRequestMonitor(){
+    stopLiveRetry();if(livePoll)clearTimeout(livePoll);livePoll=null;liveInitialized=false;liveSyncInFlight=false;liveSyncQueued=false;liveSyncRetryCount=0;seenPendingRequestIds=new Set();adminRealtimeBound=false;liveRealtimeConnected=false;localRequestMutations.clear();
+    stopAllRequestAlerts();renderPendingRequestBadge(0);window.BsmatRealtime?.stopAdmin?.().catch?.(()=>{});
   }
   async function syncLiveRequests(silent=false){
     if(!token)return false;
     if(liveSyncInFlight){liveSyncQueued=true;return false}
-    liveSyncInFlight=true;const revision=liveSyncRevision,viewTab=activeTab;
+    liveSyncInFlight=true;
     try{
-      const action=viewTab==='stats'?'admin_get_today_stats':'admin_get_requests';
-      const d=await call(action);
-      if(revision!==liveSyncRevision)return false;
-      const rows=Array.isArray(d)?d:(Array.isArray(d.requests)?d.requests:Array.isArray(d.data?.requests)?d.data.requests:Array.isArray(d.rows)?d.rows:[]);
+      const d=await call('admin_get_requests');
+      let rows=Array.isArray(d?.requests)?d.requests:Array.isArray(d)?d:Array.isArray(d?.data?.requests)?d.data.requests:Array.isArray(d?.rows)?d.rows:[];
       if(!Array.isArray(rows))throw new Error('استجابة الطلبات من الخادم غير مفهومة.');
+      rows=applyRequestMutationOverlay(rows);
       stopLiveRetry();liveSyncRetryCount=0;
       rows.forEach(row=>requestAuditMap.set(String(row.id),row));
       const pendingRows=rows.filter(r=>r.status==='pending');
       const ids=new Set(pendingRows.map(r=>String(r.id)));
-      const wasInitialized=liveInitialized,newIds=[...ids].filter(id=>!seenPendingRequestIds.has(id));
+      const wasInitialized=liveInitialized;
+      const newIds=[...ids].filter(id=>!seenPendingRequestIds.has(id));
       seenPendingRequestIds=ids;liveInitialized=true;
       reconcilePendingAlerts(ids);
-      if((!wasInitialized&&ids.size)||(!silent&&newIds.length)){notify(newIds.length?newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`:`يوجد ${ids.size} طلبات معلقة.`)}
-      if(!wasInitialized&&ids.size&&activeTab==='stats'){activateTab('requests');}
-      else if(wasInitialized||newIds.length){refreshLiveView({viewTab,data:d,rows});}
       updateDashboardStats(pendingRows.length);
+      if((!wasInitialized&&ids.size)||(!silent&&newIds.length)){
+        notify(newIds.length?(newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`):`يوجد ${ids.size} طلبات معلقة.`);
+      }
+      if(!wasInitialized&&ids.size&&activeTab==='stats')activateTab('requests');
+      else if(activeTab==='requests')renderRequestsData(rows,true);
+      else if(!wasInitialized&&ids.size===0&&activeTab==='stats')renderStats();
       return true;
-    }catch(error){
-      scheduleLiveRetry();
-      return false;
-    }finally{
+    }catch(error){scheduleLiveRetry();return false}
+    finally{
       liveSyncInFlight=false;
       if(liveSyncQueued&&token){liveSyncQueued=false;queueMicrotask(()=>syncLiveRequests(true))}
     }
@@ -749,58 +830,18 @@
     if(start.getTime()<=now.getTime())start.setTime(start.getTime()+86400000);
     return Math.max(1000,start.getTime()-now.getTime());
   }
-  function scheduleLivePoll(delay=300000){
+  function scheduleLivePoll(delay=15000){
     if(livePoll)clearTimeout(livePoll);livePoll=null;if(!token)return;
     if(!operationalHours()){
-      livePoll=setTimeout(()=>{livePoll=null;if(token)scheduleLivePoll(5000)},msUntilNextStart());
+      livePoll=setTimeout(()=>{livePoll=null;if(token)scheduleLivePoll(15000)},msUntilNextStart());
       return;
     }
     const nextDelay=liveRealtimeConnected?300000:Math.max(5000,Number(delay)||15000);
-    livePoll=setTimeout(()=>{
-      livePoll=null;
-      if(!token)return;
-      if(!operationalHours()){scheduleLivePoll(5000);return;}
-      syncLiveRequests(true).finally(()=>scheduleLivePoll(300000));
+    livePoll=setTimeout(async()=>{
+      livePoll=null;if(!token)return;
+      if(!operationalHours()){scheduleLivePoll(15000);return}
+      await syncLiveRequests(true);scheduleLivePoll(15000);
     },nextDelay);
-  }
-  function stopLiveRequestMonitor(){
-    stopLiveRetry();if(livePoll)clearTimeout(livePoll);livePoll=null;liveInitialized=false;liveSyncInFlight=false;liveSyncQueued=false;liveSyncRetryCount=0;seenPendingRequestIds=new Set();adminRealtimeBound=false;liveRealtimeConnected=false;
-    stopAllRequestAlerts();renderPendingRequestBadge(0);window.BsmatRealtime?.stopAdmin?.().catch?.(()=>{});
-  }
-  function refreshLiveView(payload){
-    const viewTab=payload?.viewTab,afterTab=activeTab;if(!viewTab||afterTab!==viewTab)return;
-    if(viewTab==='stats')renderStatsData(payload.data);
-    else if(viewTab==='requests')renderRequestsData(payload.rows,true);
-  }
-  async function syncLiveRequests(silent=false){
-    if(!token)return false;
-    if(liveSyncInFlight){liveSyncQueued=true;return false}
-    liveSyncInFlight=true;const revision=liveSyncRevision,viewTab=activeTab;
-    try{
-      const action=viewTab==='stats'?'admin_get_today_stats':'admin_get_requests';
-      const d=await call(action);
-      if(revision!==liveSyncRevision)return false;
-      const rows=Array.isArray(d)?d:(Array.isArray(d.requests)?d.requests:Array.isArray(d.data?.requests)?d.data.requests:Array.isArray(d.rows)?d.rows:[]);
-      if(!Array.isArray(rows))throw new Error('استجابة الطلبات من الخادم غير مفهومة.');
-      stopLiveRetry();liveSyncRetryCount=0;
-      rows.forEach(row=>requestAuditMap.set(String(row.id),row));
-      const pendingRows=rows.filter(r=>r.status==='pending');
-      const ids=new Set(pendingRows.map(r=>String(r.id)));
-      const wasInitialized=liveInitialized,newIds=[...ids].filter(id=>!seenPendingRequestIds.has(id));
-      seenPendingRequestIds=ids;liveInitialized=true;
-      reconcilePendingAlerts(ids);
-      if((!wasInitialized&&ids.size)||(!silent&&newIds.length)){notify(newIds.length?newIds.length===1?'وصل طلب نداء جديد.':`وصلت ${newIds.length} طلبات نداء جديدة.`:`يوجد ${ids.size} طلبات معلقة.`)}
-      if(!wasInitialized&&ids.size&&activeTab==='stats'){activateTab('requests');}
-      else if(wasInitialized||newIds.length){refreshLiveView({viewTab,data:d,rows});}
-      updateDashboardStats(pendingRows.length);
-      return true;
-    }catch(error){
-      scheduleLiveRetry();
-      return false;
-    }finally{
-      liveSyncInFlight=false;
-      if(liveSyncQueued&&token){liveSyncQueued=false;queueMicrotask(()=>syncLiveRequests(true))}
-    }
   }
   async function bindAdminRealtime(){
     if(!token||adminRealtimeBound||!window.BsmatRealtime?.subscribeAdmin)return;
@@ -810,24 +851,24 @@
         if(!token)return;
         const kind=String(event?.kind||event?.operation||'').toUpperCase();
         const requestId=String(event?.request_id||'');
-        if(kind==='INSERT'&&requestId&&!activeRequestAlerts.has(requestId)){
-          const optimistic=new Set(activeRequestAlerts);optimistic.add(requestId);renderPendingRequestBadge(optimistic.size);playNewRequestAlert();
-          notify('وصل طلب جديد مباشرة.');
-        }
-        liveSyncQueued=liveSyncInFlight||liveSyncQueued;
+        if(kind==='INSERT'&&requestId&&!activeRequestAlerts.has(requestId))notify('وصل طلب جديد مباشرة.');
         await syncLiveRequests(true);
       });
     }catch{adminRealtimeBound=false}
   }
   function wakeLiveMonitor(){
-    if(!token)return;refreshAdminSession();
+    if(!token)return;
+    refreshAdminSession();
     if(livePoll){clearTimeout(livePoll);livePoll=null}
-    liveSyncQueued=false;syncLiveRequests(true).finally(()=>{bindAdminRealtime();scheduleLivePoll(liveRealtimeConnected?300000:15000)});
+    liveSyncQueued=false;
+    bindAdminRealtime().finally(()=>syncLiveRequests(true).finally(()=>scheduleLivePoll(liveRealtimeConnected?300000:15000)));
   }
   function startLiveRequestMonitor(){
-    stopLiveRequestMonitor();scheduleAdminRefresh();
-    unlockAlertAudio();
-    syncLiveRequests(true).finally(()=>{bindAdminRealtime();scheduleLivePoll(liveRealtimeConnected?300000:15000)});
+    if(!token)return;
+    stopLiveRetry();if(livePoll)clearTimeout(livePoll);livePoll=null;
+    scheduleAdminRefresh();
+    void unlockAlertSound();
+    bindAdminRealtime().finally(()=>syncLiveRequests(true).finally(()=>scheduleLivePoll(liveRealtimeConnected?300000:15000)));
   }
   window.addEventListener('bsmat-realtime-status',event=>{
     const detail=event.detail||{};
@@ -836,29 +877,22 @@
     if(status==='SUBSCRIBED'){
       liveRealtimeConnected=true;
       if(livePoll){clearTimeout(livePoll);livePoll=null}
-      syncLiveRequests(true);
-      scheduleLivePoll(300000);
+      syncLiveRequests(true);scheduleLivePoll(300000);
     }else if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status)){
-      liveRealtimeConnected=false;
-      syncLiveRequests(true);
-      scheduleLivePoll(5000);
+      liveRealtimeConnected=false;syncLiveRequests(true);scheduleLivePoll(5000);
     }
   });
   window.addEventListener('bsmat-realtime-heartbeat',event=>{
-    const status=String(event.detail?.status||'');
-    if(!token)return;
+    const status=String(event.detail?.status||'');if(!token)return;
     if(status==='ok'){liveRealtimeConnected=true;scheduleLivePoll(300000)}
-    if(['timeout','disconnected'].includes(status)){
-      liveRealtimeConnected=false;
-      syncLiveRequests(true);
-      scheduleLivePoll(5000);
-    }
+    if(['timeout','disconnected'].includes(status)){liveRealtimeConnected=false;syncLiveRequests(true);scheduleLivePoll(5000)}
   });
   window.addEventListener('focus',()=>{if(token)wakeLiveMonitor()});
   window.addEventListener('pageshow',()=>{if(token)wakeLiveMonitor()});
   window.addEventListener('online',()=>{if(token)wakeLiveMonitor()});
   window.addEventListener('resume',()=>{if(token)wakeLiveMonitor()});
   nationalId?.addEventListener('input',()=>{nationalId.value=String(nationalId.value||'').replace(/\D/g,'').slice(0,10)});
+  if(!loginForm?.dataset.bsmatLoginFallback){
   loginForm.addEventListener('submit',async event=>{
     event.preventDefault();
     unlockAlertAudio();
@@ -883,6 +917,20 @@
       loginMessage.textContent=error.message||'تعذر تسجيل الدخول.';
       setLoggedIn(false);
     }finally{button.disabled=false}
+  });
+  }
+  window.addEventListener('bsmat-admin-login-success',event=>{
+    const session=String(event.detail?.session||'').trim();
+    if(!session)return;
+    token=session;
+    sessionStorage.setItem(Bsmat.keys.adminSession,token);
+    setLoggedIn(true);
+    loginMessage.textContent='تم تسجيل الدخول بنجاح.';
+    nationalId.value='';
+    password.value='';
+    scheduleAdminRefresh();
+    activateTab('stats');
+    startLiveRequestMonitor();
   });
   $('#logout').onclick=()=>{stopLiveRequestMonitor();sessionStorage.removeItem(Bsmat.keys.adminSession);token=null;setLoggedIn(false);nationalId.value='';password.value='';loginMessage.textContent='تم تسجيل الخروج.';notify('تم تسجيل الخروج')};
   $$('[data-tab]').forEach(button=>button.addEventListener('click',()=>{if(token)activateTab(button.dataset.tab)}));
